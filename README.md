@@ -8,6 +8,86 @@ It is not a methodology, a consultancy product, or a manifesto-only document. It
 
 This is **Generation 1**. It is honest about what works today, what is bridged with manual processes, and what is deferred to Generation 2 (crypto rails, smart-contract long-tail, internal unit fund) and Generation 3 (Cotrugli Ledger anchoring, autonomous agent business units).
 
+---
+
+## 📖 Read in this order
+
+If you are new to ØØT, read these in order. Each step is timed; the full path is roughly **2 hours of reading** before you write a single line of configuration.
+
+| # | Read | Time | Why |
+|---|---|---|---|
+| 1 | [`MANIFESTO.md`](MANIFESTO.md) | ~15 min | The five theses with citations. The intellectual core. |
+| 2 | [`SPEC.md`](SPEC.md) | ~30 min | The eight-layer technical architecture and the full Lego inventory. |
+| 3 | [`GENERATIONS.md`](GENERATIONS.md) | ~10 min | What's in Gen 1, what's deferred, why. |
+| 4 | [`governance/KLARNA-TEST.md`](governance/KLARNA-TEST.md) | ~10 min | The framework's signature epistemic discipline. Non-negotiable. |
+| 5 | [`QUICKSTART.md`](QUICKSTART.md) | ~30 min | Weekend setup path (cloud or privacy). Implementation starts here. |
+| 6 | [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) | ~20 min | The external tools the framework rests on. With links to every wiki. |
+| 7 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — screenshot-rich, no shell required. |
+| 8 | [`research/README.md`](research/README.md) | optional | Going deeper — paper summaries, original articles, and the curated ecosystem index. |
+
+> 💡 **For the technically-minded:** also read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) — the agent-orientation files. They are vendor-neutral guides for any AI coding assistant working in this repo.
+
+---
+
+## 🗺️ Repository map
+
+What lives where.
+
+| Folder / file | Purpose |
+|---|---|
+| [`README.md`](README.md), [`MANIFESTO.md`](MANIFESTO.md), [`SPEC.md`](SPEC.md), [`GLOSSARY.md`](GLOSSARY.md), [`QUICKSTART.md`](QUICKSTART.md), [`GENERATIONS.md`](GENERATIONS.md) | Tier-1 reading. The intellectual + technical core. |
+| [`CLAUDE.md`](CLAUDE.md), [`AGENTS.md`](AGENTS.md), [`BUILD-INSTRUCTIONS.md`](BUILD-INSTRUCTIONS.md) | Agent-orientation files. CLAUDE for Claude Code; AGENTS for any other agent; BUILD-INSTRUCTIONS for the phased scaffolding script. |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), [`LICENSE`](LICENSE), [`LICENSE-DOCS`](LICENSE-DOCS) | Open-source standards. |
+| [`governance/`](governance/) | Klarna Test, EU AI Act mapping, decision rights, secrets policy. |
+| [`skills/`](skills/) | 12 hand-built Skill Packs — 7 hardened (S1–S6, S12) + 5 scaffolded (S7–S11). |
+| [`templates/excel/`](templates/excel/) | 9 pre-built `.xlsx` templates with formulas + the spec they're generated from. |
+| [`templates/brain/`](templates/brain/) | The Brain ontology + 14 Brain page templates that Routines and Skills write to. |
+| [`templates/partner-onboarding/`](templates/partner-onboarding/) | Onboarding checklist + provisioning script + first-90-days plan. |
+| [`routines/`](routines/) | 8 cloud Routines + 8 privacy-track equivalents. |
+| [`docs/`](docs/) | 12 Tier-1 user guides + 6 Tier-2 UI walkthroughs (`docs/walkthroughs/`). |
+| [`research/`](research/) | Paper summaries, original articles, and the curated ecosystem index ([`external-resources.md`](research/external-resources.md)). |
+| [`installer/`](installer/) | Terminal wizard + fallback install scripts (Phase 9 deliverable). |
+| [`examples/`](examples/) | Three reference orgs: small (3-partner), medium (12-partner), regulated-EU (6-partner). |
+| [`.github/workflows/`](.github/workflows/) | CI: SKILL.md frontmatter linter, link checker, Excel validator, Klarna gate. |
+
+---
+
+## 🔗 External ecosystem
+
+ØØT runs on a stack of well-documented external tools. Each has its own wiki or docs site; the framework links to those rather than duplicating them. The full curated index is at [`research/external-resources.md`](research/external-resources.md).
+
+**The reference Brain implementation:**
+- **The Curator** — open-source Brain + MyCuratorMCP server. Skill Pack S1 imports the Curator's `SKILL.md` verbatim.
+  - Repo + research articles: https://github.com/talirezun/the-curator
+  - Research section: https://github.com/talirezun/the-curator/tree/main/research
+
+**Cloud-track stack:**
+- **Anthropic Claude** — Desktop, Code, Remote Routines, API. https://claude.com/ · docs: https://docs.claude.com/
+- **Google Workspace** — Drive, Sheets, Docs, Calendar. https://workspace.google.com/
+- **Slack** — internal comms; Claude integration available. https://slack.com/
+- **GitHub** — repo + CI + Brain sync substrate. https://github.com/
+
+**Privacy-track stack (full Gen 1 parity, sovereignty-first):**
+- **4thtech** — on-chain dMail / dChat / file transfer. Wiki: https://wiki.4thtech.io/ · Quickstart: https://wiki.4thtech.io/quickstart/index · Repo: https://github.com/4thtech
+- **PollinationX** — decentralised storage, NFT-based. Wiki: https://wiki.pollinationx.io/ · Start: https://wiki.pollinationx.io/introduction/start-here
+- **LM Studio** — local LLM runner with native MCP. https://lmstudio.ai/ · MCP docs: https://lmstudio.ai/docs/local-server/mcp
+- **Excel MCP** (`haris-musa/excel-mcp-server`) — privacy-track Excel automation. https://github.com/haris-musa/excel-mcp-server
+- **Desktop Commander MCP** — privacy-track filesystem. https://github.com/wonderwhy-er/DesktopCommanderMCP
+- **GitHub MCP** — cross-machine Brain sync. https://github.com/modelcontextprotocol/servers/tree/main/src/github
+
+**Secrets layer (both tracks):**
+- **Bitwarden** — open-source password manager. https://bitwarden.com/ · CLI: https://bitwarden.com/help/cli/
+- **Trezor** — hardware wallet (4thtech identity, treasury wallets). https://trezor.io/
+- **Yubikey** — hardware key for org-admin 2FA. https://yubico.com/
+
+**Standards bodies:**
+- **Linux Foundation Agentic AI Foundation (AAIF)** — governs MCP, AGENTS.md, MCP server cards. https://lfaidata.foundation/
+- **Model Context Protocol (MCP)** — the open standard for agent ↔ tool. https://modelcontextprotocol.io/
+
+For the comprehensive index (with licences, ØØT components that depend on each tool, and citation-grade references), see [`research/external-resources.md`](research/external-resources.md).
+
+---
+
 ## Who this is for
 
 Primarily: **founders building a new organisation from zero**, with three to twenty partners (no employees, no headcount, no fixed salaries beyond a small dignified base), who want to operate the firm as a partner-run, AI-augmented entity from day one rather than retrofit it later.
@@ -58,16 +138,6 @@ This is the v1.0 release. It is honest about what's deferred:
 - **Generation 3 (12–24 months, theoretical):** Cotrugli Ledger anchoring (PAC-RO receipts, Cotrugli Score, Vanguard Score, IAAF autonomy levels), Kelly-style autonomous business units (agents with their own LLC, accounts, contracts), per-agent compensation. This is research-stage. We mark it on the roadmap, design v1 so it doesn't conflict with v3, and stop there.
 
 See `GENERATIONS.md` for the full roadmap.
-
-## Quick start
-
-Read in this order:
-
-1. **`MANIFESTO.md`** — the five theses in full, with citations. ~15 minutes.
-2. **`SPEC.md`** — the technical specification: layers, Skill Packs, Excel Legos, Routines, governance. ~30 minutes.
-3. **`QUICKSTART.md`** — weekend setup path, cloud or privacy track. Implementation starts here.
-4. **`GENERATIONS.md`** — what's in v1, what's deferred, why.
-5. **`governance/KLARNA-TEST.md`** — the signature epistemic check that must run before any "AI replaces human" decision.
 
 ## Initiator and contributors
 
