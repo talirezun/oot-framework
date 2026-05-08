@@ -76,9 +76,30 @@ oot-framework/
 │   │   ├── eu-ai-act-mapping.xlsx            (Phase 5)
 │   │   ├── treasury-runway.xlsx              (Phase 5, optional)
 │   │   └── oot-readiness.xlsx                (Phase 5)
+│   ├── brain/
+│   │   ├── FIRM-ONTOLOGY.md          (foundation kit — Brain folder structure + permissions)
+│   │   ├── SPEC.md                   (foundation kit — Brain page template specifications)
+│   │   ├── daily-output-log.md       (Phase 4 — generate)
+│   │   ├── audit-log-day.md          (Phase 4)
+│   │   ├── business-review.md        (Phase 4)
+│   │   ├── klarna-test-page.md       (Phase 4)
+│   │   ├── variable-statement.md     (Phase 4)
+│   │   ├── long-tail-statement.md    (Phase 4)
+│   │   ├── output-spec.md            (Phase 4)
+│   │   ├── partner-profile.md        (Phase 4)
+│   │   ├── reward-species-declaration-summary.md (Phase 4)
+│   │   ├── decision-record.md        (Phase 4)
+│   │   ├── adr.md                    (Phase 4)
+│   │   ├── pilot-summary.md          (Phase 4)
+│   │   ├── dispute-record.md         (Phase 4)
+│   │   └── prompt-artefact.md        (Phase 4)
 │   ├── partner-charter.md            (Phase 4 — generate)
-│   ├── output-spec.md                (Phase 4 — generate)
-│   └── partner-onboarding/           (Phase 4 — generate)
+│   ├── output-spec.md                (Phase 4 — generate, partner-onboarding tutorial copy)
+│   └── partner-onboarding/
+│       ├── PROVISIONING-SPEC.md      (foundation kit)
+│       ├── checklist.md              (Phase 4 — generate)
+│       ├── provisioning-script.sh    (Phase 4 — generate per PROVISIONING-SPEC.md)
+│       └── first-90-days.md          (Phase 4 — generate)
 ├── routines/
 │   ├── SPEC.md                       (foundation kit)
 │   ├── cloud/                        (Phase 6 — 8 .md files)
@@ -96,12 +117,20 @@ oot-framework/
 │   ├── 06-when-to-call-a-lawyer.md   (Phase 7)
 │   ├── 07-troubleshooting.md         (Phase 7)
 │   ├── 08-faq.md                     (Phase 7)
-│   └── glossary.md                   (Phase 7 — alias of /GLOSSARY.md)
+│   ├── glossary.md                   (Phase 7 — alias of /GLOSSARY.md)
+│   └── walkthroughs/                 (Phase 7 — Tier 2 UI walkthroughs)
+│       ├── W1-claude-desktop-tour.md
+│       ├── W2-curator-daily-use.md
+│       ├── W3-excel-monthly-variable-pay.md
+│       ├── W4-running-the-friday-business-review.md
+│       ├── W5-running-a-klarna-test.md
+│       └── W6-monitoring-routines-dashboard.md
 ├── installer/
 │   ├── cloud/                        (Phase 9 — generate)
 │   └── privacy/                      (Phase 9 — generate)
 ├── examples/
-│   ├── small-org/                    (Phase 9 — generate)
+│   ├── SPEC.md                       (foundation kit — reference org specifications)
+│   ├── small-org/                    (Phase 9 — generate per SPEC)
 │   ├── medium-org/                   (Phase 9)
 │   └── regulated-eu-org/             (Phase 9)
 └── .github/
@@ -166,9 +195,9 @@ oot-framework/
 
 ---
 
-## Phase 4 — Generate Tier-2 Skill Pack scaffolds + supporting templates
+## Phase 4 — Generate Tier-2 Skill Pack scaffolds + supporting templates + Brain page templates
 
-**Goal:** Scaffold the 5 Tier-2 packs (frontmatter + section structure + TODOs only — not full content). Generate the partner-onboarding markdown templates.
+**Goal:** Scaffold the 5 Tier-2 packs (frontmatter + section structure + TODOs only — not full content). Generate the partner-onboarding markdown templates. Generate the Brain page templates per `templates/brain/SPEC.md`.
 
 **Tasks:**
 
@@ -177,15 +206,16 @@ oot-framework/
    - Generate a scaffolded `skills/<pack>/SKILL.md` with frontmatter, section headings, and `<!-- TODO: ... -->` markers for substantive content. Include the citations from the SPEC.
    - Aim for ~600–900 words per scaffold.
 2. Generate `templates/partner-charter.md` — markdown template for the Partner Charter. References the reward-species declaration, the output spec, the cohort designation. ~800 words template + commentary.
-3. Generate `templates/output-spec.md` — markdown template for an Output Spec. Defines what "done" looks like for committed work.
+3. Generate `templates/output-spec.md` — partner-onboarding tutorial version (a more annotated copy of `templates/brain/output-spec.md`).
 4. Generate `templates/partner-onboarding/` directory with:
    - `checklist.md` — 30-step onboarding checklist.
-   - `provisioning-script.sh` — bash script that creates the partner's Bitwarden vault entry, GitHub access, Slack invite, Brain folder.
+   - `provisioning-script.sh` — bash script that creates the partner's Bitwarden vault entry, GitHub access, Slack invite, Brain folder. **Must follow `templates/partner-onboarding/PROVISIONING-SPEC.md` exactly** — Phase 4's PR is reviewed against that spec.
    - `first-90-days.md` — week-by-week onboarding plan.
+5. Generate the 14 Brain page templates per `templates/brain/SPEC.md` (`daily-output-log.md`, `audit-log-day.md`, `business-review.md`, `klarna-test-page.md`, `variable-statement.md`, `long-tail-statement.md`, `output-spec.md`, `partner-profile.md`, `reward-species-declaration-summary.md`, `decision-record.md`, `adr.md`, `pilot-summary.md`, `dispute-record.md`, `prompt-artefact.md`).
 
-**Acceptance criteria:** 5 Tier-2 SKILL.md scaffolds + onboarding templates committed.
+**Acceptance criteria:** 5 Tier-2 SKILL.md scaffolds + 14 Brain page templates + 3 partner-onboarding files committed. The provisioning-script.sh validates against PROVISIONING-SPEC.md.
 
-**Commit message:** `phase-4: scaffold tier-2 skill packs and partner-onboarding templates`
+**Commit message:** `phase-4: scaffold tier-2 skill packs, partner-onboarding templates, and Brain page templates`
 
 ---
 
@@ -234,19 +264,22 @@ oot-framework/
 
 ---
 
-## Phase 7 — Generate user documentation from docs/SPEC.md
+## Phase 7 — Generate user documentation from docs/SPEC.md (18 docs)
 
-**Goal:** Generate the 12 plain-language user guides.
+**Goal:** Generate the 12 Tier-1 plain-language guides + 6 Tier-2 UI walkthroughs per `docs/SPEC.md`.
 
 **Tasks:**
 
-1. Read `docs/SPEC.md`. The spec specifies, per doc: audience, purpose, structure, required sections, what to reference from elsewhere in the repo.
-2. For each of the 12 documents, generate the markdown file. Plain language, screenshot placeholders where applicable, copy-pasteable commands. No assumed technical background beyond "I can edit a config file."
-3. Cross-reference correctly — each doc should link to the relevant SPEC files, Skill Packs, and Excel templates.
+1. Read `docs/SPEC.md` end-to-end. The spec specifies, per doc: audience, purpose, structure, required sections, what to reference from elsewhere in the repo. **Note especially the "Documentation philosophy — write for the non-technical partner first" section** — every Tier-1 doc that involves a UI tool follows the three-layer pattern (orientation → walkthrough → pitfalls), and every Tier-2 walkthrough is screenshot-rich and assumes no shell-command literacy.
+2. **Tier 1 — generate the 12 docs in `docs/`:** `00-quickstart-cloud.md`, `00-quickstart-privacy.md`, `01-installing-the-curator.md`, `02-installing-routines.md`, `02-installing-routines-privacy.md`, `03-onboarding-a-partner.md`, `04-running-the-business-review.md`, `05-using-the-klarna-test.md`, `06-when-to-call-a-lawyer.md`, `07-troubleshooting.md`, `08-faq.md`, `glossary.md`.
+3. **Tier 2 — generate the 6 walkthroughs in `docs/walkthroughs/`:** `W1-claude-desktop-tour.md`, `W2-curator-daily-use.md`, `W3-excel-monthly-variable-pay.md`, `W4-running-the-friday-business-review.md`, `W5-running-a-klarna-test.md`, `W6-monitoring-routines-dashboard.md`.
+4. Every doc with UI steps shows both Microsoft Excel and Google Sheets variants where they diverge, and both cloud-track and privacy-track variants where the underlying tool differs.
+5. Every screenshot placeholder is in the form `![Description](images/<doc-id>-<step-number>.png)` with descriptive alt-text and an italic caption underneath that tells the reader what to look for. The actual image binaries are added in a follow-up PR (one PR per doc).
+6. Cross-reference correctly — each doc should link to the relevant SPEC files, Skill Packs, Excel templates, and other docs.
 
-**Acceptance criteria:** 12 doc files committed. Cross-references resolve.
+**Acceptance criteria:** 18 doc files committed. Cross-references resolve. Tier-1 quickstarts are ≥4,500 words; Tier-2 walkthroughs are 1,500–3,000 words. Every Tier-1 doc that involves a UI tool follows the three-layer pattern.
 
-**Commit message:** `phase-7: generate plain-language user documentation`
+**Commit message:** `phase-7: generate plain-language user documentation (12 Tier-1 + 6 Tier-2 walkthroughs)`
 
 ---
 
