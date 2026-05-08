@@ -84,10 +84,23 @@ The most opinionated coding-related Skill Pack the framework ships. Disagreement
 6. ØØT `governance/KLARNA-TEST.md`.
 7. ØØT Skill Pack S6 — Change Management (METR baseline integration).
 
+## Repo-level setup pre-requisites (must be in the SKILL.md)
+
+The Klarna gate, the Article 12 audit retention, and the AI-authorship attribution all assume specific GitHub repo configuration. The SKILL.md must walk through configuring:
+
+1. **Required status check `oot/klarna-test`** on the merge target branch — the Klarna gate. The workflow file is at `.github/workflows/klarna-gate.yml` (shipped Phase 8). Any PR labelled `ai-replaces-human` cannot be merged until the check passes.
+2. **Force-push disabled, deletion disabled** on `main` (and any `audit/*` branches) — the immutability foundation for Routine R6's audit trail.
+3. **Required signed commits** on the same branches — GPG or SSH-backed. The cloud installer (Phase 9) ships a setup script for this.
+4. **Required reviewer count ≥ 1** for any PR touching `firm/audit-logs/` — protects the integrity of the EU AI Act record.
+5. **Auto-label rule** (`.github/labeler.yml` or equivalent) that applies `ai-replaces-human` to any PR matching the Code & QA pack's diff signatures (e.g. removes a code path routing to manual review, modifies a `partner-output-ledger.xlsx` formula in a way that reduces variable pay attribution).
+
+Without items 1–4, the Klarna and Article 12 disciplines are advisory rather than enforcing. The pack's "When NOT to invoke" section must call this out — invoking the pack against a repo that has not configured these protections produces false confidence.
+
 ## Acceptance criteria
 
 Standard. Plus:
-- Klarna Test integration is documented with the GitHub Action snippet.
+- Klarna Test integration is documented with the **complete** `.github/workflows/klarna-gate.yml` snippet (not just a reference).
+- The five repo-level setup pre-requisites above are documented step-by-step.
 - Plan Mode example is concrete (not abstract).
 - The `Co-authored-by:` trailer convention is specified.
 - 3+ worked examples in `examples/`.

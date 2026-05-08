@@ -55,10 +55,13 @@ For each output:
 - Reference the output_spec_ref from the Brain if one exists; flag for human review if not.
 - Estimate value_tier (S/M/L/XS) based on the output_spec value envelope; default to L if no spec exists.
 - Estimate ai_authored_pct from commit trailers and change patterns (best-effort; partner can correct).
-- Set rework_within_30d to "No" by default (this field is updated retroactively by the same Routine on subsequent days when it detects rework).
-- Compute partner_multiplier and value_envelope per the X1 schema's lookups.
+- Set `rework_within_30d` to "No" by default. This field is **updated retroactively by R1 on every subsequent run within the next 30 days** using the following deterministic detection rule:
 
-Append rows to X1 Output_Log. Do not edit existing rows.
+  > A new commit `C_new` marks an earlier commit `C_old` as `rework=Yes` if **all four** conditions hold: (a) same `partner_id` on both commits; (b) `C_new` timestamp is within 30 days after `C_old`; (c) ≥50% file overlap between the two commits' changed-files sets; (d) `C_new`'s commit message OR associated PR title/description matches the regex `\b(fix|revert|hotfix|redo|retry|reapply|backout|rollback)\b` (case-insensitive). When all four hold, R1 **updates the prior X1 row's `rework_within_30d` to "Yes"** (which zeroes out its `computed_variable` via the X1 column-L formula). The Routine logs every retroactive update in the daily Brain summary under a `## Retroactive rework detections` heading.
+
+- Resolve `partner_multiplier` (column J) by **reading X2 directly at write time** — do not rely on a cross-workbook Excel formula (see `templates/excel/SPEC.md` X1). Compute `value_envelope` (column K) per the lookup table embedded in X1.
+
+Append rows to X1 Output_Log. Do **not** edit existing rows except to flip `rework_within_30d` per the rule above.
 
 Write a daily summary as a Brain page at firm/output-logs/YYYY-MM-DD.md following the template at templates/brain/daily-output-log.md. Include: total outputs captured, breakdown by partner, any anomalies (e.g., a partner with zero outputs for >3 consecutive days), any retroactive rework_within_30d updates.
 
@@ -151,13 +154,32 @@ Your task: lock the previous month's Output_Log and produce per-partner variable
 
 4. Populate the Monthly_Variable sheet of partner-output-ledger.xlsx for {{LAST_MONTH}}: one row per partner, with total_outputs, total_variable, base_pay (last_month proportional), total_compensation, sign_off_status='draft'.
 
-5. For each partner, generate a personalised statement at firm/partners/{{partner_id}}/variable-statements/YYYY-MM.md. Statement includes: month, total outputs (with the top 5 listed by value), variable computation with the multiplier, base pay, total compensation, list of any retroactive rework_within_30d zero-outs from prior months that affected this month's pool. The statement is the partner's official record of their variable for the month.
+5. For each partner, generate a personalised statement at firm/partners/{{partner_id}}/variable-statements/YYYY-MM.md following the template at `templates/brain/variable-statement.md`. Statement includes: month, total outputs (with the top 5 listed by value), variable computation with the multiplier, base pay, total compensation, list of any retroactive rework_within_30d zero-outs from prior months that affected this month's pool. The statement is the partner's official record of their variable for the month. The template ends with an explicit acknowledgement block:
+
+   ```markdown
+   ## Acknowledgement
+
+   - [ ] I have reviewed this statement and agree with the calculation.
+   - [ ] I dispute the calculation (open Tier 1 dispute per `governance/DECISION-RIGHTS.md`).
+
+   _Sign by editing this page and ticking the appropriate box, then commit._
+   ```
 
 6. Send the statement to each partner via email (cloud) or 4thtech dMail (privacy track). Subject: "Variable pay statement for {{LAST_MONTH}} — review by {{REVIEW_DEADLINE}}". Body links to the Brain statement page.
 
 7. Post to Slack/dChat #compensation: "Monthly variable drafts for {{LAST_MONTH}} are ready. {{COUNT}} partners. Total: {{TOTAL_EUR}}. Review window: 5 business days. Founder approval required before payment."
 
-8. Set sign_off_status='partner_reviewed' as each partner confirms (manual trigger or auto-detect via dMail/email reply parsing).
+8. **Acknowledgement detection** — the Routine polls each partner's statement page once daily and parses the acknowledgement block. The first checked box wins. Set `sign_off_status` per the table:
+
+   | Detected state in Brain page | sign_off_status |
+   |---|---|
+   | First box ticked, second unticked | `partner_reviewed` |
+   | Second box ticked (dispute), first unticked | `partner_disputed` (escalates to Tier 1 per DECISION-RIGHTS.md; `R3` does not advance the row to `founder_approved`) |
+   | Both ticked | `partner_disputed` (the partner's intent is unclear; treat as dispute, ask for clarification) |
+   | Neither ticked, ≥5 business days since send | `partner_unresponsive` (escalate to founder; never auto-approve) |
+   | Neither ticked, <5 business days since send | `draft` (no change) |
+
+   Slack reactions are **not** the canonical signal; only the Brain checkbox counts. This makes the audit trail self-contained in the Brain (auditable from the firm's git history alone, no third-party messaging dependency).
 
 9. After all partner reviews complete OR after 5 business days (whichever first), compile a founder-approval packet at firm/compensation/YYYY-MM/founder-approval.md. Founder approves; sign_off_status moves to 'founder_approved'. Payment processing then proceeds (manual in Gen 1; automated stablecoin in Gen 2).
 
@@ -266,14 +288,16 @@ Your task:
 2. For each decision, capture: timestamp, AI system identifier (which model + Skill), decision context (sanitised input summary), output, human reviewer if any, related use_case_id from eu-ai-act-mapping.xlsx.
 3. Append to firm/audit-logs/YYYY-MM-DD.md following the template at templates/brain/audit-log-day.md.
 4. Update eu-ai-act-mapping.xlsx Audit_Log_Index sheet with today's entry count and any anomalies flagged.
-5. Commit the audit log day file via GitHub MCP — git history provides the immutable retention required by Article 12.
+5. Commit the audit log day file via GitHub MCP using a **signed commit** (GPG or SSH). This commit MUST land on the protected `main` branch (or the firm's chosen audit branch) which has the following branch-protection rules configured: (a) force-push disabled; (b) deletion disabled; (c) signed commits required; (d) at least one reviewer for any modification (Routine R6's commits are auto-approved by a designated bot account or use a `[skip review]` exemption only for append-only audit-log paths under `firm/audit-logs/`). These three protections together — append-only path, force-push block, signed commits — provide the practical immutability required by Article 12 record-keeping. (True triple-entry / external anchoring is Generation 2; see `GENERATIONS.md`.)
 
-Failure handling: if any source unreachable, append from available sources and flag the gap. The audit log MUST be appended every day; an empty day is a noted "no agent activity" entry, not a missing day.
+Failure handling: if any source unreachable, append from available sources and flag the gap. The audit log MUST be appended every day; an empty day is a noted "no agent activity" entry, not a missing day. If the signed-commit step fails (signing key unavailable, branch protection rejects the push), R6 retries hourly; if still failing at 02:00 the next day, escalate to founder via Slack `#ops` — DO NOT downgrade to an unsigned commit silently.
 ```
 
-**Expected outputs:** Daily audit log Brain page; X7 Audit_Log_Index updated; git commit.
+**Expected outputs:** Daily audit log Brain page; X7 Audit_Log_Index updated; **signed** git commit on the protected branch.
 
-**Privacy-track delta:** All git operations via GitHub MCP. The audit log discipline is identical.
+**Privacy-track delta:** All git operations via GitHub MCP. The audit log discipline is identical. Signing key is stored in a Trezor or YubiKey-backed slot, never in plaintext on the always-on machine.
+
+**Setup pre-requisite (one-time):** The firm must configure GitHub branch protection on `main` (or the audit branch) with: force-push disabled, deletion disabled, "Require signed commits" enabled. The cloud installer (Phase 9) and the Code & QA SKILL.md (S4) document this configuration. Without these protections the Article 12 retention claim does not hold.
 
 ---
 
@@ -297,7 +321,7 @@ Your task:
 2. Append a row to klarna-test.xlsx Decision_Log with: test_id, today's date, decision_summary (extracted from PR title + description), trigger='pr_label', trigger_ref=PR URL, status='scoring'.
 3. Identify the affected partner(s) — partners whose primary function (per their Output Spec history) overlaps with the PR's automated capability.
 4. Identify the non-beneficiary reviewer — a partner whose variable pay or long-tail does not increase as a result of the action.
-5. Block PR merge by adding a status check that fails until total_score >= 14 in Klarna_Score sheet AND scorer_signoff = Yes AND non_beneficiary_signoff = Yes.
+5. Block PR merge by posting a **failing GitHub status check** named `oot/klarna-test` against the PR's head SHA. The status check is implemented by the GitHub Actions workflow at `.github/workflows/klarna-gate.yml` (shipped in Phase 8). The workflow re-runs on every push to the PR and reads the `klarna-test.xlsx` Klarna_Score sheet for the matching `test_id`; it sets the check to **passing** only when **all three** conditions hold simultaneously: `total_score >= 14` AND `scorer_signoff = Yes` AND `non_beneficiary_signoff = Yes`. The firm must have configured branch protection on the merge target to require the `oot/klarna-test` status check; without that protection, the gate is advisory rather than enforcing. Both setup steps (the workflow file and the branch-protection rule) are documented in the Code & QA SKILL.md (S4) and shipped by the cloud installer in Phase 9.
 6. Post to Slack/dChat #klarna-test: "{{TEST_ID}}: PR #{{PR_NUMBER}} ({{TITLE}}) requires Klarna Test scoring before merge. Affected partner(s): {{LIST}}. Non-beneficiary reviewer: {{ASSIGNED}}. Scoring window: 5 business days. Reference: governance/KLARNA-TEST.md."
 7. Email/dMail the founder + affected partner(s) + non-beneficiary reviewer with the same content.
 8. Open a Brain page at firm/klarna-tests/{{test_id}}.md with the full context.

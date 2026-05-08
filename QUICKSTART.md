@@ -163,7 +163,7 @@ You are now operating ØØT Generation 1.
 
 **Skipping the METR baseline.** Mandatory before any major Skill rollout. Without baseline metrics, you cannot detect the perception gap. The Skill Pack will tell you to do it; do it.
 
-**Treating the Klarna Test as a checkbox.** It is not. The test is the framework's signature epistemic discipline. If you score 6.5 and rationalise to 7, you are doing it wrong. Either honestly score above the threshold or don't proceed.
+**Treating the Klarna Test as a checkbox.** It is not. The test is the framework's signature epistemic discipline. If you score 13 and rationalise to 14, you are doing it wrong. Either honestly score at or above the threshold (≥14/20) or don't proceed.
 
 **Mixing cloud and privacy tracks.** Pick one for v1.0. You can transition later, but mixing produces tooling chaos and partner confusion.
 

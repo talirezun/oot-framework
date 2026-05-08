@@ -35,7 +35,7 @@ This is not a slogan. It is the most consistent finding in the 2025 enterprise-A
 5. **The "Two Worlds of Code" (Karpathy) is real and time-bound.** By the Software 3.0 transition (~2026–2028), legacy developers face a forced cohort transition. Partner onboarding helps the partner self-identify which world they're entering.
 6. **Plan for a 12–24 month resistance plateau.** MIT NANDA's 95% failure rate is largely composed of teams that quit after pilot disappointment. Persistence at the workflow-redesign level is the key correlate of high performance.
 
-**The signature epistemic check:** the **Klarna Test**. Any ØØT recommendation that would have produced the Klarna outcome must be flagged. The full scoring rubric is in `governance/KLARNA-TEST.md`. The test is wired into the Code & QA Skill Pack as a pre-merge gate on any pull request labelled `ai-replaces-human`. A score below 7 blocks merge.
+**The signature epistemic check:** the **Klarna Test**. Any ØØT recommendation that would have produced the Klarna outcome must be flagged. The full scoring rubric is in `governance/KLARNA-TEST.md`. The test is wired into the Code & QA Skill Pack as a pre-merge gate on any pull request labelled `ai-replaces-human`. Each of the ten questions is scored 0, 1, or 2; the threshold to proceed is **≥14/20 (70%)**. A score below 14 blocks merge.
 
 **Honesty clause:** Resistance is the strongest thesis empirically. It is also the most uncomfortable, because it implies that the bottleneck on AI value capture is the organisation, not the model. We lead with it anyway because the alternative is unserious.
 

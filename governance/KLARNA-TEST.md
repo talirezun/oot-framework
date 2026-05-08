@@ -87,9 +87,15 @@ DORA + SPACE + DX Core 4 metrics captured before AI rollout, per the Change Mana
 
 A partner whose variable pay or long-tail entitlement does not increase as a result of the action. This is the conflict-of-interest check.
 
-**8. Does the public communication accurately reflect the operational reality?**
+**8. Is the public-communication posture for this decision specified — even if the chosen posture is "no public communication"?**
 
-If the org plans to attribute the change to AI publicly, does the messaging match what is actually happening internally? "AI now handles X" is materially different from "AI handles 60% of X with human escalation for 40%." The Klarna case failed on this question hard.
+The question always applies. There are three valid postures, each scored as follows:
+
+- **Score 2** — Public messaging is drafted and matches operational reality precisely (e.g. "AI handles 60% of X with human escalation for 40%"), or a written decision *not* to communicate publicly exists with an owner and a review date.
+- **Score 1** — Posture is decided in principle but the messaging is not yet drafted and reviewed against operational reality, or the no-comms decision is verbal only.
+- **Score 0** — No posture decided. This is the Klarna failure mode in its purest form: a workforce change ships without anyone owning what gets said about it.
+
+The previous "n/a" loophole has been removed: there is no decision in scope for the Klarna Test for which silence is automatically defensible. Active decision required.
 
 **9. Has a 90-day post-deployment review been scheduled and resourced?**
 
@@ -167,11 +173,11 @@ In the quarterly check-in, every partner is asked whether they have observed any
 | 5 | Affected partner consulted in writing? | 1 | Partner was informed; their feedback was acknowledged but not addressed (they raised concerns about the failure-case pattern). |
 | 6 | METR baseline? | 2 | DORA-equivalent metrics for customer-onboarding cycle captured for 90 days pre-rollout. |
 | 7 | Reviewed by non-beneficiary partner? | 0 | Reviewed only by the partner championing the change, who would benefit from the cost saving. |
-| 8 | Public communication accurate? | n/a | No public communication planned. (Score as 2 by default for n/a.) |
+| 8 | Public-communication posture specified? | 0 | No comms posture decided. The team assumed silence was acceptable; nobody owned the question of what would be said if a customer or journalist asked. This is the Klarna failure mode. |
 | 9 | 90-day post-deployment review scheduled? | 1 | A review is on the calendar but no owner or framework is defined. |
 | 10 | Founder willing to defend this in 2 years? | 1 | Founder is "comfortable" but not "willing to defend in detail." |
 
-**Total: 10 / 20.**
+**Total: 8 / 20.**
 
 **Decision: Hold.**
 
@@ -181,6 +187,7 @@ In the quarterly check-in, every partner is asked whether they have observed any
 - Q4: Retain the human partner on a standby contract for 90 days.
 - Q5: Address the partner's failure-case concerns in writing; either modify the Skill to handle them or accept their persistence as a risk and plan accordingly.
 - Q7: Have a non-beneficiary partner review the decision with full evidence.
+- Q8: Decide and write down the public-communication posture (likely: "no proactive comms; if asked, the messaging is X"). Assign an owner. Set a review date.
 - Q9: Assign an owner for the 90-day review; pre-commit the decision framework.
 - Q10: If the founder cannot honestly say yes, abandon.
 

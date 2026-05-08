@@ -70,7 +70,7 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 ## Process / governance
 
-**Klarna Test.** The signature epistemic check. Any ØØT recommendation that would have produced the Klarna outcome (publicly cut humans, quietly rehired) must be flagged. Ten-question scoring rubric in `governance/KLARNA-TEST.md`. Score below 7 blocks proceeding. Wired into Code & QA as a pre-merge gate on any PR labelled `ai-replaces-human`.
+**Klarna Test.** The signature epistemic check. Any ØØT recommendation that would have produced the Klarna outcome (publicly cut humans, quietly rehired) must be flagged. Ten-question scoring rubric in `governance/KLARNA-TEST.md`. Each question scored 0, 1, or 2 (max 20). Score **<14/20** blocks proceeding. Wired into Code & QA as a pre-merge gate on any PR labelled `ai-replaces-human`.
 
 **METR baseline.** Pre-rollout productivity baseline using DORA + SPACE + DX Core 4 metrics. Mandatory before any major Skill rollout. The METR study showed senior engineers were 19% slower while feeling 20% faster — without a baseline, organisations cannot detect their own regressions.
 

@@ -80,10 +80,11 @@ The four articles ØØT explicitly maps:
 
 - Routine R6 (EU AI Act Audit Trail) is the framework's primary logging mechanism. Runs daily at 23:00. Appends to a markdown audit log committed to the Brain.
 - The audit log captures: AI system identifier, decision context, input summary (sanitised for PII), output, human reviewer if any, timestamp.
-- The Brain's git history provides immutable retention.
+- **Practical immutability is provided by three combined controls** on the Brain repo's audit branch (typically `main`): (a) force-push disabled; (b) deletion disabled; (c) signed commits required (GPG or SSH); (d) audit log paths under `firm/audit-logs/` are append-only by convention. Plain `git history` alone is **not** immutable — force-push can rewrite history — so the controls above must be configured at the GitHub repo level. The cloud installer (Phase 9) and the Code & QA SKILL.md (S4) document the configuration. Generation 2 introduces external anchoring (daily SHA-256 of the audit log committed to a public ledger or service) for adopters who require stronger guarantees.
 
 **Adopter actions:**
 - Confirm R6 is configured and running for every high-risk use case.
+- Configure branch protection on the audit branch with the three controls above before relying on the Article 12 retention claim.
 - Set retention policy (default: indefinite via git; archive older than 12 months to PollinationX cold storage on privacy track).
 - Document the logging in the Risk Register.
 

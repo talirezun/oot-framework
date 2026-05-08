@@ -163,7 +163,7 @@ Eight scheduled Routines pre-shipped as templates. Cloud track = Anthropic Remot
 | R4 | Quarterly Long-Tail Settlement | 1st of quarter | Calculate long-tail entitlements per partner per output, prep payment list |
 | R5 | Brain Health Check | Weekly Sunday | Run Curator `scan_wiki_health`, post issues to Slack/dChat |
 | R6 | EU AI Act Audit Trail | Daily 23:00 | Append day's agent decisions to audit log per Article 12 |
-| R7 | Klarna Test Trigger | GitHub event: PR labelled `ai-replaces-human` | Auto-launch Klarna Test scoring; block merge until ≥7 |
+| R7 | Klarna Test Trigger | GitHub event: PR labelled `ai-replaces-human` | Auto-launch Klarna Test scoring; block merge until ≥14/20 |
 | R8 | Treasury Runway Update (**OPTIONAL**) | Weekly Monday 08:00 | Pull bank balances + obligations → update `treasury-runway.xlsx` |
 
 Full Routine prompts are in `routines/SPEC.md`.

@@ -53,9 +53,11 @@ Value envelope lookup table (in cells O1:P5):
 
 Formulas in Output_Log:
 
-- **J (partner_multiplier):** `=VLOOKUP(C2, EXTERNAL_X2!partner_profile, [column index of multiplier], FALSE)` — placeholder; xlsx skill should adapt for the actual cross-workbook reference pattern. If cross-workbook reference is fragile, embed a `partner_multipliers` named range in this workbook that is manually copied from X2 at month start.
+- **J (partner_multiplier):** **No Excel formula.** Each workbook is self-contained — cross-workbook references via openpyxl are unreliable. Instead, the value of `J` is **written directly by the Routine** that appends a row (R1 on daily capture; R3 on month-open backfill if any partner_multiplier changed). The Routine reads `reward-species-declaration.xlsx` (X2) at runtime, applies the partner's `output_multiplier` (X2 column F), and writes the resolved number into `J`. A read-only mirror sheet `Partner_Multipliers_Snapshot` (refreshed monthly by R3) is included for human inspection only — it is not consumed by any formula.
 - **K (value_envelope):** `=VLOOKUP(G2, value_envelope_table, 2, FALSE)`
-- **L (computed_variable):** `=K2 * J2 * IF(I2="Yes", 0, 1)` — rework-within-30d zeros out the variable per the YOLO model's principle that AI-assisted output requiring rework "was not actually output, it was just typing."
+- **L (computed_variable):** `=K2 * J2 * IF(I2="Yes", 0, 1)` — `value_envelope × partner_multiplier × rework_flag`. Rework-within-30d zeros out the variable per the YOLO model's principle that AI-assisted output requiring rework "was not actually output, it was just typing."
+
+**Design decision — AI-authored output is paid at full rate at month-1.** The formula deliberately does **not** discount by `H ai_authored_pct`. The framework's correction discipline is the rework-within-30d zero-out (the `rework_within_30d` field flips to `Yes` retroactively when R1 detects rework — see R1's detection rule in `routines/SPEC.md`). This is the cleanest expression of the manifesto's seven-layer compensation principle: humans direct, agents implement, the firm pays for output that lands and stays landed.
 
 Conditional formatting:
 - Column I: red fill if "Yes".
@@ -97,7 +99,22 @@ Columns:
 | D | ytd_variable | Number (SUMIFS year-to-date) |
 | E | current_month_forecast | Number (rolling-7d-avg × days remaining) |
 
-**4. README**
+**4. Partner_Multipliers_Snapshot**
+
+Read-only mirror of the relevant fields from X2. Refreshed monthly by R3 (Monthly Variable Calc) on the first run after month open. Provides human inspection of which multiplier the Routine actually applied for the prior month.
+
+| Col | Name | Type | Description |
+|---|---|---|---|
+| A | partner_id | Text | |
+| B | full_name | Text | From X2 Partner_Profile |
+| C | base_amount | Number | From X2 Base_Variable_Split (annualised) |
+| D | output_multiplier | Number | From X2 Base_Variable_Split column F |
+| E | reward_species | Text | From X2 |
+| F | snapshot_date | Date | When this row was last refreshed |
+
+This sheet is **not** referenced by any formula in Output_Log. It exists for audit and human-review. Conditional formatting: column F red if `snapshot_date` is more than 35 days old (snapshot is stale).
+
+**5. README**
 
 Content:
 
@@ -162,7 +179,7 @@ DO NOT
 | H | bonus_split_team | Number | (~1/3 default) |
 | I | bonus_split_company | Number | (~1/3 default) |
 
-Validation: D + E + F = 1.0; G + H + I = 1.0. Highlight red if violated.
+Validation: **C + D + E = 1.0** (the three variable-pay weights must sum to 1.0); **G + H + I = 1.0** (the three annual-bonus splits must sum to 1.0). Highlight cell red if violated. Column F (`output_multiplier`) is a free-running multiplier and is not part of the sum constraint.
 
 **3. Long_Tail_Schedule**
 
@@ -307,7 +324,7 @@ One row per test, ten columns for the ten questions, plus total.
 | N | scorer_signoff | Yes/No | |
 | O | non_beneficiary_signoff | Yes/No | |
 
-Validation: each Q column accepts only 0, 1, or 2.
+Validation: each Q column accepts only the integers 0, 1, or 2 (data validation rule, with input message referencing the rubric in `governance/KLARNA-TEST.md`). **No "n/a" affordance** — every question always applies. Q8 in particular is now phrased so that "no public communication" is itself a posture and must be specified to score 2 (see KLARNA-TEST.md Q8 for the rephrasing).
 
 Conditional formatting:
 - Q columns: red fill if 0; yellow if 1; green if 2.
@@ -367,7 +384,7 @@ Pre-populated rows for the canonical metrics:
 | C | self_reported_productivity | Number (-100 to +100) | Partner's self-report |
 | D | measured_productivity | Number | From DORA delta |
 | E | gap | Number | Formula: `=C2-D2` |
-| F | gap_flag | Text | Formula: `=IF(ABS(E2)>15, "PERCEPTION_GAP", "OK")` |
+| F | gap_flag | Text | Formula: `=IF(ABS(E2)>20, "PERCEPTION_GAP", "OK")` — the 20-point threshold is roughly half the 39-point swing observed in METR (2025) "RCT on AI tools and developer productivity"; tighten to 15 once your firm has 90 days of internal baseline data. |
 
 **3. Pilot_Cohort**
 
@@ -484,7 +501,7 @@ Upcoming committed payments. Columns: due_date, description, amount, currency, r
 |---|---|---|
 | A | snapshot_date | Date |
 | B | total_cash_eur | Number | SUM Cash_Position |
-| C | monthly_burn_average | Number | Rolling 3-month average from Obligations |
+| C | monthly_burn_average | Number | Rolling 3-month average computed from **historical Cash_Position deltas** (snapshot N − snapshot N−3 months, divided by 3). Burn is realised outflow, **not** the future-committed total in `Obligations`. The Routine R8 writes this on each run. |
 | D | runway_months | Number | Formula: `=B2/C2` |
 | E | unit_fund_outstanding_units | Number | |
 | F | implied_redemption_value | Number | units × current_bid |
@@ -524,7 +541,7 @@ The 20 questions, distributed 5 per dimension:
 2. Is there written buy-in for output-based variable compensation?
 3. Are reward-species expectations aligned across the founding partners?
 4. Is the founder willing to stop tracking time and headcount as primary metrics?
-5. Are dispute-resolution mechanisms culturally acceptable?
+5. Have all founding partners read `governance/DECISION-RIGHTS.md` and accepted the three-tier dispute path?
 
 **Tech (Q06–Q10):**
 6. Is Claude Pro / Max budget approved (cloud track) OR is there an always-on machine plan (privacy track)?

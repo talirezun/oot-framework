@@ -208,7 +208,7 @@ Decisions made during foundation-kit development that are now baked into the fra
 14. **Founders:** Dr. Tali Režun (initiator); Dražen Kapusta + COTRUGLI Business School (founding contributors).
 15. **Curator pay-as-you-go honesty:** free tier for tasting only; heavy usage <€10/month on Gemini Flash Lite or Anthropic.
 16. **n8n mentioned not recommended** — Claude Routines + Excel + cron cover ~80% of v1 needs.
-17. **Klarna Test rubric:** 10 questions, scored 0/1/2 each; threshold ≥14/20 (70%); legacy framing ≥7/10 also valid.
+17. **Klarna Test rubric:** 10 questions, scored 0/1/2 each (max 20). Canonical threshold across all artefacts: **≥14/20 (70%)** to proceed. The legacy `≥7/10` framing has been retired in favour of the operational form (matches the X4 Excel sheet).
 
 ---
 
