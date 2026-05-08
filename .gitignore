@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node / JS
+node_modules/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Claude Code local settings (per-developer, not committed)
+.claude/settings.local.json
+
+# Excel lock / temp files
+~$*.xlsx
+~$*.xlsm
+*.xlsx.tmp
+
+# Environment / secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# Local CI / build artefacts
+.coverage
+htmlcov/
+dist/
+build/
+*.egg

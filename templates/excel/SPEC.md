@@ -1,0 +1,586 @@
+# Excel Templates — SPEC
+
+Schemas, named ranges, formulas, conditional formatting, and Routine integration points for the nine ØØT pre-built `.xlsx` files. Claude Code uses the xlsx skill (`/mnt/skills/public/xlsx/SKILL.md`) to generate the actual files from this spec.
+
+**Conventions across all files:**
+
+- **Sheet order** is authoritative. Generate sheets in the order specified.
+- **Named ranges** use snake_case: `partner_id`, `value_tier`, `total_score`.
+- **Formulas** are specified in Excel formula syntax. Generate exactly as written.
+- **Every workbook ends with a README sheet** describing purpose, Routine integration, and human-review cadence.
+- **Conditional formatting** rules are specified per sheet where used.
+- **Sample data:** Generate each file with 3–5 rows of realistic sample data so it opens populated. Sample data should be clearly marked as such (`[SAMPLE]` prefix in identifier columns).
+
+---
+
+## X1 — partner-output-ledger.xlsx
+
+**Purpose:** Daily record of per-partner output. Source of truth for monthly variable pay calculation. Written by Routine R1; read by Routines R2, R3.
+
+### Sheets (in order)
+
+**1. Output_Log**
+
+Columns:
+
+| Col | Name | Type | Description |
+|---|---|---|---|
+| A | log_id | Text | UUID-like identifier; format `OL-YYYYMMDD-NNN` |
+| B | date | Date (YYYY-MM-DD) | Date of output |
+| C | partner_id | Text | References Partner_Profile in X2 |
+| D | output_type | Text | One of: `commit`, `pr_merged`, `contract_signed`, `deal_closed`, `spec_drafted`, `review_completed`, `design_shipped`, `content_published` |
+| E | output_ref | Text | Identifier (commit hash, PR URL, contract ID, etc.) |
+| F | output_spec_ref | Text | Brain wikilink to the Output Spec, e.g., `[[outputs/oauth-flow-v2]]` |
+| G | value_tier | Text | One of: `S` (flagship), `M` (significant), `L` (standard), `XS` (maintenance) |
+| H | ai_authored_pct | Number (0–100) | Percentage AI-authored vs. human-authored |
+| I | rework_within_30d | Yes/No | Did this output require rework within 30 days? (filled in retroactively) |
+| J | partner_multiplier | Number | From X2 (lookup) |
+| K | value_envelope | Number | From the value-envelope lookup |
+| L | computed_variable | Number | Formula (see below) |
+| M | notes | Text | Optional human annotation |
+
+Named ranges:
+- `output_log` = OutputLog!A:M
+- `value_envelope_table` = (defined in this sheet rows 1–5 in cells O1:P5; see lookup table below)
+
+Value envelope lookup table (in cells O1:P5):
+| value_tier | base_envelope |
+|---|---|
+| XS | 100 |
+| L | 500 |
+| M | 2000 |
+| S | 8000 |
+
+Formulas in Output_Log:
+
+- **J (partner_multiplier):** `=VLOOKUP(C2, EXTERNAL_X2!partner_profile, [column index of multiplier], FALSE)` — placeholder; xlsx skill should adapt for the actual cross-workbook reference pattern. If cross-workbook reference is fragile, embed a `partner_multipliers` named range in this workbook that is manually copied from X2 at month start.
+- **K (value_envelope):** `=VLOOKUP(G2, value_envelope_table, 2, FALSE)`
+- **L (computed_variable):** `=K2 * J2 * IF(I2="Yes", 0, 1)` — rework-within-30d zeros out the variable per the YOLO model's principle that AI-assisted output requiring rework "was not actually output, it was just typing."
+
+Conditional formatting:
+- Column I: red fill if "Yes".
+- Column L: green gradient based on value (high values darker green).
+
+**2. Monthly_Variable**
+
+Columns:
+
+| Col | Name | Type | Description |
+|---|---|---|---|
+| A | month | Text | YYYY-MM |
+| B | partner_id | Text | |
+| C | total_outputs | Number | COUNTIFS from Output_Log |
+| D | total_variable | Number | SUMIFS from Output_Log column L |
+| E | base_pay | Number | From X2 (lookup) |
+| F | total_compensation | Number | E + D |
+| G | sign_off_status | Text | One of: `draft`, `partner_reviewed`, `founder_approved`, `paid` |
+| H | approval_date | Date | |
+| I | payment_date | Date | |
+
+Formulas:
+
+- **C (total_outputs):** `=COUNTIFS(Output_Log!B:B, ">="&DATE(YEAR_FROM_A2, MONTH_FROM_A2, 1), Output_Log!B:B, "<"&DATE(YEAR_FROM_A2, MONTH_FROM_A2+1, 1), Output_Log!C:C, B2)`
+- **D (total_variable):** `=SUMIFS(Output_Log!L:L, [same date and partner filters as C])`
+- **F:** `=D2+E2`
+
+**3. Partner_Dashboard**
+
+Auto-pivot summary per partner: rolling 30-day output count, rolling 30-day variable, year-to-date variable, current month forecast.
+
+Columns:
+
+| Col | Name | Type |
+|---|---|---|
+| A | partner_id | Text |
+| B | rolling_30d_outputs | Number (formula: COUNTIFS rolling) |
+| C | rolling_30d_variable | Number (SUMIFS rolling) |
+| D | ytd_variable | Number (SUMIFS year-to-date) |
+| E | current_month_forecast | Number (rolling-7d-avg × days remaining) |
+
+**4. README**
+
+Content:
+
+```
+# partner-output-ledger.xlsx
+
+PURPOSE
+Records daily output per partner. Source of truth for monthly variable pay (Routine R3) and weekly Business Review agenda (Routine R2).
+
+WRITTEN BY
+- Routine R1 (Daily Output Capture, daily 18:00) — appends rows to Output_Log.
+
+READ BY
+- Routine R2 (Weekly BR Prep, Friday 08:00) — surfaces notable outputs, blockers, KPI movements.
+- Routine R3 (Monthly Variable Calc, 1st of month 09:00) — locks previous month's Output_Log; populates Monthly_Variable.
+- Routine R4 (Quarterly Long-Tail Settlement) — references Output_Log for outputs eligible for long-tail entitlements.
+
+REVIEWED BY
+- Each partner: monthly, before Variable sign-off.
+- Founder: monthly, for Variable approval.
+- Friday Business Review: weekly, in the standing agenda.
+
+DO NOT
+- Edit Output_Log rows that have been included in a paid Monthly_Variable. Use the renegotiation flow per S3.
+- Bypass the rework_within_30d field. The YOLO model's correction discipline depends on it.
+- Aggregate values in ways that obscure individual partner attribution.
+```
+
+---
+
+## X2 — reward-species-declaration.xlsx
+
+**Purpose:** Per-partner contract for compensation structure. One file per partner OR one workbook with one sheet per partner — choose the latter for organisations <20 partners. Version-controlled in Brain.
+
+### Sheets (in order)
+
+**1. Partner_Profile**
+
+| Col | Name | Type | Description |
+|---|---|---|---|
+| A | partner_id | Text | Canonical ID |
+| B | full_name | Text | |
+| C | cohort | Text | One of: `full-time-partner`, `project-specialist`, `advisor` |
+| D | start_date | Date | |
+| E | jurisdiction | Text | Country / state — drives legal touchpoint reference |
+| F | base_currency | Text | EUR / USD / GBP — Gen 1 FIAT |
+| G | stablecoin_upgrade_pref | Yes/No | Activated in Gen 2 |
+| H | unit_fund_interest | Yes/No | Activated in Gen 2 |
+| I | two_worlds_self_id | Text | One of: `vibe-coder`, `agentic-engineer`, `non-code` |
+
+**2. Base_Variable_Split**
+
+| Col | Name | Type | Description |
+|---|---|---|---|
+| A | reward_species | Text | One of: `eat-what-you-kill`, `lockstep`, `hybrid` |
+| B | base_amount | Number | Annual base in base_currency |
+| C | variable_weight_personal | Number (0–1) | Weight on personal output for variable |
+| D | variable_weight_team | Number (0–1) | Weight on team contribution |
+| E | variable_weight_company | Number (0–1) | Weight on company outcomes |
+| F | output_multiplier | Number | Default 1.0; rare adjustments |
+| G | bonus_split_personal | Number | Annual bonus weights (~1/3 default) |
+| H | bonus_split_team | Number | (~1/3 default) |
+| I | bonus_split_company | Number | (~1/3 default) |
+
+Validation: D + E + F = 1.0; G + H + I = 1.0. Highlight red if violated.
+
+**3. Long_Tail_Schedule**
+
+| Col | Name | Type | Description |
+|---|---|---|---|
+| A | output_id | Text | Reference to X1 Output_Log |
+| B | description | Text | Brief description |
+| C | partner_share_pct | Number | Partner's % of long-tail entitlement (0–100) |
+| D | settlement_period | Text | `quarterly` (Gen 1 default) |
+| E | start_date | Date | |
+| F | end_date | Date | Or "ongoing" |
+| G | total_settled_to_date | Number | Cumulative |
+
+**4. Unit_Fund_Eligibility (locked in Gen 1)**
+
+Header: "This sheet activates in Generation 2. Fields locked / read-only."
+
+| Col | Name | Type |
+|---|---|---|
+| A | credit_balance | Number (locked) |
+| B | credits_earned_to_date | Number |
+| C | credits_consumed | Number |
+| D | units_held | Number |
+| E | last_subscription_date | Date |
+
+**5. Renegotiation_Log**
+
+| Col | Name | Type | Description |
+|---|---|---|---|
+| A | renegotiation_date | Date | |
+| B | initiated_by | Text | partner / founder |
+| C | reason | Text | |
+| D | fields_changed | Text | Comma-separated |
+| E | approved_by | Text | |
+| F | brain_link | Text | Wikilink to renegotiation summary in Brain |
+
+**6. README**
+
+Standard structure: Purpose, Updated by (manual at onboarding + at renegotiations), Reviewed by (quarterly partner check-in), Do Not (override without signed renegotiation; bypass jurisdiction field; alter Long_Tail_Schedule retroactively without renegotiation).
+
+---
+
+## X3 — business-review.xlsx
+
+**Purpose:** Friday Business Review working document. Generated by R2; reviewed in BR; outcomes committed to Brain.
+
+### Sheets
+
+**1. Weekly_Review**
+
+| Col | Name | Type |
+|---|---|---|
+| A | week_starting | Date |
+| B | notable_outputs | Text | Auto-generated from R2: top 5 outputs by value_envelope this week |
+| C | blockers | Text | From Slack / Brain blocker tags |
+| D | klarna_test_status | Text | Open tests + states |
+| E | kpi_movements | Text | Customer NPS, sales pipeline, treasury runway delta |
+| F | decisions_due | Text | Items requiring BR decision |
+| G | meeting_notes | Text | Filled during meeting |
+| H | brain_link | Text | Post-meeting committed summary |
+
+**2. Monthly_BR**
+
+KPI rollup. Columns: month, total_outputs, total_variable_paid, gross_margin, treasury_runway_months, customer_count_delta, partner_count, klarna_tests_proceeded, klarna_tests_held, ai_skill_roi.
+
+**3. Decisions_Log**
+
+| Col | Name | Type |
+|---|---|---|
+| A | decision_id | Text | `D-YYYY-NNN` |
+| B | date | Date | |
+| C | decision | Text | |
+| D | accountable | Text | partner_id from X2 |
+| E | consulted | Text | Comma-separated partner_ids |
+| F | brain_link | Text | |
+| G | reversal_threshold | Text | Optional; for reversible decisions |
+| H | review_date | Date | If applicable |
+
+**4. Blockers**
+
+| Col | Name | Type |
+|---|---|---|
+| A | blocker_id | Text |
+| B | raised_date | Date |
+| C | description | Text |
+| D | partner_blocked | Text |
+| E | owner | Text |
+| F | status | Text | open / resolved |
+| G | resolved_date | Date |
+| H | brain_link | Text |
+
+**5. Klarna_Test_Hits**
+
+Mirror sheet of X4 Decision_Log entries that hit during the BR week.
+
+**6. README** — standard.
+
+---
+
+## X4 — klarna-test.xlsx
+
+**Purpose:** Operational scoring of the signature epistemic check. Triggered by Routine R7 on `ai-replaces-human` PR labels; also used manually for non-PR decisions.
+
+### Sheets
+
+**1. Decision_Log**
+
+| Col | Name | Type |
+|---|---|---|
+| A | test_id | Text | `KT-YYYY-NNN` |
+| B | date | Date |
+| C | decision_summary | Text | One sentence |
+| D | trigger | Text | One of: `pr_label`, `manual`, `pre_rollout` |
+| E | trigger_ref | Text | PR URL, decision-meeting link, etc. |
+| F | scorer | Text | Partner_id |
+| G | non_beneficiary_reviewer | Text | Partner_id (Q7 requirement) |
+| H | total_score | Number | Auto from Klarna_Score sheet |
+| I | decision | Text | Auto: `proceed` if total ≥14, `hold` if <14 |
+| J | reversal_plan_ref | Text | Brain wikilink |
+| K | review_date_90d | Date | |
+| L | post_review_outcome | Text | After 90-day review |
+
+Formulas:
+- **H:** `=VLOOKUP(A2, Klarna_Score_Index, 2, FALSE)` — pulls total from Klarna_Score sheet by test_id.
+- **I:** `=IF(H2>=14, "PROCEED", "HOLD")`
+- **K:** `=B2+90`
+
+Conditional formatting:
+- Column I: green if "PROCEED", red if "HOLD".
+- Column K: red if past today and L is empty.
+
+**2. Klarna_Score**
+
+One row per test, ten columns for the ten questions, plus total.
+
+| Col | Name | Type |
+|---|---|---|
+| A | test_id | Text |
+| B–K | Q1–Q10 | Number (0, 1, or 2) |
+| L | total | Number | Formula: `=SUM(B2:K2)` |
+| M | evidence_links | Text | Comma-separated wikilinks per question that scored 0 or 1 |
+| N | scorer_signoff | Yes/No | |
+| O | non_beneficiary_signoff | Yes/No | |
+
+Validation: each Q column accepts only 0, 1, or 2.
+
+Conditional formatting:
+- Q columns: red fill if 0; yellow if 1; green if 2.
+- L (total): red if <14; green if ≥14.
+
+**3. Quality_Gates**
+
+For each "PROCEED" decision, the pre-committed quality gates that, if breached, trigger reversal.
+
+| Col | Name | Type |
+|---|---|---|
+| A | test_id | Text |
+| B | metric | Text | The exact metric (e.g., "first-contact resolution %") |
+| C | baseline | Number | Pre-rollout value |
+| D | threshold | Number | Reversal trigger value |
+| E | current | Number | Updated over time |
+| F | breach_check | Text | Formula: `=IF(E2<D2, "BREACHED", "OK")` |
+
+Conditional formatting: F red if "BREACHED".
+
+**4. Reversal_Plan**
+
+| Col | Name | Type |
+|---|---|---|
+| A | test_id | Text |
+| B | reversal_action | Text | What we do if threshold breached |
+| C | standby_partners | Text | Partner_ids retained on standby |
+| D | standby_contract_ref | Text | |
+| E | reversal_owner | Text | Who pulls the trigger |
+| F | max_reversal_time | Text | "2 weeks" target |
+
+**5. README** — standard, with explicit note that Klarna Test scoring discipline is non-negotiable; reference `governance/KLARNA-TEST.md`.
+
+---
+
+## X5 — metr-baseline.xlsx
+
+**Purpose:** Pre-rollout productivity baseline. Mandatory before any major Skill Pack rollout per Skill Pack S6.
+
+### Sheets
+
+**1. Baseline_Metrics**
+
+DORA + SPACE + DX Core 4 capture. Columns: metric_name, source, baseline_value, capture_date, capture_period_days, owner, notes.
+
+Pre-populated rows for the canonical metrics:
+- DORA: deployment_frequency, lead_time_for_changes, change_failure_rate, time_to_restore_service.
+- SPACE: satisfaction_score, performance_metric, activity_count, communication_quality, efficiency_index.
+- DX Core 4: deep_work_hours, cycle_time, dx_score, ai_assist_uptake.
+
+**2. Self_Report_vs_Actual**
+
+| Col | Name | Type |
+|---|---|---|
+| A | partner_id | Text |
+| B | period | Text | `pre-rollout` / `week-N-rollout` |
+| C | self_reported_productivity | Number (-100 to +100) | Partner's self-report |
+| D | measured_productivity | Number | From DORA delta |
+| E | gap | Number | Formula: `=C2-D2` |
+| F | gap_flag | Text | Formula: `=IF(ABS(E2)>15, "PERCEPTION_GAP", "OK")` |
+
+**3. Pilot_Cohort**
+
+| Col | Name | Type |
+|---|---|---|
+| A | cohort_id | Text |
+| B | partner_id | Text |
+| C | inclusion_criteria | Text | Why this partner |
+| D | start_date | Date |
+| E | end_date | Date |
+| F | role | Text | participant / control / champion-candidate |
+
+**4. Adoption_Curve**
+
+Weekly snapshot of pilot adoption. Columns: week_number, active_users_pct, completion_rate, satisfaction_score.
+
+**5. README** — standard, with explicit note that without baseline, perception gap cannot be detected.
+
+---
+
+## X6 — agent-skill-roi.xlsx
+
+**Purpose:** Track per-Skill and per-agent costs vs. outputs. The "human-agent ratio" (Microsoft Frontier Firm metric) materialises in financial terms.
+
+### Sheets
+
+**1. Agent_Costs**
+
+| Col | Name | Type |
+|---|---|---|
+| A | date | Date |
+| B | agent_or_skill | Text | E.g., `claude-code`, `compensation-attribution-skill` |
+| C | input_tokens | Number |
+| D | output_tokens | Number |
+| E | api_calls | Number |
+| F | cost_usd | Number | Formula combining tokens × rate |
+| G | use_case | Text | Which Skill Pack or workflow |
+
+**2. Skill_Outputs**
+
+| Col | Name | Type |
+|---|---|---|
+| A | date | Date |
+| B | skill_pack | Text |
+| C | outputs_count | Number |
+| D | hours_saved_estimated | Number | Per-output estimate × count |
+| E | partner_value_uplift | Number | Variable pay attributable to Skill |
+
+**3. Human_Agent_Ratio**
+
+Per-domain ratio. Columns: domain (e.g., engineering, sales, marketing), human_partner_count, ai_agent_count, agent_human_ratio (formula: AI/human), monthly_outputs_human, monthly_outputs_agent_assisted, ratio_trend (vs. 30 days ago).
+
+**4. ROI_Calc**
+
+Per-Skill ROI: cost_to_run vs. value_produced. Columns: skill_pack, monthly_cost, monthly_outputs_value, roi_multiple (formula: value/cost), break_even_threshold.
+
+**5. README** — standard.
+
+---
+
+## X7 — eu-ai-act-mapping.xlsx
+
+**Purpose:** Compliance register for EU-operating organisations per `governance/EU-AI-ACT.md`. Mandatory for EU adopters from 2 August 2026.
+
+### Sheets
+
+**1. Use_Cases**
+
+Every AI system used in the org. Columns: use_case_id, name, owner_partner_id, brief_description, deployment_status (planned/pilot/production), affected_population, brain_link.
+
+**2. Annex_III_Risk_Mapping**
+
+For each use case: annex_iii_category (or "none"), rationale, conservative_baseline_tier (high/limited/minimal), counsel_review_status, counsel_review_date.
+
+**3. Article_Obligations**
+
+For each high-risk use case: use_case_id, article_9_status (compliant / partial / not-started), article_12_status, article_13_status, article_14_status, gdpr_article_22_status, evidence_refs.
+
+**4. Evidence_Trail**
+
+Per-obligation evidence pointers. Columns: use_case_id, article, requirement, evidence_type (skill_pack_ref / routine_id / brain_page / risk_register_row), evidence_link, last_verified_date.
+
+**5. Audit_Log_Index**
+
+Pointers into the daily R6 audit log markdown files. Columns: date, audit_log_path, entries_count, anomalies_flagged.
+
+**6. README** — standard, with explicit note that this document is methodology not legal advice; counsel is mandatory.
+
+---
+
+## X8 — treasury-runway.xlsx (OPTIONAL — only orgs adopting Unit Fund)
+
+**Purpose:** Treasury reserve discipline per the YOLO model. The company must stand ready to repurchase units at the published bid; this requires reserves; reserves require runway visibility.
+
+### Sheets
+
+**1. Cash_Position**
+
+| Col | Name | Type |
+|---|---|---|
+| A | date | Date |
+| B | account_label | Text | E.g., "Operating EUR", "Reserve EUR", "Stablecoin USDC" |
+| C | balance | Number |
+| D | currency | Text |
+| E | balance_eur_equivalent | Number | Formula or external rate |
+
+**2. Obligations**
+
+Upcoming committed payments. Columns: due_date, description, amount, currency, recurring (yes/no), category (payroll / variable / long-tail / suppliers / other).
+
+**3. Runway_Calc**
+
+| Col | Name | Type |
+|---|---|---|
+| A | snapshot_date | Date |
+| B | total_cash_eur | Number | SUM Cash_Position |
+| C | monthly_burn_average | Number | Rolling 3-month average from Obligations |
+| D | runway_months | Number | Formula: `=B2/C2` |
+| E | unit_fund_outstanding_units | Number | |
+| F | implied_redemption_value | Number | units × current_bid |
+| G | reserve_coverage_ratio | Number | Formula: `=B2/F2` |
+
+Conditional formatting: D red if <6 months; G red if <1.0.
+
+**4. Reserve_Discipline**
+
+Policy parameters. Columns: parameter, value, last_review_date, owner. Examples: minimum_reserve_months (default 9), unit_fund_redemption_pct_per_quarter_max (default 5%), bid_update_cadence (default monthly).
+
+**5. README** — standard, with explicit note that this file is optional in v1.0; mandatory if Unit Fund (Gen 2) is opened.
+
+---
+
+## X9 — oot-readiness.xlsx
+
+**Purpose:** 20-question pre-adoption diagnostic. Run once before adopting ØØT. Score below 60% suggests addressing gaps before adoption.
+
+### Sheets
+
+**1. Questions**
+
+| Col | Name | Type |
+|---|---|---|
+| A | question_id | Text | `Q01` to `Q20` |
+| B | dimension | Text | One of: `People`, `Tech`, `Culture`, `Risk` |
+| C | question | Text | The question |
+| D | scoring_guidance | Text | What 0/1/2 means for this question |
+| E | response | Number | 0, 1, or 2 |
+| F | evidence | Text | |
+
+The 20 questions, distributed 5 per dimension:
+
+**People (Q01–Q05):**
+1. Are 80%+ of intended partners willing to operate without fixed hours?
+2. Is there written buy-in for output-based variable compensation?
+3. Are reward-species expectations aligned across the founding partners?
+4. Is the founder willing to stop tracking time and headcount as primary metrics?
+5. Are dispute-resolution mechanisms culturally acceptable?
+
+**Tech (Q06–Q10):**
+6. Is Claude Pro / Max budget approved (cloud track) OR is there an always-on machine plan (privacy track)?
+7. Is Bitwarden + Trezor procurement approved?
+8. Is the Curator install path clear for at least one partner?
+9. Are GitHub + Drive (cloud) or 4thtech + PollinationX (privacy) workflows acceptable to all partners?
+10. Has the Skill Pack ecosystem been demoed to all founding partners?
+
+**Culture (Q11–Q15):**
+11. Is there willingness to run a METR baseline before any Skill rollout?
+12. Is the Klarna Test framing accepted as the framework's signature discipline?
+13. Are the founding partners comfortable with public commitment to long-tail entitlements?
+14. Is the Friday Business Review structure compatible with existing rhythms?
+15. Is the founder willing to defend ØØT-native decisions publicly in 2 years?
+
+**Risk (Q16–Q20):**
+16. Has local counsel been identified and engaged for the eleven legal touchpoints?
+17. Is the jurisdiction's worker classification compatible with partner-not-employee?
+18. Are EU AI Act obligations understood (if EU-operating)?
+19. Is the secrets policy (Bitwarden + Trezor) implementable culturally?
+20. Is there budget for Curator pay-as-you-go (~€10/month/heavy-user) and Bitwarden/Trezor procurement?
+
+**2. Scoring**
+
+| Col | Name | Type |
+|---|---|---|
+| A | dimension | Text |
+| B | dimension_score | Number | SUM of Q in this dimension |
+| C | dimension_max | Number | 10 (5 questions × 2) |
+| D | dimension_pct | Number | `=B2/C2` |
+
+Plus one row for total: total_score, total_max=40, total_pct.
+
+Conditional formatting: total_pct cell — red <60%, yellow 60–75%, green ≥75%.
+
+**3. Recommendations**
+
+For each dimension scoring <60%, auto-generated recommendations referencing the relevant Skill Packs and governance docs.
+
+**4. README** — standard, with explicit note that this is a diagnostic, not a gate; founders may proceed below 60% with documented mitigation.
+
+---
+
+## Generation conventions
+
+xlsx skill should:
+
+1. Read this SPEC end-to-end before generating any file.
+2. Generate one workbook at a time; verify openable and formula-evaluating before moving to next.
+3. Where formulas reference cross-workbook data (e.g., X1 references X2 partner_multiplier), prefer the embedded named-range pattern: each workbook contains its own copy of the lookup table, refreshed manually or via Routine.
+4. Add a hidden `_metadata` sheet to each workbook with: spec_version, generation_date, oot_version (1.0.0), file_id (X1–X9). Used by the Phase 8 validator.
+5. Lock cells that should not be edited by humans (e.g., computed formula cells; locked sheets like X2 Unit_Fund_Eligibility in Gen 1).
+
+After generation, verify each file:
+- Opens in Microsoft Excel and Google Sheets without errors.
+- All named ranges resolve.
+- All formulas evaluate on the seeded sample data without `#REF!`, `#NAME?`, `#VALUE!` errors.
+- Conditional formatting renders correctly.
+- README sheet is the last sheet in each workbook.
