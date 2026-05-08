@@ -323,6 +323,28 @@ For the last item especially: the answer is "your 4thtech identity is gone; crea
 
 ---
 
+### `docs/ECOSYSTEM.md`
+
+**Audience:** Non-technical founder picking up the framework for the first time.
+
+**Purpose:** Plain-language tour of every external tool the framework depends on, in the order a new founder will meet them. Mirrors `research/external-resources.md` but written for someone who has not yet decided which tools to install.
+
+**Required sections:**
+
+1. **What this is** — orientation paragraph: ØØT runs on a stack of well-known external tools; this doc shows you which, in what order, with which quickstart link.
+2. **The decision tree** — a small flowchart: cloud vs. privacy track → which tools matter for you. Same as the QUICKSTART decision but with a wider set of tools.
+3. **Cloud-track ecosystem** — for each tool: 2-3 sentence overview, why it matters, the "first 5 minutes" link to the tool's own quickstart, the relevant ØØT skill pack and Tier-2 walkthrough.
+4. **Privacy-track ecosystem** — same shape; Trezor, 4thtech, PollinationX, LM Studio, Excel MCP, Desktop Commander, GitHub MCP get the prominent treatment.
+5. **Both-track tools** — Bitwarden, GitHub, Yubikey, the Curator.
+6. **Reading order** — for a founder who wants to understand the ecosystem before installing anything: read this doc, then the relevant Tier-2 wikis (the Curator README, 4thtech's wiki, PollinationX's wiki, Anthropic's docs), then the Tier-1 quickstart, then start installing.
+7. **A note on costs** — order-of-magnitude monthly costs for each track, with the framework's recommended budget ranges (cloud: ~€100-€200/month for a 10-partner firm; privacy: ~€600 hardware + ~€10-80/month PollinationX; both: ~€80/Trezor per partner one-time).
+
+**Length:** ~3,000 words. Heavy on links to the external wikis (the Curator's, 4thtech's, PollinationX's, LM Studio's, Anthropic's, etc.). The doc *intentionally* defers to those external resources rather than duplicating them — the doc's job is orientation, not training.
+
+**References:** `research/external-resources.md` (the comprehensive index this doc derives from), Skill Pack S12 (privacy track integration), `governance/SECRETS-POLICY.md` (Bitwarden + Trezor + Yubikey).
+
+---
+
 ## Generation order
 
 Recommended order for Claude Code:

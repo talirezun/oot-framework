@@ -50,7 +50,7 @@ The human contributes spec, taste, judgement, and the parts of the work that dep
 - **Harvard Business School, *The Cybernetic Teammate* (Dell'Acqua et al., Working Paper 25-043, 2025).** A controlled field experiment with Procter & Gamble (n=776) showing that **individuals working with AI matched the performance of two-person teams without AI**, that **teams with AI produced more top-tier solutions**, and that AI broke down functional silos between R&D and commercial roles. The effect persists after controlling for individual skill.
 - **DORA Report 2025.** Teams using AI assistance show measurable lifts in deployment frequency and lead time, but only when paired with mature CI/CD, code review, and observability practices. Without those, AI assistance accelerates the production of bugs.
 - **Karpathy, *Software 3.0* (Sequoia AI Ascent 2026).** The most articulate framing of the new division of labour: spec is human, implementation is AI, review is human. "Agents are like intern entities" — they need taste, aesthetics, and judgement from humans.
-- **HBS Cybernetic Teammate** + **MIT NANDA** + **DORA 2025** + **Microsoft Frontier Firm 2025** all converge on the same finding: the highest-performing teams in 2025 are neither the AI-skeptical nor the AI-maximalist; they are the ones who redesigned workflows around the centaur pattern.
+- **HBS Cybernetic Teammate** + **MIT NANDA** + **DORA 2025** + **Microsoft Frontier Firm 2025** all converge on the same finding: across 2025–2026, the highest-performing teams are neither the AI-sceptical nor the AI-maximalist; they are the ones who redesigned workflows around the centaur pattern.
 
 **Domain-specific augmentation patterns the framework's Skill Packs encode:**
 
@@ -171,7 +171,7 @@ This is a deliberate architectural choice. The history of organisational softwar
 
 **The "two corners" thesis ØØT occupies:**
 
-The 2025 framework landscape has four corners: (1) Beyond Budgeting / ROWE compensation primitives; (2) Anthropic Skills + MCP + AGENTS.md technical primitives; (3) explicit resistance / change-management playbooks; (4) Collecting Brain knowledge layer with attribution. **No competitor occupies all four corners.** ØØT does, by construction.
+The 2025–2026 framework landscape has four corners: (1) Beyond Budgeting / ROWE compensation primitives; (2) Anthropic Skills + MCP + AGENTS.md technical primitives; (3) explicit resistance / change-management playbooks; (4) Collecting Brain knowledge layer with attribution. **No competitor occupies all four corners.** ØØT does, by construction.
 
 **Honesty clause:** Composability is the cleanest thesis to assert and the hardest to prove. It is proven by adoption: when other frameworks borrow our Skill Pack format, when third parties write Routines that run against our Excel schemas, when a partner can leave the framework with their Brain intact and unmodified. ØØT is designed to be left without penalty. The exit door is not vendor lock-in's antonym; it is its disproof.
 

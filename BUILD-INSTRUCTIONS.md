@@ -41,6 +41,11 @@ oot-framework/
 ├── CODE_OF_CONDUCT.md                (Phase 1 — generate)
 ├── LICENSE                           (Phase 1 — Apache 2.0)
 ├── LICENSE-DOCS                      (Phase 1 — CC BY-SA 4.0)
+├── research/                         (foundation kit — research index + papers + articles)
+│   ├── README.md                     (foundation kit — research index)
+│   ├── external-resources.md         (foundation kit — curated ecosystem index)
+│   ├── articles/                     (Phase 7 — populate stub articles; future contributors add)
+│   └── papers/                       (Phase 7 — markdown summaries of cited papers)
 ├── governance/
 │   ├── KLARNA-TEST.md                (foundation kit)
 │   ├── EU-AI-ACT.md                  (foundation kit)
@@ -106,6 +111,9 @@ oot-framework/
 │   └── privacy/                      (Phase 6 — 8 .md files)
 ├── docs/
 │   ├── SPEC.md                       (foundation kit)
+│   ├── ECOSYSTEM.md                  (Phase 7 — generate the user-facing ecosystem guide; mirrors research/external-resources.md but written for non-technical adopters)
+│   ├── internal/
+│   │   └── MANIFEST.md               (foundation kit — build provenance, internal scaffolding doc)
 │   ├── 00-quickstart-cloud.md        (Phase 7 — generate from SPEC)
 │   ├── 00-quickstart-privacy.md      (Phase 7)
 │   ├── 01-installing-the-curator.md  (Phase 7)
@@ -138,14 +146,15 @@ oot-framework/
 ```
 
 2. Generate `AGENTS.md` — cross-vendor orientation. Should mirror `CLAUDE.md` but be agent-agnostic. ~500 words.
-3. Generate `CONTRIBUTING.md` — how to contribute. Reference Apache 2.0 / CC BY-SA 4.0 split. List initiator + founding contributors per `README.md`. ~500 words.
+3. Generate `CONTRIBUTING.md` — how to contribute. Reference Apache 2.0 / CC BY-SA 4.0 split. List initiator + founding contributors per `README.md`. ~500 words. Cross-link to `research/README.md` for the research-contribution path.
 4. Generate `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1, adapted. ~400 words.
 5. Generate `LICENSE` — Apache 2.0 boilerplate.
 6. Generate `LICENSE-DOCS` — CC BY-SA 4.0 boilerplate.
+7. **Update `README.md` to function as a navigation hub.** The current README focuses on the framework's intellectual content; Phase 1 adds a prominent **"Read in this order"** section near the top, a **"Repository map"** section explaining what lives in each top-level folder, and a **"External ecosystem"** section linking to the major external dependencies (the Curator, 4thtech, PollinationX, Anthropic, the Linux Foundation AAIF). Reference `research/external-resources.md` for the comprehensive index. Length increase: ~500 words. The READ-IN-THIS-ORDER ladder must include `research/README.md` as a tier-2 entry for readers wanting to go deeper.
 
-**Acceptance criteria:** Directory tree matches the spec. All 6 generated files committed. Foundation kit files unmodified.
+**Acceptance criteria:** Directory tree matches the spec. All 6 generated files committed. README navigation hub additions live. Foundation kit files unmodified.
 
-**Commit message:** `phase-1: scaffold repository structure and licensing`
+**Commit message:** `phase-1: scaffold repository structure, licensing, README navigation hub`
 
 ---
 
@@ -271,7 +280,7 @@ oot-framework/
 **Tasks:**
 
 1. Read `docs/SPEC.md` end-to-end. The spec specifies, per doc: audience, purpose, structure, required sections, what to reference from elsewhere in the repo. **Note especially the "Documentation philosophy — write for the non-technical partner first" section** — every Tier-1 doc that involves a UI tool follows the three-layer pattern (orientation → walkthrough → pitfalls), and every Tier-2 walkthrough is screenshot-rich and assumes no shell-command literacy.
-2. **Tier 1 — generate the 12 docs in `docs/`:** `00-quickstart-cloud.md`, `00-quickstart-privacy.md`, `01-installing-the-curator.md`, `02-installing-routines.md`, `02-installing-routines-privacy.md`, `03-onboarding-a-partner.md`, `04-running-the-business-review.md`, `05-using-the-klarna-test.md`, `06-when-to-call-a-lawyer.md`, `07-troubleshooting.md`, `08-faq.md`, `glossary.md`.
+2. **Tier 1 — generate the 12 docs in `docs/`:** `00-quickstart-cloud.md`, `00-quickstart-privacy.md`, `01-installing-the-curator.md`, `02-installing-routines.md`, `02-installing-routines-privacy.md`, `03-onboarding-a-partner.md`, `04-running-the-business-review.md`, `05-using-the-klarna-test.md`, `06-when-to-call-a-lawyer.md`, `07-troubleshooting.md`, `08-faq.md`, `glossary.md`. **Plus `ECOSYSTEM.md`** — the user-facing version of `research/external-resources.md`. Where the research index is comprehensive and citation-style, ECOSYSTEM.md is plain-language and oriented toward "I'm a non-technical founder; what should I install, in what order, and where do I read about it?". Length: ~3,000 words. Cross-links every external tool to the relevant Skill Pack and quickstart step.
 3. **Tier 2 — generate the 6 walkthroughs in `docs/walkthroughs/`:** `W1-claude-desktop-tour.md`, `W2-curator-daily-use.md`, `W3-excel-monthly-variable-pay.md`, `W4-running-the-friday-business-review.md`, `W5-running-a-klarna-test.md`, `W6-monitoring-routines-dashboard.md`.
 4. Every doc with UI steps shows both Microsoft Excel and Google Sheets variants where they diverge, and both cloud-track and privacy-track variants where the underlying tool differs.
 5. Every screenshot placeholder is in the form `![Description](images/<doc-id>-<step-number>.png)` with descriptive alt-text and an italic caption underneath that tells the reader what to look for. The actual image binaries are added in a follow-up PR (one PR per doc).
@@ -301,21 +310,73 @@ oot-framework/
 
 ---
 
-## Phase 9 — Installers and reference org examples
+## Phase 9 — Installers (terminal wizard) + reference org examples
 
-**Goal:** Generate the one-command quickstart installers for both tracks, plus three reference org examples.
+**Goal:** Ship a unified terminal wizard (`installer/wizard.py`) that guides a founder end-to-end through cloud or privacy track setup, plus three reference org examples generated per `examples/SPEC.md`.
 
-**Tasks:**
+### 9.1 Installer wizard (Python, OpenClaw-style)
 
-1. **Cloud installer (`installer/cloud/install.sh`):** Bash script that prompts the user for their Anthropic API key, GitHub token, Slack webhook, Google credentials path; clones the framework; sets up Bitwarden integration; configures the Curator; installs the 4 immediately-active Routines (R1, R2, R5, R6).
-2. **Privacy installer (`installer/privacy/install.sh`):** Bash script that prompts for Trezor wallet address, GitHub token, PollinationX storage capacity NFT, 4thtech wallet; sets up LM Studio + Qwen 3; configures local cron jobs for the 4 immediately-active Routines.
-3. **Reference org `examples/small-org/`:** A 3-partner org. Skeleton Brain with 10 sample documents. Reward Species Declarations for each partner. One filled-in `partner-output-ledger.xlsx` showing two months of operation.
-4. **Reference org `examples/medium-org/`:** A 12-partner org. Cohort mix (5 full-time, 4 project specialists, 3 advisors). Filled-in business review sheets showing one full quarter.
-5. **Reference org `examples/regulated-eu-org/`:** A 6-partner EU-based org with the EU AI Act mapping fully populated, daily audit trail samples, a worked Klarna Test scoring example.
+**The wizard replaces a stack of separate `install.sh` scripts** with a single guided experience. It is the framework's primary onboarding mechanism for non-technical founders.
 
-**Acceptance criteria:** Installers run end-to-end on a fresh machine. Reference orgs are coherent and reviewed for realism.
+**Implementation:**
 
-**Commit message:** `phase-9: cloud and privacy installers, reference org examples`
+- Language: **Python ≥3.13** (matches `CLAUDE.md`'s coding convention).
+- Dependencies: `questionary` for interactive prompts; `rich` for formatted output; `httpx` for API calls; standard library otherwise. Single `pyproject.toml` managed by `uv`.
+- Entry point: `installer/wizard.py` (also exposed as `installer/wizard.sh` shim that bootstraps Python via `uv` if not installed).
+- Cross-platform: macOS, Linux, Windows (via WSL or PowerShell shim).
+
+**Wizard flow (12 steps; resumable — state saved to `~/.oot/wizard-state.yaml`):**
+
+1. **Welcome + framework overview.** 60-second pitch; offer to read MANIFESTO.md inline.
+2. **Track selection.** Cloud vs. privacy. Branching point for the rest of the wizard.
+3. **Firm profile.** Name, partner count estimate, jurisdictions (ISO codes), EU AI Act exposure (Yes/No → branches Phase 9.6).
+4. **Pre-requisite check.** Detect installed tools (`git`, Python, `bw`, `gh`, `curl`, `jq`, plus track-specific: LM Studio, `pollinationx`, `4thtech`). For each missing tool, offer to install (auto-suggest the platform-appropriate command, ask consent before running).
+5. **Hardware (privacy track only).** Confirm always-on machine; pre-flight check for RAM, disk, OS encryption status.
+6. **Secrets vault.** Bitwarden vs. 1Password; bootstrap the org account; create the canonical collections (`founders`, `all-partners`, `specialists`, `advisors`, `shared-services`); install the CLI.
+7. **GitHub setup.** Verify org exists; create the firm Brain repo; configure the 5 repo-level setup pre-requisites from S4 (status check, branch protection, signed commits, audit-log reviewer rule, auto-labeller).
+8. **Track-specific tools.** Cloud: Anthropic account confirmation, Google Workspace / Slack connectors. Privacy: LM Studio + model download (Qwen 3 14B default), 4thtech firm domain provisioning, PollinationX storage NFT acquisition (with cost estimate shown), Excel MCP + Desktop Commander + GitHub MCP install.
+9. **The Curator install.** Walk through the desktop app install + MyCuratorMCP wizard. Run the self-test. Create the firm's first Curator domain (`firm`).
+10. **Routine configuration.** Install the 4 Day-1 Routines (R1, R2, R5, R6) — cloud or privacy variant. Defer R3, R4, R7, R8 with clear "we'll come back when you have your first partner".
+11. **Klarna gate setup.** Walk the founder through the `oot/klarna-test` workflow + the `ai-replaces-human` auto-labeller; require active confirmation that branch protection is in place before allowing wizard completion.
+12. **Smoke test + summary.** Run the framework's self-test suite (lint Brain ontology, verify Routines fire on demand, confirm signed-commit pipeline). Print a summary card with "what's set up, what's deferred, what to read next" and write the same to `firm/setup-log.md` in the firm Brain.
+
+**Wizard discipline:**
+- Every prompt explains *why* it's asking. The wizard is also a teaching tool.
+- Every consequential action (install software, modify config, push to GitHub) requires explicit consent.
+- The wizard is **idempotent** — re-running with `--resume` skips completed steps.
+- A `--dry-run` flag walks the founder through the questions without taking actions, producing a config preview.
+- All credentials retrieved live (via `bw get item`); never stored in the wizard's state file.
+
+**Reference for inspiration:** the OpenClaw installer (https://github.com/microsoft/openclaw or analogue) — clean, opinionated, walks the user through complex setup without overwhelming them. The wizard is **not** trying to be that-fancy; it's trying to be that-clear.
+
+### 9.2 Companion artefacts
+
+- `installer/wizard.py` — main entry point.
+- `installer/wizard/` — module directory with one Python file per step.
+- `installer/wizard.sh` — bootstrap shim that installs `uv` + Python if missing.
+- `installer/cloud/install.sh` — minimal fallback for users who refuse the wizard. Documents what it does *not* do compared to the wizard (essentially: skips the teaching).
+- `installer/privacy/install.sh` — same, privacy variant.
+- `installer/README.md` — explains which installer to use when.
+
+### 9.3 Three reference org examples
+
+Per `examples/SPEC.md`:
+
+1. **`examples/small-org/`** — 3-partner Solunar Studio, full operational data per the spec.
+2. **`examples/medium-org/`** — 12-partner Brda Cooperative, full quarter.
+3. **`examples/regulated-eu-org/`** — 6-partner AdriaLex AI, EU AI Act high-risk mapping, mid-migration to privacy track.
+
+Each example must include: filled `firm/` Brain pages, populated Excel files (X1–X9), the awkward edges (perception gap, dispute, Klarna held), and a `README.md` explaining what the example demonstrates. The validator from Phase 8 must pass against each example.
+
+### Acceptance criteria
+
+- The wizard runs end-to-end on a fresh macOS, Linux, and Windows machine (or WSL).
+- The `--dry-run` mode produces a coherent config preview without side effects.
+- The `--resume` mode picks up after any step completes.
+- The 3 reference orgs are coherent (every wikilink resolves; every Excel formula evaluates; the awkward edges are present).
+- The fallback `install.sh` scripts work for users who refuse the wizard.
+
+**Commit message:** `phase-9: installer wizard (terminal), fallback install scripts, three reference org examples`
 
 ---
 
