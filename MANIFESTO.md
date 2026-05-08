@@ -20,7 +20,7 @@ This is not a slogan. It is the most consistent finding in the 2025 enterprise-A
 
 - **MIT NANDA, *The GenAI Divide* (August 2025).** 95% of enterprise GenAI pilots produce no measurable P&L impact. Only 5% achieve rapid revenue acceleration. The root cause of failure is a *learning gap* — organisational and process-level, not model quality. Externally purchased or partnered tools succeed roughly twice as often as internal builds (~67% vs. ~33%). 90% of workers use shadow AI tools daily; only 40% of companies have official LLM subscriptions.
 
-- **METR, *RCT on AI tools and developer productivity* (2025).** Senior open-source developers using AI assistance were measured 19% slower on real tasks while self-reporting they were 20% faster. The perception gap is a 39-point swing. This is not a one-off; it is a structural feature of how humans assess their own AI-assisted work.
+- **METR, *RCT on AI tools and developer productivity* (July 2025).** In a controlled study of experienced open-source developers using **early-2025 AI coding tools** on real OSS tasks, participants were measured **19% slower** while self-reporting they were **20% faster** — a 39-point perception swing. METR's February 2026 follow-up shows similar but wider-CI results; the structural finding (humans cannot reliably self-assess AI-assisted productivity without an external baseline) holds across both studies.
 
 - **Microsoft, *Work Trend Index 2025: The Frontier Firm*.** 82% of leaders call 2025 "pivotal" for rethinking strategy and operations. 81% expect agents to be moderately-to-extensively integrated within 12–18 months. Only 46% are actually automating workflows with agents today. The gap between expectation and execution is the resistance problem in numerical form.
 
@@ -47,7 +47,7 @@ The human contributes spec, taste, judgement, and the parts of the work that dep
 
 **The evidence:**
 
-- **Harvard Business School, *The Cybernetic Teammate* (Dell'Acqua et al., Working Paper 25-043, 2025).** A controlled study showing AI-augmented teams produce higher-quality outputs faster than either AI-alone or human-alone teams, across professional knowledge-work tasks. The effect persists after controlling for individual skill.
+- **Harvard Business School, *The Cybernetic Teammate* (Dell'Acqua et al., Working Paper 25-043, 2025).** A controlled field experiment with Procter & Gamble (n=776) showing that **individuals working with AI matched the performance of two-person teams without AI**, that **teams with AI produced more top-tier solutions**, and that AI broke down functional silos between R&D and commercial roles. The effect persists after controlling for individual skill.
 - **DORA Report 2025.** Teams using AI assistance show measurable lifts in deployment frequency and lead time, but only when paired with mature CI/CD, code review, and observability practices. Without those, AI assistance accelerates the production of bugs.
 - **Karpathy, *Software 3.0* (Sequoia AI Ascent 2026).** The most articulate framing of the new division of labour: spec is human, implementation is AI, review is human. "Agents are like intern entities" — they need taste, aesthetics, and judgement from humans.
 - **HBS Cybernetic Teammate** + **MIT NANDA** + **DORA 2025** + **Microsoft Frontier Firm 2025** all converge on the same finding: the highest-performing teams in 2025 are neither the AI-skeptical nor the AI-maximalist; they are the ones who redesigned workflows around the centaur pattern.
@@ -56,7 +56,7 @@ The human contributes spec, taste, judgement, and the parts of the work that dep
 
 - **Software development.** Karpathy's pattern: spec / test / review human, implementation AI. Tools: Claude Code, Cursor, Augment Code, Codex CLI, GitHub Copilot. Adoption: 75% of professional developers; 41–46% of code AI-written. Skill Pack: Code & QA.
 - **Legal.** Document review, due diligence, contract drafting AI; lawyer = judgement + strategy. Reference platform: Harvey ($11B valuation, $190M ARR, 700+ firms, 42% of AmLaw 100). Skill Pack: Legal Operations (Tier 2 in v1.0).
-- **Marketing.** Content generation, segmentation, A/B at scale. 73% of Frontier Firm employees use AI for marketing vs. 55% non-Frontier. Skill Pack: Marketing (Tier 2 in v1.0).
+- **Marketing.** Content generation, segmentation, A/B at scale. 73% of Frontier Firm leaders/workers report using AI for marketing (Microsoft Work Trend Index 2025). Skill Pack: Marketing (Tier 2 in v1.0).
 - **Customer service.** AI for routine, human escalation. The Klarna lesson: prove the quality bar before reducing headcount. Reference platforms: Sierra, Decagon, Beam.
 - **Sales.** Lead enrichment, outreach, deal-room support. The Lumina AI widget pattern (RAG chatbot as front-door) is the framework's reference.
 
@@ -80,10 +80,10 @@ Weitzman (1984, profit-sharing macroeconomics) → Levin & Tadelis (Stanford, *P
 
 **The evidence each layer adds:**
 
-- **ROWE** reports ~35% productivity gains and ~90% reduction in voluntary turnover in adopting teams (Best Buy, Gap, IBM case studies; Kelly, Moen et al. research base). Cortisol studies show physiological stress reduction.
-- **Performance-based pay** (EPI / WorldatWork data) shows 10–15% output gains and ~22% engagement lifts vs. flat-salary structures.
+- **ROWE** reports up to ~35% productivity gains in adopting departments and **52–90% reductions in voluntary turnover** depending on department, in Best Buy, Gap, and IBM case studies (Kelly, Moen et al. research base). Cortisol studies show physiological stress reduction.
+- **Performance-based pay** (WorldatWork research): **88% of organisations report it improves engagement; 65% report performance gains in year one**. IZA World of Labor synthesis finds collective performance-related-pay schemes produce roughly **5–15% productivity gains** depending on scheme design. Specific firm case studies (e.g. Salesforce) report 15–35% productivity lifts.
 - **Levin & Tadelis** show partnership structures emerge as optimal where production is human-capital-intensive — a near-perfect match for an AI-orchestration era.
-- **The gig economy is now structural, not marginal.** ~50% of the US workforce participates in some form of gig work by 2025. 5.6M independent workers earn >$100k/year (up 87% from 3M in 2020 — MBO Partners). 36% of US workers willing to receive crypto pay; 60% of freelancers report ≥1 paycheck in digital assets.
+- **The gig economy is now structural, not marginal.** Roughly **36% of US workers (~70–76M people)** participate in independent / gig work in 2025 (Upwork / MBO Partners), with the **>50% threshold projected by 2027**. **5.6M independent workers earn >$100k/year**, up 87% from 3M in 2020 (MBO Partners *State of Independence* 2025). On crypto rails: **Triple-A reports 56% of crypto-owning freelancers accept crypto for work**; **Ruul reports ~30% of its freelancer payouts now settle in digital dollars**. The direction is unambiguous; the rails are now production-grade.
 - **Crypto-rail compensation infrastructure is production-grade.** Stablecoin payroll settles in seconds for fractions of a cent vs. 1.5–5% all-in cost and multi-day timelines for SWIFT. Rise (Circle partner) has processed >$1B in payroll volume; >50% of worker withdrawals are in stablecoins. EU MiCA and the US GENIUS Act now provide regulatory clarity.
 
 **The seven-layer compensation picture (the YOLO model):**

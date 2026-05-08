@@ -14,7 +14,7 @@ The EU AI Act applies in stages:
 - **2 February 2025.** Prohibitions on unacceptable-risk AI systems and AI literacy obligations apply.
 - **2 August 2025.** Obligations for general-purpose AI (GPAI) models apply.
 - **2 August 2026.** Most remaining obligations apply, including high-risk AI system obligations under Annex III.
-- **2 August 2027.** Full GPAI back-compatibility obligations apply.
+- **2 August 2027.** Full applicability across all risk tiers; pre-existing (legacy) GPAI models that were placed on the market before 2 August 2025 must be brought into compliance by this date.
 
 ØØT v1.0 ships in 2026 — meaning EU-operating adopters are within one year of the most consequential deadline. The Governance & Compliance Skill Pack and `eu-ai-act-mapping.xlsx` exist primarily to prepare for this.
 
@@ -141,7 +141,7 @@ The framework's variable pay calculations and Klarna Test gating both have poten
 
 ## Italian Law 132/2025 — leading indicator
 
-Italian Law 132/2025, in force from October 2025, created criminal AI offences with fines up to ~€775,000 and corporate disqualification for certain violations. While Italian law applies only in Italy, the framework's authors view it as a leading indicator of EU-wide enforcement seriousness — particularly for organisations operating in multiple EU member states.
+Italian Law 132/2025 (enacted 23 September 2025; in force from 10 October 2025) is the first national AI law in the EU, complementing the EU AI Act. It introduces criminal AI offences — including a new Art. 612-quater of the Italian Criminal Code (1–5 years' imprisonment for harm caused via AI-generated deepfakes) — and provides aggravating circumstances for AI-assisted crimes. Specific administrative-penalty amounts are delegated to forthcoming legislative decrees and were still pending publication as of foundation-kit writing; orgs operating in Italy face the EU AI Act's separate ceiling (€35M / 7% of worldwide turnover for the most serious infringements) in addition to whatever Italy's decrees specify. The framework's authors view this as a leading indicator of EU-wide enforcement seriousness — particularly for organisations operating in multiple EU member states.
 
 **Adopter actions if operating in Italy:**
 - Map AI uses against the specific offences defined in Law 132/2025 (with counsel).
