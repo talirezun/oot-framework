@@ -1,0 +1,48 @@
+# Reference Org Examples
+
+Three reference organisations demonstrating the framework in operation. Each is internally consistent (every wikilink resolves; every Excel formula evaluates; the awkward edges are present). Use them as the framework's worked examples — read end-to-end before adopting.
+
+| Example | Profile | Demonstrates |
+|---|---|---|
+| [small-org](small-org/) | 3-partner cloud-track studio (Solunar Studio) | The framework working at minimum scale |
+| [medium-org](medium-org/) | 12-partner cloud-track cooperative (Brda Cooperative) | Cohort diversity, Tier-2 disputes, EU AI Act high-risk use case |
+| [regulated-eu-org](regulated-eu-org/) | 6-partner regulated-EU consultancy (AdriaLex AI) | EU AI Act compliance, Klarna Test that abandoned an engagement, mid-migration to privacy track |
+
+> 📖 The full specifications for each org are in [`examples/SPEC.md`](SPEC.md). The reference orgs are scaffolds in v1.0; v1.x will populate the full 60-90 days of Brain pages + Excel data per each org's spec.
+
+---
+
+## How to read a reference org
+
+Each org folder contains:
+- `firm/` — a partial Brain mirror with the canonical pages (partners, recent BRs, key decisions, Klarna tests).
+- `README.md` — explains the org's profile and the awkward edges to look for.
+- (v1.x) Populated Excel files showing 60-90 days of operational data.
+
+Recommended reading order:
+
+1. The org's `README.md` — understand the profile.
+2. The partner roster (`firm/partners/index.md`).
+3. The most recent BR (`firm/business-reviews/<latest>.md`) — see the rhythm.
+4. Any Klarna Test entries (`firm/klarna-tests/`) — see the discipline.
+5. Any open disputes — see how they resolved.
+
+---
+
+## v1.0 status
+
+The reference orgs in v1.0 are **scaffolds**:
+- Directory structure complete.
+- README + a representative Brain page per major path.
+- The full operational data (60-90 days of ledger rows, BRs, audit logs) lands in v1.x.
+
+This is intentional — generating fully-coherent reference orgs requires the framework's Routines to actually run on the example data, which is best done iteratively as the framework is adopted.
+
+For the canonical worked examples WITHIN the framework, see the `examples/` folders inside each Skill Pack — those are complete in v1.0:
+- [`skills/compensation-attribution/examples/`](../skills/compensation-attribution/examples/) — partner onboarding + variable + long-tail + rework.
+- [`skills/code-qa/examples/`](../skills/code-qa/examples/) — Plan Mode + ai-replaces-human PR end-to-end.
+- [`skills/change-management/examples/`](../skills/change-management/examples/) — pilot that worked + pilot that abandoned.
+- [`skills/privacy-self-sovereign/examples/`](../skills/privacy-self-sovereign/examples/) — 5-partner privacy setup + cron-missed incident.
+- (and others — see each Skill Pack's `examples/` folder).
+
+These per-Skill-Pack examples are individually complete and walk through specific scenarios. The `examples/<org>/` reference orgs are *firm-level* worked examples that will integrate the per-Skill examples into a coherent firm story in v1.x.
