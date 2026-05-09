@@ -1,0 +1,42 @@
+name: Markdown Lint + Link Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: |
+            **/*.md
+            !node_modules
+            !.git
+        continue-on-error: true  # Style warnings shouldn't block; broken-link check below is the harder gate.
+
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check internal markdown links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: >-
+            --no-progress
+            --offline
+            --include-fragments
+            --exclude-mail
+            './**/*.md'
+          fail: true
+        continue-on-error: false

@@ -1,0 +1,28 @@
+name: Lint Skill Packs
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**/SKILL.md'
+      - 'skills/_TEMPLATE_SKILL.md'
+      - 'scripts/validate_skills.py'
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**/SKILL.md'
+      - 'skills/_TEMPLATE_SKILL.md'
+      - 'scripts/validate_skills.py'
+
+jobs:
+  validate-skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Run SKILL.md frontmatter validator
+        run: python3 scripts/validate_skills.py
