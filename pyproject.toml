@@ -1,0 +1,58 @@
+[project]
+name = "oot-framework"
+version = "1.0.0"
+description = "ØØT — Organisation of Tomorrow framework. Markdown-first framework for partner-run, AI-augmented organisations."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0 AND CC-BY-SA-4.0" }
+authors = [
+    { name = "Dr. Tali Režun" },
+]
+keywords = ["agentic-ai", "organisation-design", "compensation", "skill-packs", "mcp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    # Excel generation (Phase 5).
+    "openpyxl>=3.1.5",
+    # Installer wizard (Phase 9).
+    "questionary>=2.0.1",
+    "rich>=13.7.0",
+    "httpx>=0.27.0",
+    "pyyaml>=6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6.0",
+    "black>=24.0.0",
+    "mypy>=1.10.0",
+    "pytest>=8.0.0",
+]
+
+[project.scripts]
+oot-build-excel = "scripts.build_excel:main"
+oot-validate-skills = "scripts.validate_skills:main"
+oot-wizard = "installer.wizard:main"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["scripts"]
