@@ -10,7 +10,7 @@
 
 ## What this is + the first 5 minutes
 
-ØØT runs on a stack of well-known UI tools: **Claude Desktop** (your daily driver), **Google Drive / Sheets** (or Microsoft Excel via the Claude extension), **Slack** (comms), **GitHub** (Brain sync + version control), the **Curator desktop app** (knowledge graph), and **Anthropic Remote Routines** (cloud automation that runs while your laptop is closed).
+ØØT runs on a stack of well-known UI tools: **Claude Desktop** (your daily driver), **GitHub** (your firm's Brain repo holds markdown pages and `.xlsx` operational state), **Slack** (comms), the **Curator desktop app** (knowledge graph), and **Claude Code Routines** (cloud automation that runs while your laptop is closed). For viewing and manually editing the `.xlsx` files, use whatever spreadsheet app you already have — **Microsoft Excel, LibreOffice (free, open-source), Apple Numbers (built into macOS), or Excel for Web** all work; the framework writes native `.xlsx` and is app-agnostic. (Google Sheets works for one-off pivots, but is not the canonical store — see the docs/02-installing-routines.md "Operational state" section.)
 
 By the end of weekend one, you will have:
 - Installed the stack.
@@ -41,26 +41,45 @@ Open the ØØT-readiness diagnostic at `templates/excel/oot-readiness.xlsx`. Sco
 
 ## Weekend One — Saturday
 
-### Saturday morning (3-4 hours): accounts + credentials
+### Saturday morning (2-3 hours): minimum-viable accounts
 
-1. **Bitwarden organisation account.** [bitwarden.com](https://bitwarden.com/). Create the org, add the canonical collections (`founders`, `all-partners`, `specialists`, `advisors`, `shared-services`). Per [`governance/SECRETS-POLICY.md`](../governance/SECRETS-POLICY.md).
-2. **Trezor hardware wallet.** Order from [trezor.io](https://trezor.io/) (only direct from manufacturer). For now, just initialise it; you'll use it later (Gen 2 stablecoin payroll, or privacy-track migration if you switch tracks).
-3. **Yubikey 5C NFC** (or two). For org-admin 2FA. Set it up for GitHub admin, Anthropic admin, Google admin, Bitwarden organisation owner.
-4. **Anthropic account.** [claude.com](https://claude.com/). Pro or Max plan — Remote Routines require Pro+.
-5. **GitHub organisation.** Apply Apache 2.0 default for code repos and CC BY-SA 4.0 for documentation repos.
-6. **Google Workspace.** [workspace.google.com](https://workspace.google.com/). Configure 2FA with the Yubikey on the admin account.
-7. **Slack workspace.** With the [Claude Slack integration](https://slack.com/apps/A0848GFRZ54-claude) enabled.
+The Day-1 minimum to operate ØØT cloud track. **Three accounts**:
 
-> 💡 **Tip:** Don't save any password to your browser's password manager during this setup. Use Bitwarden from the start. Browser autofill is the leak point that destroys the secrets policy six months later.
+1. **Anthropic account.** [claude.com](https://claude.com/). **Pro plan** is enough if you're solo or a 2-partner firm with no Klarna gate (R7) firing yet. **Max plan** is the recommended default for 3+ partner firms or any firm with active R7 — Pro's 5-runs/day cap is too tight once you add R3, R7, and the daily Routines together. See "[Plan tiering](#plan-tiering)" below.
+2. **GitHub account / organisation.** Free for private repos at small scale. Apply Apache 2.0 default for code repos and CC BY-SA 4.0 for documentation repos. Your firm's **Brain repo** lives here — both the markdown wiki and the `.xlsx` operational state (X1, X2, X3...) sit in this repo per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](internal/ADR-001-cloud-routine-excel-writeback.md).
+3. **Slack workspace.** With the [Claude Slack integration](https://slack.com/apps/A0848GFRZ54-claude) enabled. Free Slack tier is fine for ≤10 people / 90-day history; Pro tier (€7/user/month) when the firm scales.
+
+That's the minimum. The next three are **recommended but optional in Gen 1**, and you can add them later as the firm matures:
+
+4. **Bitwarden organisation account** *(recommended; optional in Gen 1)*. [bitwarden.com](https://bitwarden.com/). Best practice for any firm; not gating for solo or 2-partner founders. When you do adopt it, create the canonical collections (`founders`, `all-partners`, `specialists`, `advisors`, `shared-services`) per [`governance/SECRETS-POLICY.md`](../governance/SECRETS-POLICY.md). Beginning founders can use the Bitwarden personal free tier or any password manager that lets them store credentials securely off the browser autofill path.
+5. **Yubikey 5C NFC** *(recommended; optional in Gen 1)*. For org-admin 2FA. ~€60. Strongly recommended once the firm has its second admin or holds customer data; not required for a solo founder on day 1. Add it to GitHub admin, Anthropic admin, and the Bitwarden org owner once you have those.
+6. **Trezor hardware wallet** *(deferred to Gen 2)*. Trezors store crypto keys for the Generation-2 stablecoin payroll path. You don't need one to operate Gen 1 unless you're already on the privacy track. **Beginning founders skip this entirely until v2.0.**
+
+(*Optional convenience:* a Google Workspace seat is useful for read-only Drive/Calendar/Gmail integrations into the Anthropic native connectors, but the framework no longer requires Google Workspace. State lives in GitHub, not Google.)
+
+> 💡 **Tip:** Don't save any password to your browser's password manager during this setup. Use Bitwarden (or your chosen password manager) from the start. Browser autofill is the leak point that destroys the secrets policy six months later — even on the simpler "no Bitwarden yet" path.
+
+#### Plan tiering
+
+Per-day Routine limits and what they mean for your firm:
+
+| Plan | Routine runs/day | Suitable for |
+|---|---|---|
+| **Pro** | 5 | Solo founder or 2-partner firm with no R7 (Klarna gate) activity |
+| **Max** | 15 | **Recommended default** — 3+ partner firms, any firm with active R7 |
+| **Team** | 25 | 5+ partner firms with discretionary ad-hoc Routines |
+
+Steady-state Day-1 daily-routine cost: R1 daily + R6 daily + R2/R5 weekly ≈ 2.3 runs/day average. Pro plan handles this. The moment R3 month-end firing + acknowledgement polling kicks in (5–7 fires per month over the review window) or R7 fires on a real PR, you exceed Pro's 5/day. Upgrade to Max before that happens.
 
 ### Saturday afternoon (2-3 hours): install the stack
 
-1. **Claude Desktop.** Download from [claude.com](https://claude.com/). Sign in. Connect Google Drive, Calendar, Gmail (the official Anthropic connectors).
-2. **Claude Code.** [Install per Anthropic docs](https://docs.claude.com/en/docs/claude-code). Enable Max plan if you have it.
+1. **Claude Desktop.** Download from [claude.com](https://claude.com/). Sign in. Connect Google Drive / Calendar / Gmail (the official Anthropic connectors) **only if you use Google Workspace** — these are read-only convenience connectors, not state stores.
+2. **Claude Code.** [Install per Anthropic docs](https://docs.claude.com/en/docs/claude-code). On Max plan, you get higher rate limits and unlock the Routines daily quota described above.
 3. **The Curator desktop app.** Download from [github.com/talirezun/the-curator/releases/latest](https://github.com/talirezun/the-curator/releases/latest). Install. Run the onboarding wizard. Configure cloud-LLM ingest (Gemini Flash Lite recommended for cost; Anthropic Claude for quality on important docs). Pay-as-you-go pricing — heavy usage typically stays under €10/month.
 4. **MyCuratorMCP.** Configure per the Curator's wizard — copy the snippet, paste into `claude_desktop_config.json`, restart Claude Desktop. Run the self-test.
 5. **The My Curator skill.** From the Curator GitHub repo's `claude-skills/my-curator/SKILL.md` (or use ØØT's pre-imported version at `skills/my-curator/SKILL.md`). Add it to Claude Desktop as a Project Document.
 6. **Obsidian** (optional but recommended). Point it at your Brain's markdown folder. This is your human-readable view.
+7. **Pick a spreadsheet app.** The framework's `.xlsx` files open in any of: Microsoft Excel (desktop or web), LibreOffice (free, https://www.libreoffice.org/), Apple Numbers (preinstalled on macOS), WPS Office, OnlyOffice. The framework writes native `.xlsx` and treats them all as first-class. **You don't need Microsoft 365** unless your firm already pays for it.
 
 > 💡 **Verification:** open Claude Desktop, ask: *"Use my-curator. List the firm domains."* You should see a green checkmark on the my-curator MCP and Claude should respond with the available domains.
 
