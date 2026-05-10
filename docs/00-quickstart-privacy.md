@@ -33,12 +33,52 @@ Total partners using the privacy track typically have one of three motivations: 
 
 ---
 
-## Before you start
+## Before you start — decisions to make first
 
-- **Confirm sovereignty mandate.** If your customers don't require it and your founder doesn't strongly want it, the cloud track is materially less work and equally framework-compliant.
-- **Always-on machine choice.** Mac mini M4 Pro 32GB (~€1,800) is the framework's authors' default. NUC / Pi 5 are valid alternatives at lower cost. Per [`skills/privacy-self-sovereign/SKILL.md`](../skills/privacy-self-sovereign/SKILL.md) §4.2.
-- **UPS budget.** ~€80-150 for a small UPS. Strongly recommended — power blips kill missed Routines.
-- **EU AI Act exposure.** Same as cloud track; privacy track is no exception.
+Same decision-making framework as the cloud track plus three privacy-specific items. **Don't skip this section** — each decision affects later steps.
+
+### 1. Confirm sovereignty mandate
+
+If your customers don't require it and your founder doesn't strongly want it, the cloud track is materially less work and equally framework-compliant. Three valid privacy-track motivations: (a) regulatory pressure that disallows cloud-LLM ingest of customer data, (b) philosophical / political commitment to self-custody, (c) Generation 2 stablecoin payroll readiness which requires Trezor identities anyway.
+
+### 2. Always-on machine choice
+
+Mac mini M4 Pro 32GB (~€1,800) is the framework's authors' default. Intel NUC or Raspberry Pi 5 are valid alternatives at lower cost (~€1,200 / ~€350). Per [`skills/privacy-self-sovereign/SKILL.md`](../skills/privacy-self-sovereign/SKILL.md) §4.2.
+
+**Important:** R3 (Monthly Variable Calc) wants Llama 3.3 70B 4-bit which needs ~32-64GB RAM. Pi 5 16GB will run Qwen 3 14B for R1/R2/R5/R6 only; **R3 will fail** unless you upgrade RAM.
+
+### 3. UPS budget
+
+~€80-150 for a small UPS. Strongly recommended — power blips kill missed Routines and break the audit trail.
+
+### 4. EU AI Act exposure
+
+Same as cloud track; privacy track is no exception.
+
+### 5. Where the firm operational repo lives on the always-on machine
+
+Default: `/Users/<oot-user>/<firm-slug>` (macOS) or `/home/<oot-user>/<firm-slug>` (Linux). Pick a path now. Some founders prefer a dedicated path like `/srv/<firm-slug>` on Linux or an external SSD mount.
+
+### 6. Curator integration mode (Configuration A vs B)
+
+Same trade-off as cloud track:
+
+- **Configuration A — Separate** (recommended if you have an existing second-brain on the always-on machine): firm operational repo at `<FIRM_FOLDER>` holds `.xlsx` state and Routine-written markdown. Curator vault stays where it is.
+- **Configuration B — Unified** (recommended for greenfield privacy installs — most common case): the firm operational repo IS the Curator's vault root.
+
+For most privacy-track founders setting up a fresh always-on machine: Configuration B.
+
+### 7. GitHub plan-tier — CRITICAL DECISION ⚠️
+
+**Privacy track still uses GitHub for the Brain repo** (Routines push signed commits there for audit trail). Same Finding 16 caveat as cloud:
+
+| Config | Cost | Branch protection enforced? | Suitable for |
+|---|---|---|---|
+| **GitHub Team** | $4/user/month | ✓ YES | **Recommended default** for any firm taking R6 audit trail seriously |
+| **GitHub Public repo** | Free | ✓ YES | Open-source orgs only — your operational data becomes public |
+| **GitHub Free + private** | Free | ✗ NO (advisory only) | Solo / 2-person v1 pilot only |
+
+Pilots can start on Free + private with procedural discipline; upgrade to Team before adding a third committer. See [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) §6 of "decisions" for the longer explanation.
 
 ---
 
@@ -105,7 +145,8 @@ For each partner including the founder, ~30-45 min:
 2. **PollinationX storage NFT.** Acquire on the [PollinationX dApp](https://wiki.pollinationx.io/). Sizes: 100GB (small org), 500GB (medium), 1TB+ (regulated). Cost: ~€10-80/month equivalent.
 3. **Per-partner read access** to PollinationX granted: `pollinationx grant-read --nft <storage-nft> --to <partner-wallet>` for each partner.
 4. **GitHub MCP** configured with PAT (stored in Bitwarden under `shared-services`).
-5. **Brain repo** cloned to the always-on machine. First Curator domain created (`firm`). First five documents ingested.
+5. **Brain repo** cloned to the always-on machine. **Note:** the GitHub-side setup (create repo, generate signing key, configure branch protection, the clean branch-protection checkbox table) is identical to the cloud track — follow [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) "Weekend One — Sunday morning" Steps 1, 4, 5, 6, 7 against the always-on machine. The only differences: the local clone path is `<FIRM_FOLDER>` on the always-on machine (not your laptop), and the GPG key is generated on the always-on machine.
+6. **First Curator domain** created. If Configuration A: add a domain to your existing second-brain. If Configuration B: the Curator's vault root IS `<FIRM_FOLDER>`. First five documents ingested.
 
 ---
 
@@ -154,6 +195,8 @@ You are now operating ØØT Generation 1, privacy track.
 3. **Sharing Trezors between partners.** Don't. One Trezor per partner identity. The seed is the partner's, not the firm's.
 4. **Auto-updating LM Studio or local models without testing.** Model behaviour changes affect Routine outputs. New versions go through a 1-week dry-run before cutover.
 5. **Trying to run R3 (Monthly Variable) on Qwen 3 14B without testing.** R3 is high-stakes. Use Llama 3.3 70B for R3 specifically; the framework's authors learned this the hard way.
+6. **Skipping the GitHub plan-tier decision (Finding 16).** Privacy track still uses GitHub for the Brain repo. Free + private = advisory branch protection only. Plan to upgrade to Team within 90 days of pilot.
+7. **Forgetting that the Curator app still uses cloud-LLM ingest in Gen 1.** Gemini Flash Lite or Anthropic API calls happen during ingest. The privacy track's local-LLM ingest is Generation 2. For now, your firm's privacy posture is "operational queries are local; document ingest is cloud-LLM with the API key in your name". Make that explicit in your privacy notice if you ingest customer data.
 
 ---
 

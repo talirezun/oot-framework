@@ -310,6 +310,20 @@ This section is intended for ephemeral state across sessions.
   - The plan now also addresses Tali's meta-asks: explicit folder-selection step, plan-tier guidance up-front before any account creation, framework-script auto-install via venv (Step 0.3), Node preflight (Finding 11), email-vs-GPG-mismatch handling (Finding 12), macOS file permissions (Finding 10).
   - Privacy install plan and the wizard (Path B) and manual docs (Path C) need parallel updates → Step 5c/d remaining.
 
+- **Step 5c — Path C / manual quickstarts polished — DONE 2026-05-10.** `docs/00-quickstart-cloud.md` rewritten end-to-end with:
+  - **Non-technical primer** at the top (terminal, JSON, GitHub, MCP, signed commit, branch protection — defined in plain English).
+  - **8-decision section** before any installs: cloud/privacy, EU exposure, firm folder location, existing-Curator yes/no, Configuration A vs B, **GitHub plan-tier (Finding 16 prominently surfaced as a CRITICAL decision)**, Anthropic Pro vs Max, spreadsheet app.
+  - Sunday morning expanded from bullet points into a 10-step procedural walkthrough with **explicit web-UI guidance** (URLs and click sequences) for: GitHub repo creation, GPG key generation + upload, branch protection (with the clean Finding 17 checkbox table), Curator domain setup with Configuration A/B branch.
+  - Per-OS install commands for `gnupg`, `node`, `python3.13` (macOS / Linux / Windows-WSL).
+  - Python venv setup explained (PEP 668 fix per Finding 5).
+  - macOS file-permissions step (Finding 10).
+  - Email-vs-GPG-mismatch troubleshooting (Finding 12) inline with verification step.
+  - "Open file in TextEdit, Cmd+A, Cmd+C" pattern for the GPG public key (Finding 15 — replaces `pbcopy` reliance).
+  - Common pitfalls expanded with 3 new entries from the live-test findings.
+  - File grew from ~170 lines to ~370 lines; this is hand-holding for less-technical founders, by design.
+
+  `docs/00-quickstart-privacy.md` updated with a 7-point decisions section mirroring cloud's, plus a privacy-specific GitHub plan-tier callout (Finding 16 applies to privacy track too — it still uses GitHub for the Brain repo). Common pitfalls expanded with 2 new entries (plan-tier + cloud-LLM-ingest-still-happens-in-Gen-1).
+
 - **Step 5b — privacy install plan rewrite — DONE 2026-05-10.** `installer/agent-assisted/privacy-install-plan.md` rewritten to v1.1.0. Folds the same 18 findings as the cloud plan (where applicable) plus privacy-track-specific structure: hardware acquisition pre-week (Trezor, Mac mini / NUC / Pi 5, UPS, Yubikey), always-on machine OS setup (FDE, dedicated user, network hardening), per-partner Trezors (Day-1 not Gen-2), LM Studio + Qwen 3 14B / Llama 3.3 70B / DeepSeek-V3, 4thtech firm domain + dChat workspace, PollinationX storage NFT, OS-native scheduling (cron / launchd / Task Scheduler) instead of Claude Code Routines. Includes "agent runs on daily laptop, install target is always-on machine" handling — agent walks user through manual commands on the remote machine OR through SSH if user opts in. Same plan-tier guidance for GitHub branch protection (Finding 16 applies identically — privacy track still uses GitHub for the Brain repo).
 - **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance." Tracked for v1.x.
 - **Path C — manual (docs)**: `docs/MODULES.md` shipped (Step 2 of overhaul). Cloud + privacy quickstarts updated to point at Path A first. Bitwarden/Trezor/Yubikey re-tiered as recommended-but-optional. Plan-tier guidance (Pro vs Max) shipped throughout.
