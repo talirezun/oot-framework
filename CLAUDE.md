@@ -303,6 +303,12 @@ This section is intended for ephemeral state across sessions.
   - Local: `/Users/talirezun/00T-test-company/`
   - GPG key: `oot-test-bot <blocklabstech@gmail.com>` (FF2AE322B7F4C193)
   - Curator domain: `00t-test-company` in `/Users/talirezun/second-brain/`
+
+- **Step 5a — install-plan rewrite — DONE 2026-05-10.** Cloud install plan rewritten end-to-end (v1.0 → v1.1) with all 18 sandbox + live findings folded in:
+  - New `installer/agent-assisted/START-HERE.md` — copy-paste prompt for any coding agent (LLM-agnostic).
+  - New `installer/agent-assisted/cloud-install-plan.md` (v1.1.0): 14 steps. Adds **Step 0.5 (folder + Curator-vault location choice — Configuration A vs B per Finding 18)**, **Step 3 (GitHub plan-tier choice — Finding 16 critical)**, **Step 8 with Branch 8A (existing Curator) vs Branch 8B (greenfield) — Finding 9**. Web-UI is now the canonical user-facing path for repo creation, GPG upload, branch protection (Findings 13/14). Clipboard sandbox issue addressed (Finding 15) via print-in-chat or `open <file>`. Branch-protection instructions are now an unambiguous checkbox table (Finding 17). State-file format extended for the new dimensions.
+  - The plan now also addresses Tali's meta-asks: explicit folder-selection step, plan-tier guidance up-front before any account creation, framework-script auto-install via venv (Step 0.3), Node preflight (Finding 11), email-vs-GPG-mismatch handling (Finding 12), macOS file permissions (Finding 10).
+  - Privacy install plan and the wizard (Path B) and manual docs (Path C) need parallel updates → that's Step 5b/c/d.
 - **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance." Tracked for v1.x.
 - **Path C — manual (docs)**: `docs/MODULES.md` shipped (Step 2 of overhaul). Cloud + privacy quickstarts updated to point at Path A first. Bitwarden/Trezor/Yubikey re-tiered as recommended-but-optional. Plan-tier guidance (Pro vs Max) shipped throughout.
 

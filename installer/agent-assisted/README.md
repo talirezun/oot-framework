@@ -2,6 +2,8 @@
 
 The recommended install path for ≥80% of founders. **You hand a markdown brief to a coding agent and the agent installs the framework.** You answer questions when the agent asks; the agent handles the file edits, the JSON config, the GPG signing-key generation, the GitHub branch protection, the MCP wiring, and the verification.
 
+> 🚀 **Just want to start?** → [`START-HERE.md`](START-HERE.md) gives you a single copy-paste prompt to feed your coding agent.
+
 This is the primary path because it best matches the framework's own discipline: humans direct, agents implement, and the artefact is the audit trail. The agent reads the install plan, executes against your machine, asks for your decisions, and produces a written summary you can hand to your accountant or your lawyer.
 
 > **Status:** v1.0.1 (May 2026). The install plans are stable and have been tested with Claude Code (cloud track) end-to-end on the framework's authors' own machine. Other compatible agents (Augment Code, Aider, OpenCode, Cline, Continue.dev, Cursor agent mode) work but are less heavily tested. Report issues at [github.com/talirezun/oot-framework/issues](https://github.com/talirezun/oot-framework/issues).
