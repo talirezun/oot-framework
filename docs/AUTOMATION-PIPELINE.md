@@ -39,6 +39,109 @@ Two execution substrates, identical prompts:
 
 ---
 
+## The two main Legos
+
+The framework's cloud-track automation rests on **two pieces of infrastructure** plus a few smaller dependencies:
+
+```
+┌──────────────────────────────────┐         ┌──────────────────────────────────┐
+│   ANTHROPIC CLOUD                │  git    │   GITHUB BRAIN REPO              │
+│                                  │ ◄────►  │   (canonical source of truth)    │
+│   Claude Code Routines           │  ops    │                                  │
+│   + code execution sandbox       │         │   firm/excel/X1...X9.xlsx        │
+│   + connectors (GitHub, Slack)   │         │   firm/output-logs/*.md          │
+│                                  │         │   firm/audit-logs/*.md           │
+└──────────────────────────────────┘         └──────────────────────────────────┘
+                                                            ▲
+                                                            │ git pull / push
+                                                            │ (manual or GUI-app)
+                                                            ▼
+                                              ┌──────────────────────────────────┐
+                                              │   YOUR LOCAL WORKING CLONE       │
+                                              │   /Users/<you>/<firm-folder>/    │
+                                              │                                  │
+                                              │   You view + manually edit       │
+                                              │   .xlsx files here in Excel /    │
+                                              │   LibreOffice / Numbers          │
+                                              └──────────────────────────────────┘
+```
+
+That's the whole picture. **Your laptop can be closed** — the Routines run on Anthropic's cloud and write directly to GitHub. **GitHub is the source of truth** for both Routines and humans. **Your local clone is just a working copy** that pulls from GitHub when you want to see fresh state.
+
+### Where does the code execute?
+
+When a Routine fires:
+
+1. Anthropic spins up a fresh sandbox container on their infrastructure.
+2. Claude Code (the agent) runs inside that sandbox with a Python interpreter, `openpyxl`, the standard library, and any other packages the framework needs.
+3. The agent clones your Brain repo into the sandbox, mutates the `.xlsx`, signed-commits, pushes back.
+4. The sandbox is torn down. Nothing persists on Anthropic's side except billing/usage logs.
+
+Each Routine fire is its own ephemeral sandbox. They don't share state across runs — state lives on GitHub.
+
+### Keeping your local clone in sync
+
+When a Routine pushes a commit, the change lands on GitHub immediately. Your local clone at `/Users/<you>/<firm-folder>/` does **NOT** auto-update. To see fresh state, run:
+
+```bash
+cd <firm-folder>
+git pull
+```
+
+Three options for staying in sync:
+
+| Option | How | When it suits |
+|---|---|---|
+| **Manual `git pull`** | Run before viewing / editing | Simplest; you control when (recommended for solo founders) |
+| **GitHub Desktop app** | Free GUI app; auto-fetches every few minutes when running | If you want a status indicator + click-to-pull UX |
+| **Editor auto-sync** | VS Code git extension, Obsidian git plugin, or a small `git pull` cron job on your laptop | Hands-off, but only runs when laptop is on |
+
+For most founders: manual `git pull` is fine. Routines write to GitHub; when you open your laptop and want today's state, you pull. The `.xlsx` files are mostly *written by Routines + read by humans*; real-time sync isn't necessary.
+
+---
+
+## Connectors needed per Routine
+
+Each Routine needs a specific set of connectors configured in the Claude Code Routines dashboard. The universal requirement is **GitHub** (with the Brain repo cloneable + pushable + signing key) plus **code execution** (default for Pro+). Beyond that, each Routine adds the specific connectors it needs.
+
+| Routine | GitHub | Code exec | Slack | Email | Drive | my-curator MCP | Banking |
+|---|---|---|---|---|---|---|---|
+| R1 — Daily Output Capture | ✅ | ✅ | ✅ read+post | — | optional, read-only | optional¹ | — |
+| R2 — Weekly BR Prep | ✅ | ✅ | ✅ post | — | — | optional | — |
+| R3 — Monthly Variable | ✅ | ✅ | ✅ post | ✅ send | — | — | — |
+| R4 — Long-tail Settlement | ✅ | ✅ | ✅ post | ✅ send | — | — | — |
+| R5 — Brain Health | ✅ | optional | ✅ post | — | — | **required**¹ | — |
+| R6 — EU AI Act Audit | ✅ | ✅ | ✅ post on errors | — | — | optional¹ | — |
+| R7 — Klarna Trigger | ✅ | ✅ | ✅ post | ✅ send | — | — | — |
+| R8 — Treasury (optional) | ✅ | ✅ | ✅ post | ✅ alert | — | — | ✅ jurisdiction-specific |
+
+¹ **my-curator MCP is local to your machine, not reachable from Anthropic's cloud.** Routines that depend on it (R5 critically; R6 indirectly) hit the [Gen-1 reachability gap](#-known-gen-1-gap-my-curator-mcp-reachability-from-cloud-routines). For solo / pilot founders: defer R5; R1/R2/R3 work without it.
+
+### What each connector does
+
+- **GitHub** — primary connector. Clones the Brain repo into the Routine's sandbox at fire time; signed-commits and pushes back at end. Also reads commit/PR history of firm code repos for R1's output capture. **Universal requirement.**
+- **Code execution (Python + openpyxl)** — runs the openpyxl script that mutates `.xlsx` files inside the cloned Brain repo. Default for Pro+ Anthropic plans; verify enabled when configuring each Routine.
+- **Slack** — read tracked channels (R1: `#output`, `#commercial`, `#sales` for tags); post to result channels (`#output-log`, `#brain-health`, `#klarna-test`, etc.). Configure per-Routine which channels.
+- **Email** — for sending per-partner statements (R3 monthly variable, R4 long-tail, R7 Klarna trigger). Anthropic's native email connector or a third-party Gmail/Outlook MCP.
+- **Google Drive / Workspace** — *optional*, read-only. Only used by R1 if your firm tracks Drive folders for documents-as-output. Not used by any Routine that mutates state — Drive is never the source of truth (per ADR-001).
+- **my-curator MCP** — *local stdio MCP* on your machine. Reachable from Anthropic's cloud only if you self-host (e.g. on a Tailscale-routed Pi 5). Documented gap for v1; alternatives in the section below.
+- **Banking APIs** — jurisdiction-specific HTTP APIs. Most large banks expose REST endpoints; the Routine calls them with API keys stored as Routine secrets.
+
+### Configuring connectors
+
+In Claude Code Routines (whether via the CLI's `/schedule`, the web at https://claude.ai/code/routines, or the Claude Code desktop app):
+
+1. **GitHub connector** — when prompted, authorise GitHub OAuth for the bot identity. Grant `repo` scope on the Brain repo. The signing key (uploaded at install time to GitHub's GPG keys) is what Claude Code uses to sign commits.
+2. **Slack connector** — install the [Claude Slack integration](https://slack.com/apps/A0848GFRZ54-claude) in your Slack workspace if not already. The Routine references channels by name; Anthropic handles the OAuth.
+3. **Email connector** — typically Gmail or Outlook OAuth. Some firms use a dedicated transactional-email service (Postmark, SendGrid) via API key — works as a Routine secret.
+4. **Google Workspace connector** — OAuth flow in Claude Desktop / Claude Code; grants read-only Drive access. **Note:** the connector is read-only for Sheets in place per Anthropic's docs; .xlsx state never lives in Drive (ADR-001).
+5. **Code execution** — toggle in Routine settings; verify "Allow code execution" is on.
+6. **Banking** — jurisdiction-specific. Some are OAuth (Stripe, Wise); most banks are HTTP API keys you store as Routine secrets.
+
+The framework does not require any specific paid Slack/Email plan; free tiers work for pilot. The Anthropic plan tier (Pro / Max / Team) is what gates per-day Routine runs — see the schedule timeline below.
+
+---
+
 ## How does a Routine touch the `.xlsx` files? (Pattern C, ADR-001)
 
 **This is the framework's most important architectural decision and the most common point of confusion.** A cloud Routine running on Anthropic's infrastructure does NOT reach into your local machine. Instead:
