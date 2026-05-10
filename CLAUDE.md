@@ -146,6 +146,9 @@ These were debated, decided, and committed during the v1.0 build. Future agents 
 8. **X5 perception-gap threshold is 20 points** (≈ half the METR 39-point swing). Tightens to 15 with 90 days of internal baseline.
 9. **X8 monthly_burn_average is from Cash_Position deltas** (realised outflow), NOT future Obligations.
 10. **The `oot/klarna-test` GitHub status check name** is fixed. Branch protection on `main` must require it for the gate to enforce.
+11. **Excel `.xlsx` files live in the firm's Brain GitHub repo and are mutated by Routines via openpyxl + signed commits — not via Google Sheets, not via the native Drive connector, not via a hosted Excel MCP.** Track-symmetric: cloud and privacy Routines do the same operation against the same repo. Recorded in [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](docs/internal/ADR-001-cloud-routine-excel-writeback.md). Spreadsheet viewers are user choice (Excel / LibreOffice / Numbers / Excel-for-Web). Don't reintroduce Sheets-as-state without an ADR superseding ADR-001.
+12. **Cloud Routines product name is "Claude Code Routines"** (launched 14 April 2026), not "Anthropic Remote Routines" (the framework's older naming, retired in v1.0.1). Per-day limits: 5 (Pro) / 15 (Max, Team) / 25 (Enterprise). Plan-tier guidance: **Pro for solo or 2-partner firms with no R7 activity; Max for 3+ partner firms or any firm with active R7 / Klarna gate**.
+13. **Bitwarden / Trezor / Yubikey are recommended-but-optional in Gen 1.** Trezor stores crypto keys not used until Gen 2 (stablecoin payroll). Bitwarden + Yubikey are best-practice for any firm but not gating for a beginning founder. The install paths must allow a founder to start without these and add them as the firm matures. Decision recorded 2026-05-10.
 
 ---
 
@@ -272,12 +275,25 @@ Then identify what the user wants to do:
 
 ## Active conversations / open threads (transient — update freely)
 
-This section is intended for ephemeral state across sessions. As of release:
+This section is intended for ephemeral state across sessions.
 
-- v1.0.0 just shipped. No open threads.
-- Tali plans to adopt the framework for his own firms (4thtech, PollinationX) as the first real-world test.
-- Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework). 17 commits on `main`. Tag `v1.0.0`.
-- Next priority (per Tali, May 2026): real-world adoption + community contribution acceptance.
+**As of 2026-05-10 (post v1.0.0):**
+
+**Install-path overhaul in flight.** Three install paths are being upgraded for less-technical founders:
+
+- **Path A — coding-agent-assisted install (NEW)**: a markdown brief + agent-runnable plans the founder hands to Claude Code (cloud) or any agent meeting a defined capability spec (Augment Code, OpenCode, Aider against LM Studio + a local model, etc.). Goal: LLM-agnostic where possible, otherwise a published minimum-spec list. **Not yet built; design in flight.**
+- **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance."
+- **Path C — manual (docs)**: tighten for less-technical readers; add absolutely-non-technical primer; resolve Excel-writeback ambiguity (now done in ADR-001).
+
+**Excel writeback resolved (Pattern C, ADR-001).** Cloud Routines mutate `.xlsx` files in the firm's Brain GitHub repo via openpyxl + signed commits — not via Google Sheets. Same operation on cloud and privacy. Multiple files needing updates: `routines/SPEC.md`, all `routines/cloud/R*.md`, `templates/excel/SPEC.md`, `docs/00-quickstart-cloud.md`, `docs/02-installing-routines.md`, plus the "Anthropic Remote Routines" → "Claude Code Routines" rename across the repo.
+
+**Bitwarden / Trezor / Yubikey re-tiered as optional for Gen 1.** See decision #13. Quickstart docs will be updated to make these optional rather than gating, with explicit "skip until you grow" affordances.
+
+**Routines plan-tier guidance.** Pro plan ≤2 partners + no R7; Max for everyone else. Decision #12.
+
+**Spreadsheet-viewer support.** Microsoft Excel, LibreOffice (free, open-source), Apple Numbers, Excel-for-Web, Google Sheets via "Open with" — all supported. Don't recommend any single paid app.
+
+**Real-world adoption.** Tali plans to adopt the framework for his own firms (4thtech, PollinationX) as the first real-world test. Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework). 18 commits on `main`. Tag `v1.0.0`.
 
 > Future sessions: update this section with what's currently in flight. Stale items get pruned at v1.x release boundaries.
 
