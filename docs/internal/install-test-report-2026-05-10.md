@@ -131,6 +131,84 @@ I imagined a `--check` flag that isn't in `scripts/build_excel.py`. The plan's s
 - The install plan's pause-and-confirm gate structure (🟡 ASK USER) reads cleanly when the agent narrates what it's about to do — exactly the "surface decisions, don't decide silently" behavior the plan was meant to encode.
 - The state-file pattern (`~/.oot/install-state.yaml`) is defensible — every step logs its outcome; agent can resume.
 
+## Live install findings (2026-05-10, post-sandbox)
+
+### Finding 9 — Install plan didn't handle "user already has Curator + second-brain" case
+
+The cloud install plan's Step 6 assumes greenfield Curator install ("install Curator desktop app, create first domain"). Tali already had a populated second-brain at `/Users/talirezun/second-brain/` with my-curator MCP wired into Claude Desktop AND LM Studio. The plan should ask: *"Do you already have a Curator second-brain? If yes, where, and which domain do you want to use for this firm?"* — and skip the wizard portion when the answer is yes.
+
+This is probably the more common case for any experienced ØØT adopter. **Severity: medium.** Fix in next install-plan revision.
+
+### Finding 10 — macOS filesystem permissions for the Curator + MCP path
+
+Not yet exercised in this test (Tali's MCP was already authorised), but install plan should explicitly walk through System Settings → Privacy & Security → Files and Folders for first-time MCP installs. **Severity: medium for new installs.**
+
+### Finding 11 — Node.js preflight missing from the install plan
+
+`mcp-remote` (the standard wrapper for plumbing remote MCP servers into Claude Desktop) needs Node ≥18. Tali had Node 22.14.0 already, but the plan's Step 0.1 didn't check. **Fix:** add `node --version` to preflight; if missing, surface `brew install node` (macOS) / `apt install nodejs` (Linux).
+
+### Finding 12 — `noreply.github.com` email vs. real-email mismatch for signed commits
+
+Tali's global git config used `61226945+talirezun@users.noreply.github.com` (GitHub's privacy email). The GPG key generated for the test uses `blocklabstech@gmail.com`. For GitHub to mark commits "Verified", the commit author's email must match the GPG key UID's email. **Fix:** install plan must set `user.email` *locally* in the Brain repo to match the GPG key's email — not change global config.
+
+### Finding 13 — Install plan over-relies on `gh` CLI; web-UI path must be canonical fallback
+
+A non-technical founder is more likely to know the GitHub web UI than the `gh` CLI. The install plan currently assumes `gh repo create` / `gh api -X PUT /repos/.../branches/main/protection` / `gh gpg-key add`. Each of those needs a web-UI alternative documented. **Fix:** rewrite the plan's Steps 4, 5, 6 to offer "via gh CLI (faster)" or "via GitHub.com (more accessible)" forks. Default to web UI; agent can switch to gh if user opts in.
+
+### Finding 14 — `gh gpg-key add` requires `gh auth`, which most non-technical founders don't have
+
+Same as #13 but specifically for GPG key upload. Web-UI path: paste the key block at https://github.com/settings/gpg/new. **Fix:** plan documents this as the primary path.
+
+### Finding 15 — `pbcopy` from agent shell doesn't reach user's real clipboard
+
+When I tried `cat /tmp/oot-test-gpg-public.asc | pbcopy`, the key didn't land on Tali's clipboard — agent shell sandbox clipboard ≠ user clipboard. **Fix:** install plan must use a method the user can actually access. Two acceptable options: (a) print the key inline in the chat for the user to copy, (b) use `open <file>` on macOS to launch the user's default text editor showing the key. **Severity: high** — mid-install blocker for any agent shell that doesn't share clipboard with the user session.
+
+### Finding 16 — CRITICAL: GitHub Free private repos don't enforce branch protection rules
+
+Tali's screenshot showed the explicit warning: *"Your protected branch rules for your branch won't be enforced on this private repository until you move to a GitHub Team or Enterprise organization account."* This means **R6's audit-trail-immutability claim does not hold on GitHub Free + private repo** — anyone with push access can force-push or push unsigned commits, even with the rule "set."
+
+**Implications for the framework:**
+
+1. ADR-001's audit-trail discipline requires *enforced* branch protection. Three valid configurations:
+   - **GitHub Team** ($4/user/month) — branch protection enforces on private repos. Recommended for any firm taking R6 seriously.
+   - **GitHub Public repo** — branch protection enforces on personal Free, but firm operational data (X1, X2, salaries, customer info) is publicly readable. Workable only for fully-open-source orgs.
+   - **GitHub Free + private + procedural discipline** — branch protection rule is advisory; rely on internal trust + Klarna Test review. Acceptable for solo founders / 2-person shops.
+
+2. **The install plan must surface this trade-off explicitly before the user creates the repo**, including the cost implication.
+
+3. **Routine R6 should detect the unenforced state** at install time and warn. Possibly via a smoke-test that tries `git push --force` and verifies it gets rejected; if accepted, surface "branch protection is not enforced — your audit trail does not have the immutability the framework's docs assume."
+
+**Severity: CRITICAL.** This affects the framework's correctness claims for every firm on GitHub Free. **Fix:** new section in install plan + new section in `governance/SECRETS-POLICY.md` about repo-hosting plan choice.
+
+### Finding 18 — Curator vault location vs. firm operational repo location is unspecified
+
+The framework has two valid configurations and hasn't been explicit about which is canonical:
+
+- **Configuration A (separate roots, used by Tali's existing setup):** Curator vault at one path (`/Users/talirezun/second-brain/`), firm operational repo at another (`/Users/talirezun/00T-test-company/`). The firm repo holds `.xlsx` + Routine-written markdown (`firm/output-logs/`, etc.). The Curator vault holds the knowledge graph, with the firm as one domain. They link via wikilinks but my-curator MCP queries don't see operational data — operational reads happen via direct git access.
+- **Configuration B (unified root, greenfield):** firm operational repo IS the Curator vault. `firm/` is a domain. my-curator queries see everything: `.xlsx` state, output logs, audit logs, partner profiles.
+
+Configuration A suits an experienced Curator user with a multi-firm or general second-brain. Configuration B suits a new founder building a single-firm Curator setup from scratch. Both are valid; the framework needs to surface the choice in the install plan and explain the trade-off.
+
+**Fix:** new install-plan step at the top of Step 6 ("the Curator integration choice") that asks the user which config they want. Document trade-offs. Default to B for greenfield, A for users who already have a Curator vault with content.
+
+**Severity: medium.** Affects discoverability of operational data via Curator MCP queries. Doesn't block Pattern C or basic Routines; does affect whether founders can ask Claude "show me the most recent output specs" via my-curator.
+
+### Finding 17 — Install plan's branch protection instructions were unclear
+
+Quoting my own writing: "☑ **Allow force pushes — disabled** (so it stays off)" — internally contradictory. The checkbox label is "Allow force pushes" — checking it ALLOWS force pushes; unchecking it DISALLOWS them. I wrote it in a way that confused Tali.
+
+**Fix:** rewrite as a clean table:
+
+| Checkbox | State | Why |
+|---|---|---|
+| Require signed commits | ☑ CHECKED | Reject unsigned commits (ADR-001 keystone) |
+| Allow force pushes | ☐ UNCHECKED | Force-push rewrites history; we want history immutable |
+| Allow deletions | ☐ UNCHECKED | Branch deletion erases audit trail |
+
+**Severity: medium.** Real install-time confusion; user did the wrong thing because of my unclear writing.
+
+---
+
 ## Recommended next steps
 
 In priority order:

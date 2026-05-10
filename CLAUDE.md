@@ -283,13 +283,26 @@ This section is intended for ephemeral state across sessions.
 
 - **Path A — coding-agent-assisted install — DONE 2026-05-10.** Built at `installer/agent-assisted/{README.md, AGENT-CAPABILITY-SPEC.md, cloud-install-plan.md, privacy-install-plan.md}`. LLM-agnostic capability spec; known-compatible agents include Claude Code (reference), Augment Code, Aider, OpenCode, Cline, Continue.dev.
 
-- **Step 4 — sandbox install test — DONE 2026-05-10.** Drove the cloud install plan against a sandbox at `/tmp/oot-test-install/`. Pattern C verified end-to-end (openpyxl mutates X1 cleanly, named ranges + conditional formatting survive, signed-commit workflow round-trips through a bare git remote). 8 findings recorded in [`docs/internal/install-test-report-2026-05-10.md`](docs/internal/install-test-report-2026-05-10.md); all blocking ones fixed:
+- **Step 4 — sandbox + LIVE install test — DONE 2026-05-10.** Drove the cloud install plan against a sandbox at `/tmp/oot-test-install/` then against a real persistent test instance at `/Users/talirezun/00T-test-company/` + GitHub repo `talirezun/oot-test-company` (private). 18 findings recorded in [`docs/internal/install-test-report-2026-05-10.md`](docs/internal/install-test-report-2026-05-10.md). Pattern C verified live (signed commit `8bae769` lands on main with green Verified badge on GitHub). my-curator MCP integration confirmed against existing second-brain at `/Users/talirezun/second-brain/`. Test instance is **persistent** — Tali plans to use it for LM Studio testing.
+
+  Sandbox-phase findings 1-8 fixed in commit [5ff1c55](https://github.com/talirezun/oot-framework/commit/5ff1c55):
   - **Finding 6 (CRITICAL):** R1 was not writing K (`value_envelope`) and L (`computed_variable`) formulas on appended rows → silent zero-pay bug. Fixed in `templates/excel/SPEC.md` X1 §Formulas, `routines/SPEC.md` R1 implementation, `routines/cloud/R1.md` prompt body.
   - **Finding 7:** `ws.max_row + 1` is wrong on Output_Log (the value_envelope_table at O1:P5 inflates max_row). R1 must find next empty row via column A. Fixed.
   - **Findings 1, 3, 4, 5:** install plan Step 0.1 + new Step 0.4 — Python version fallback (3.13/3.12/3.11/3 in order), per-OS install one-liners for gpg/gh/jq, and venv setup at `~/.oot/venv` to handle PEP 668.
   - **Finding 8:** install plan Step 10.1 referenced `build_excel.py --check` which doesn't exist; replaced with inline openpyxl smoke check.
   - **Finding 2:** Python ≥3.11 / 3.13-recommended canonicalised in CLAUDE.md.
-- Live install on a fresh machine is the next quality bar (will surface GitHub repo creation, branch protection API, real signed commits, Curator install, Claude Desktop MCP wiring). Sandbox could not test those.
+  Live-phase findings 9-18 (NOT yet fixed in install plan — that's Step 5):
+  - **#16 (CRITICAL):** GitHub Free private repos do not enforce branch protection. ADR-001's audit-trail-immutability claim does not hold without GitHub Team ($4/u/mo) or upgraded plan. Install plan must surface plan-tier choice as a structural decision.
+  - **#13/14:** install plan's reliance on `gh` CLI is too high; web-UI fallback for repo creation, GPG upload, branch protection must be canonical for less-technical founders.
+  - **#9/18:** install plan must handle (a) existing-Curator users + (b) Configuration A (separate vault and firm repo) vs. Configuration B (unified root) choice.
+  - **#11/15/17:** Node preflight, clipboard sandbox issue, branch-protection instruction clarity.
+  - Other findings 10/12: macOS file permissions; noreply email vs GPG email mismatch.
+
+  Test instance preserved for follow-up:
+  - GitHub: `talirezun/oot-test-company` (private)
+  - Local: `/Users/talirezun/00T-test-company/`
+  - GPG key: `oot-test-bot <blocklabstech@gmail.com>` (FF2AE322B7F4C193)
+  - Curator domain: `00t-test-company` in `/Users/talirezun/second-brain/`
 - **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance." Tracked for v1.x.
 - **Path C — manual (docs)**: `docs/MODULES.md` shipped (Step 2 of overhaul). Cloud + privacy quickstarts updated to point at Path A first. Bitwarden/Trezor/Yubikey re-tiered as recommended-but-optional. Plan-tier guidance (Pro vs Max) shipped throughout.
 
