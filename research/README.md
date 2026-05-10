@@ -51,6 +51,12 @@ All contributions follow the framework's licence split: original articles are CC
 - [`2026-05-prompts-to-precision.md`](articles/2026-05-prompts-to-precision.md) — *(stub)* the framework's five-step prompt skeleton, by Dr. Tali Režun.
 - [`2026-04-three-philosophies.md`](articles/2026-04-three-philosophies.md) — *(stub)* Augment Code, Claude Code, Codex CLI — when to use which, by Dr. Tali Režun.
 
+**Curator articles (recommended pre-reading for new ØØT installers).** The Curator is the canonical Brain implementation that S1 imports; understanding how it works is a prerequisite to running the framework. These three articles live upstream in the [Curator research section](https://github.com/talirezun/the-curator/tree/main/research/articles) and are stubbed here for navigation:
+
+- [`2026-05-second-brain-grows-smarter.md`](articles/2026-05-second-brain-grows-smarter.md) — *(link)* The Second Brain That Grows Smarter — the compounding-knowledge model behind Thesis 4.
+- [`2026-05-knowledge-immortality.md`](articles/2026-05-knowledge-immortality.md) — *(link)* Knowledge Immortality: The Second Brain — why the Brain is plain markdown under git, not SaaS.
+- [`2026-05-graph-to-intelligence-mcp.md`](articles/2026-05-graph-to-intelligence-mcp.md) — *(link)* From Graph to Intelligence: My Curator MCP — how the 17-tool MCP surface makes the Brain agent-accessible.
+
 ---
 
 ## Paper summaries (anchoring the manifesto's theses)
