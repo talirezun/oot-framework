@@ -20,10 +20,11 @@ If you are new to ØØT, read these in order. Each step is timed; the full path 
 | 2 | [`SPEC.md`](SPEC.md) | ~30 min | The eight-layer technical architecture and the full Lego inventory. |
 | 3 | [`GENERATIONS.md`](GENERATIONS.md) | ~10 min | What's in Gen 1, what's deferred, why. |
 | 4 | [`governance/KLARNA-TEST.md`](governance/KLARNA-TEST.md) | ~10 min | The framework's signature epistemic discipline. Non-negotiable. |
-| 5 | [`QUICKSTART.md`](QUICKSTART.md) | ~30 min | Weekend setup path (cloud or privacy). Implementation starts here. |
-| 6 | [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) | ~20 min | The external tools the framework rests on. With links to every wiki. |
-| 7 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — screenshot-rich, no shell required. |
-| 8 | [`research/README.md`](research/README.md) | optional | Going deeper — paper summaries, original articles, and the curated ecosystem index. |
+| 5 | [`docs/MODULES.md`](docs/MODULES.md) | ~10 min | What to install, in what order, and what's optional. The dependency graph + a Day-N progression table. Read this before QUICKSTART. |
+| 6 | [`QUICKSTART.md`](QUICKSTART.md) | ~30 min | Weekend setup path (cloud or privacy). Implementation starts here. |
+| 7 | [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) | ~20 min | The external tools the framework rests on. With links to every wiki. |
+| 8 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — screenshot-rich, no shell required. |
+| 9 | [`research/README.md`](research/README.md) | optional | Going deeper — paper summaries, original articles, and the curated ecosystem index. |
 
 > 💡 **For the technically-minded:** also read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) — the agent-orientation files. They are vendor-neutral guides for any AI coding assistant working in this repo.
 
@@ -44,7 +45,7 @@ What lives where.
 | [`templates/brain/`](templates/brain/) | The Brain ontology + 14 Brain page templates that Routines and Skills write to. |
 | [`templates/partner-onboarding/`](templates/partner-onboarding/) | Onboarding checklist + provisioning script + first-90-days plan. |
 | [`routines/`](routines/) | 8 cloud Routines + 8 privacy-track equivalents. |
-| [`docs/`](docs/) | 12 Tier-1 user guides + 6 Tier-2 UI walkthroughs (`docs/walkthroughs/`). |
+| [`docs/`](docs/) | 12 Tier-1 user guides + 6 Tier-2 UI walkthroughs (`docs/walkthroughs/`) + [`docs/MODULES.md`](docs/MODULES.md) module-dependency map. |
 | [`research/`](research/) | Paper summaries, original articles, and the curated ecosystem index ([`external-resources.md`](research/external-resources.md)). |
 | [`installer/`](installer/) | Terminal wizard + fallback install scripts (Phase 9 deliverable). |
 | [`examples/`](examples/) | Three reference orgs: small (3-partner), medium (12-partner), regulated-EU (6-partner). |
