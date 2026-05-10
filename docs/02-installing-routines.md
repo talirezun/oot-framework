@@ -10,7 +10,10 @@
 
 ## What this is + the first 5 minutes
 
-ØØT ships **8 scheduled Routines**. The cloud-track equivalents run on [**Claude Code Routines**](https://claude.com/blog/introducing-routines-in-claude-code) — Anthropic's cloud-hosted scheduled-agent product, launched 14 April 2026. Routines execute on Anthropic's infrastructure, so they fire whether or not your laptop is open. The Routine prompts are markdown files at `routines/cloud/R1.md` through `R8.md`; you upload them via Claude Code's `/schedule` command (or the dashboard at claude.com/routines).
+ØØT ships **8 scheduled Routines**. The cloud-track equivalents run on [**Claude Code Routines**](https://claude.com/blog/introducing-routines-in-claude-code) — Anthropic's cloud-hosted scheduled-agent product, launched 14 April 2026. Routines execute on Anthropic's infrastructure, so they fire whether or not your laptop is open. **You don't need a dedicated machine for Routines on the cloud track** — that's the privacy track's domain. The Routine prompts are markdown files at `routines/cloud/R1.md` through `R8.md`; you upload them via any of three management interfaces (all configure the same cloud-hosted Routines):
+- **Claude Code CLI** in your terminal: `/schedule` command
+- **Web dashboard:** [claude.ai/code/routines](https://claude.ai/code/routines)
+- **Claude Code desktop app:** "New Remote Task" feature *(distinct from Claude Desktop chat)*
 
 ## Operational state lives in your Brain repo (ADR-001)
 
@@ -61,7 +64,7 @@ For each Routine, the install pattern is the same. Here's the full procedure for
 
 **Why first:** no dependencies. If R5 fires successfully, your Curator + MCP + Slack stack is wired.
 
-1. **Open the Claude Code Routines dashboard.** [claude.com/routines](https://claude.com/routines) (or via the `/schedule` command in Claude Code, or Settings → Routines in Claude Desktop).
+1. **Open the Claude Code Routines dashboard.** [claude.ai/code/routines](https://claude.ai/code/routines), or via the `/schedule` command in Claude Code, or via the Claude Code desktop app's "New Remote Task" feature.
 2. Click **"New Routine"**.
 3. **Name:** `R5 Brain Health Check`.
 4. **Trigger:** Schedule. Time zone: your firm's primary. Recurrence: weekly. Day: Sunday. Time: 09:00.

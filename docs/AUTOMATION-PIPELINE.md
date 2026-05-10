@@ -16,8 +16,11 @@ The Routines are the *only* automation in Gen 1. Everything else (partner onboar
 
 Two execution substrates, identical prompts:
 
-- **Cloud track** — Claude Code Routines run on Anthropic's infrastructure. Your laptop can be closed. Per-day limits: 5 (Pro) / 15 (Max) / 25 (Team/Enterprise). [Anthropic launch announcement →](https://claude.com/blog/introducing-routines-in-claude-code)
-- **Privacy track** — cron / launchd / Task Scheduler on your always-on machine, hitting headless LM Studio via `llmster`.
+- **Cloud track** — Claude Code Routines run on Anthropic's infrastructure. **Your laptop can be closed; no dedicated machine required.** Per-day limits: 5 (Pro) / 15 (Max) / 25 (Team/Enterprise). [Anthropic launch announcement →](https://claude.com/blog/introducing-routines-in-claude-code). You manage them from any of three interfaces (all configure the same cloud-hosted feature):
+  - **Claude Code CLI** in your terminal: `/schedule` command
+  - **Web dashboard:** [claude.ai/code/routines](https://claude.ai/code/routines)
+  - **Claude Code desktop app:** "New Remote Task" feature *(this is the Claude Code-specific desktop app, distinct from Claude Desktop chat)*
+- **Privacy track** — cron / launchd / Task Scheduler on your always-on machine, hitting headless LM Studio via `llmster`. **Privacy track is the one that needs a dedicated machine.** That's the structural trade-off vs. cloud track's sovereign-but-laptop-must-be-on cost.
 
 ---
 

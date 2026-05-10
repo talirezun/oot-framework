@@ -515,7 +515,7 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
         ok(f"Claude Code CLI: {which('claude')}")
     else:
         warn("Claude Code CLI not found. Install per https://docs.claude.com/en/docs/claude-code")
-        info("(Optional — you can configure Routines via the web dashboard at claude.com/routines instead.)")
+        info("(Optional — you can configure Routines via the web dashboard at https://claude.ai/code/routines instead. Routines run on Anthropic's cloud either way; CLI is just one of three management interfaces.)")
 
     plan = ask_select(
         "Anthropic plan tier:",
@@ -794,7 +794,9 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
     header("Step 12 / 14 — Configure Day-1 Routines", level=2)
     info(
         "I'll walk you through configuring the four Day-1 Routines. Each Routine is\n"
-        "configured via Claude Code → /schedule (or claude.com/routines).\n\n"
+        "configured via Claude Code → /schedule, or the web dashboard at\n"
+        "https://claude.ai/code/routines, or the Claude Code desktop app's\n"
+        "'New Remote Task' feature. Routines run on Anthropic's cloud regardless.\n\n"
         "Install order (per routines/README.md):\n"
         "  R5 — Brain Health Check (Sunday 09:00). No dependencies.\n"
         "  R6 — EU AI Act Audit Trail (daily 23:00). Needs branch protection from Step 10.\n"

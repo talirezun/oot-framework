@@ -24,7 +24,13 @@ The framework's 8 Routines run on schedule. **Failures should not be silent.** Y
 
 ### Where it is
 
-In Claude Desktop: **Settings → Routines**. Or directly at `claude.com/routines`.
+Three places to access the Routines dashboard (all the same cloud-hosted feature):
+
+- **Web dashboard**: directly at https://claude.ai/code/routines
+- **Claude Code CLI**: `/schedule` in any Claude Code session
+- **Claude Code desktop app** (distinct from Claude Desktop chat): "New Remote Task" feature
+
+Note: **Routines run on Anthropic's cloud, not on your machine.** No dedicated computer required for cloud-track Routines.
 
 ### What you'll see
 

@@ -42,10 +42,16 @@ The four Day-1 Routines (R1, R2, R5, R6) are sufficient for the framework's basi
 
 ## Cloud track install (Claude Code Routines)
 
+**Where Routines run:** on Anthropic's cloud infrastructure — not on your local machine. Your laptop can be closed; the Routines fire on schedule against your firm's Brain repo on GitHub. You manage them from any of three interfaces (they all configure the same cloud-hosted feature):
+
+- **Claude Code CLI:** `/schedule` command in any Claude Code session
+- **Web dashboard:** [claude.ai/code/routines](https://claude.ai/code/routines)
+- **Claude Code desktop app:** "New Remote Task" feature *(distinct from Claude Desktop chat — Claude Code has its own desktop app)*
+
 For each Routine to install:
 
-1. Open Claude Code → `/schedule` (or claude.com/routines / Settings → Routines in the desktop app).
-2. Click **"New Routine"**.
+1. Pick one of the three management interfaces above and open it.
+2. Click **"New Routine"** (or **"New Remote Task"** in the Claude Code desktop app).
 3. Configure trigger per the routine's frontmatter.
 4. Upload the prompt body from `routines/cloud/<R>.md`.
 5. Attach the listed Skill Packs.

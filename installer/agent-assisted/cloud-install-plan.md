@@ -320,7 +320,7 @@ If neither installed:
 
 If `claude` CLI missing:
 
-🟡 **ASK USER:** "Claude Code CLI isn't installed. It's how the Day-1 Routines will be configured (`/schedule` command). Install it: https://docs.claude.com/en/docs/claude-code. Type `done` when installed, or `skip` to use the web dashboard at claude.com/routines instead."
+🟡 **ASK USER:** "Claude Code CLI isn't installed. It's the most common way to configure Day-1 Routines (`/schedule` command). Install it: https://docs.claude.com/en/docs/claude-code. Type `done` when installed, or `skip` to use the web dashboard at https://claude.ai/code/routines instead. Either path works — Routines run on Anthropic's cloud regardless."
 
 `step_4_anthropic_check: done`.
 
@@ -738,7 +738,7 @@ For each Routine, follow the per-Routine setup checklist at `routines/cloud/<R>.
 
 R5 first (no dependencies):
 
-🟡 **ASK USER:** "Open Claude Code → run `/schedule`. Or visit https://claude.com/routines. Configure R5 per the checklist at `routines/cloud/R5.md`. Use the prompt body from that file. Attach the `my-curator` Skill Pack. Configure the GitHub connector pointing at `<BRAIN_REPO_URL>` (with the bot identity's signing key). Manual fire to test. Verify a signed commit lands on `main` adding `firm/brain-health/<YYYY-WW>.md`. Tell me `done`."
+🟡 **ASK USER:** "Open Claude Code → run `/schedule`. Or visit https://claude.ai/code/routines. Or use the Claude Code desktop app's 'New Remote Task' feature. Configure R5 per the checklist at `routines/cloud/R5.md`. Use the prompt body from that file. Attach the `my-curator` Skill Pack. Configure the GitHub connector pointing at `<BRAIN_REPO_URL>` (with the bot identity's signing key). Manual fire to test. Verify a signed commit lands on `main` adding `firm/brain-health/<YYYY-WW>.md`. Tell me `done`."
 
 Repeat for R6, R1, R2 if user opted in at Step 2.
 

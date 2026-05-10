@@ -458,7 +458,7 @@ Expected: a clean report. Walk through `fix_wiki_issue` for any broken wikilinks
 
 For each Routine, the workflow is:
 
-1. Open Claude Code → run `/schedule`. (Or visit https://claude.com/routines, or Settings → Routines in Claude Desktop.)
+1. Open Claude Code → run `/schedule`. Or visit the web dashboard at https://claude.ai/code/routines, or use the Claude Code desktop app's "New Remote Task" feature. **Routines run on Anthropic's cloud, not on your local machine** — your laptop can be closed once they're scheduled. The three interfaces are just management UIs for the same cloud-hosted feature. (Note: this is the **Claude Code** desktop app, not the Claude Desktop chat app — they're different products.)
 2. Click **New Routine**.
 3. Configure trigger per the routine's frontmatter (e.g. R5 = Sunday 09:00).
 4. Upload the prompt body from `routines/cloud/<R>.md` (everything inside the `## Prompt body` fenced block).
