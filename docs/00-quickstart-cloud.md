@@ -1,10 +1,14 @@
 # 00 — Quickstart: Cloud Track
 
 **Audience:** Founder. Cloud track. Non-technical to moderately-technical.
-**Time:** Two weekends (~16 hours total). Most of it sequential, not parallelisable.
+**Time:** Two weekends (~16 hours) for the manual path. Path A (agent-assisted) cuts this to ~60-90 minutes.
 **You will end with:** a fully-operational ØØT instance with one partner onboarded.
 
-> 📖 **Read first:** [`MANIFESTO.md`](../MANIFESTO.md) (15 min), [`SPEC.md`](../SPEC.md) (30 min), [`governance/KLARNA-TEST.md`](../governance/KLARNA-TEST.md) (10 min). The framework's discipline starts with reading.
+> 📖 **Read first:** [`MANIFESTO.md`](../MANIFESTO.md) (15 min), [`docs/MODULES.md`](MODULES.md) (10 min — what to install and what's optional), [`governance/KLARNA-TEST.md`](../governance/KLARNA-TEST.md) (10 min). The framework's discipline starts with reading.
+
+> 🤖 **Faster install path:** if you have a coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, etc.), use [Path A — Coding-agent-assisted install](../installer/agent-assisted/README.md). The agent reads the install plan and executes it, asking you the questions a human installer would have to answer. ~60-90 minutes wall-clock. Recommended for ≥80% of founders, especially less-technical ones.
+
+This document is the **manual path** (Path C) — every step is something you type yourself. Slowest and most transparent.
 
 ---
 

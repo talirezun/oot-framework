@@ -281,9 +281,9 @@ This section is intended for ephemeral state across sessions.
 
 **Install-path overhaul in flight.** Three install paths are being upgraded for less-technical founders:
 
-- **Path A — coding-agent-assisted install (NEW)**: a markdown brief + agent-runnable plans the founder hands to Claude Code (cloud) or any agent meeting a defined capability spec (Augment Code, OpenCode, Aider against LM Studio + a local model, etc.). Goal: LLM-agnostic where possible, otherwise a published minimum-spec list. **Not yet built; design in flight.**
-- **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance."
-- **Path C — manual (docs)**: tighten for less-technical readers; add absolutely-non-technical primer; resolve Excel-writeback ambiguity (now done in ADR-001).
+- **Path A — coding-agent-assisted install — DONE 2026-05-10.** Built at `installer/agent-assisted/{README.md, AGENT-CAPABILITY-SPEC.md, cloud-install-plan.md, privacy-install-plan.md}`. LLM-agnostic capability spec; known-compatible agents include Claude Code (reference), Augment Code, Aider, OpenCode, Cline, Continue.dev. Cloud install plan is 12 steps, ~60-90 minutes wall-clock. Privacy install plan is 12 steps + hardware shipping pre-week + model download time. **Not yet end-to-end-tested on a real machine** — that's Step 4 of the install-path overhaul plan. README.md "Read in this order" + `installer/README.md` updated to make Path A the recommended primary.
+- **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance." Tracked for v1.x.
+- **Path C — manual (docs)**: `docs/MODULES.md` shipped (Step 2 of overhaul). Cloud + privacy quickstarts updated to point at Path A first. Bitwarden/Trezor/Yubikey re-tiered as recommended-but-optional. Plan-tier guidance (Pro vs Max) shipped throughout.
 
 **Excel writeback resolved (Pattern C, ADR-001) — DONE 2026-05-10.** Cloud Routines mutate `.xlsx` files in the firm's Brain GitHub repo via openpyxl + signed commits — not via Google Sheets. Same operation on cloud and privacy. Implemented across:
 - `docs/internal/ADR-001-cloud-routine-excel-writeback.md` (the design-of-record).

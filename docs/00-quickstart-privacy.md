@@ -4,7 +4,11 @@
 **Time:** Two weekends + 1 week of preparation (~25 hours total). The privacy track is materially more setup work than the cloud track.
 **You will end with:** a fully-operational ØØT instance with no cloud dependency for daily operations.
 
-> 📖 **Read first:** [`MANIFESTO.md`](../MANIFESTO.md), [`SPEC.md`](../SPEC.md), [`governance/KLARNA-TEST.md`](../governance/KLARNA-TEST.md), Skill Pack [`skills/privacy-self-sovereign/SKILL.md`](../skills/privacy-self-sovereign/SKILL.md).
+> 📖 **Read first:** [`MANIFESTO.md`](../MANIFESTO.md), [`docs/MODULES.md`](MODULES.md), [`governance/KLARNA-TEST.md`](../governance/KLARNA-TEST.md), [`governance/SECRETS-POLICY.md`](../governance/SECRETS-POLICY.md), Skill Pack [`skills/privacy-self-sovereign/SKILL.md`](../skills/privacy-self-sovereign/SKILL.md).
+
+> 🤖 **Faster install path:** if you have a coding agent that meets the [capability spec](../installer/agent-assisted/AGENT-CAPABILITY-SPEC.md) — Aider or OpenCode against LM Studio + Qwen 3 32B is the privacy-track-friendly option — use [Path A — Coding-agent-assisted install](../installer/agent-assisted/README.md). The agent walks you through the same setup but does the file-edits, key-generation, and MCP-wiring on your behalf. Total wall-clock similar (the bottleneck is hardware shipping + model download time, not the install steps). Recommended for less-technical founders.
+
+This document is the **manual path** (Path C) — every step is something you type yourself.
 
 > ⚠️ The privacy track requires an **always-on machine** (Mac mini / NUC / Pi 5) and **per-partner Trezors**. Total one-time cost ~€2,400 + ~€110/year for a 5-partner firm. If the cost is prohibitive or you don't yet have sovereignty mandate, start with the [cloud track](00-quickstart-cloud.md).
 
