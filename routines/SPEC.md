@@ -94,7 +94,19 @@ For each output:
 
 1. Clone the firm's Brain repo to a working directory: `git clone <BRAIN_REPO_URL> /tmp/brain && cd /tmp/brain && git pull`.
 2. Open `firm/excel/partner-output-ledger.xlsx` (X1) with openpyxl in code execution.
-3. Append the new rows to the Output_Log sheet per the schema. Resolve column J (`partner_multiplier`) by reading X2 (`firm/excel/reward-species-declaration.xlsx`) at write time per the v1.0 design decision (no cross-workbook formulas).
+3. Find the next empty row in Output_Log using **column A (log_id) as the determinant**, NOT `ws.max_row`. The value_envelope_table embedded at O1:P5 makes `max_row` report 5 even when sample data only fills rows 2-4 — using `max_row + 1` would leave a permanent ghost gap. Pseudocode:
+   ```python
+   r = 2
+   while ws.cell(r, 1).value:
+       r += 1
+   # r is now the first empty row to append at
+   ```
+4. Append the new rows starting at row `r`. Per row R appended:
+   - **Columns A-I:** write the captured values directly to row R (log_id, date, partner_id, output_type, output_ref, output_spec_ref, value_tier, ai_authored_pct, rework_within_30d).
+   - **Column J (`partner_multiplier`):** resolve by reading X2 (`firm/excel/reward-species-declaration.xlsx`) at write time per the v1.0 design decision (no cross-workbook formulas). Write the resolved number.
+   - **Column K (`value_envelope`):** **MUST write the formula** `=VLOOKUP(G{R}, $O$2:$P$5, 2, FALSE)` (with `{R}` substituted to the row number). Without this formula the cell stays blank and contributes zero to Monthly_Variable's SUMIFS — silent failure mode that R3 will not catch. Do NOT leave K blank.
+   - **Column L (`computed_variable`):** **MUST write the formula** `=K{R}*J{R}*IF(I{R}="Yes", 0, 1)` (with `{R}` substituted). Same discipline as K — blank L means zero variable pay for that output until someone manually patches it.
+   - **Column M (`notes`):** write any human-readable annotation, optional.
 4. For any retroactive rework_within_30d updates, edit the corresponding Output_Log rows in place.
 5. Save X1.
 6. Write the daily Brain summary as a markdown file at `firm/output-logs/YYYY-MM-DD.md` following the template at `templates/brain/daily-output-log.md`. Include: total outputs captured, breakdown by partner, any anomalies (e.g., a partner with zero outputs for >3 consecutive days), any retroactive rework_within_30d updates.

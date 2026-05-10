@@ -74,16 +74,32 @@ Run, in order, and capture each result:
 
 ```bash
 git --version
-python3 --version    # must be ≥3.13
-curl --version
-gpg --version
-jq --version || true # nice-to-have, not required
-which gh || true     # GitHub CLI; if missing, walk user through install
+# Python: try 3.13 / 3.12 / 3.11 / system python3 in order; use whichever first satisfies ≥3.11
+for cmd in python3.13 python3.12 python3.11 python3; do
+    command -v "$cmd" >/dev/null 2>&1 && "$cmd" --version && OOT_PYTHON="$cmd" && break
+done
+echo "Will use: $OOT_PYTHON"
+curl --version | head -1
+gpg --version | head -1 2>&1 || echo "MISSING: gpg"
+jq --version 2>&1 || echo "MISSING: jq (nice-to-have, not required)"
+gh --version 2>&1 | head -1 || echo "MISSING: gh"
 ```
 
-If any required tool is missing, walk the user through installation (macOS: `brew install <tool>`; Linux: `apt install <tool>`; Windows / WSL: per official docs).
+If `OOT_PYTHON` is unset (no Python ≥3.11 found): "ØØT requires Python 3.11 or newer. Please install Python 3.13 from https://www.python.org/downloads/ (or via Homebrew on macOS: `brew install python@3.13`). Stop the plan and wait."
 
-If `python3 --version` is < 3.13, surface this clearly: "ØØT requires Python 3.13 or newer. You have <X>. Please install Python 3.13 from https://www.python.org/ before continuing." Stop the plan and wait.
+If `gpg` is missing, walk the user through:
+- **macOS:** `brew install gnupg` (run `brew install homebrew/cask/gpg-suite-pinentry` if you want a graphical pinentry too).
+- **Linux:** `sudo apt install gnupg` (Debian/Ubuntu) or `sudo dnf install gnupg2` (Fedora).
+- **Windows:** install Gpg4win from https://www.gpg4win.org/ or use WSL.
+
+If `gh` is missing, walk through:
+- **macOS:** `brew install gh`
+- **Linux:** see https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+- **Windows:** `winget install --id GitHub.cli` or https://cli.github.com/
+
+`jq` is nice-to-have. Install if convenient (`brew install jq` / `apt install jq`); otherwise skip.
+
+After install, re-run the checks. Capture the absolute path of `OOT_PYTHON` (e.g. `/opt/homebrew/bin/python3.13`) — it'll be used in subsequent steps and persisted in the state file.
 
 ### 0.2 — Confirm framework reading
 
@@ -99,7 +115,30 @@ If `skip`, log this in the state file's `notes` and continue.
 
 ### 0.3 — Mark step done
 
-Update state file: `step_0_preflight: done`.
+Update state file: `step_0_preflight: done`. Also persist `OOT_PYTHON` (absolute path).
+
+### 0.4 — Set up Python virtual environment for the framework
+
+The framework's scripts (`build_excel.py`, `validate_skills.py`, the wizard) use `openpyxl`, `pyyaml`, `httpx`, and others. macOS Homebrew Python 3.13 enforces PEP 668 — `pip install --user` is rejected. Use a venv at `~/.oot/venv/`:
+
+```bash
+$OOT_PYTHON -m venv ~/.oot/venv
+source ~/.oot/venv/bin/activate
+pip install openpyxl pyyaml httpx
+# OR if the framework repo is cloned locally and you want all dev tools:
+# pip install -e <FRAMEWORK_REPO_PATH>
+```
+
+Verify:
+```bash
+python -c "import openpyxl; print(f'openpyxl {openpyxl.__version__} OK')"
+```
+
+The venv is the install-time agent's code-execution sandbox. Routines themselves (cloud track) run on Anthropic infrastructure where the dependencies are already available; the venv is for the local install + any human-in-the-loop work.
+
+Persist `~/.oot/venv` path in the state file. Future steps assume the venv is active when running Python.
+
+`step_0_4_venv: done`.
 
 ---
 
@@ -565,8 +604,27 @@ git ls-remote git@github.com:<user>/<BRAIN_REPO_NAME>.git | head -3
 cd ~/oot-brain
 git log --show-signature -1 | grep "gpg: Good signature" && echo "✓ signing works"
 
-# Excel templates intact
-python3 <FRAMEWORK_REPO>/scripts/build_excel.py --check ~/oot-brain/firm/excel/ 2>&1 || echo "(skip if --check unsupported)"
+# Excel templates intact — open all 9 .xlsx files via openpyxl and count sheets
+source ~/.oot/venv/bin/activate
+python -c "
+import openpyxl
+from pathlib import Path
+brain = Path.home() / 'oot-brain' / 'firm' / 'excel'
+ok = 0
+fail = 0
+for f in sorted(brain.glob('*.xlsx')):
+    try:
+        wb = openpyxl.load_workbook(f)
+        sheets = len(wb.sheetnames)
+        wb.close()
+        ok += 1
+        print(f'  ✓ {f.name} — {sheets} sheets')
+    except Exception as e:
+        fail += 1
+        print(f'  ✗ {f.name} — {e}')
+print(f'Result: {ok} ok, {fail} fail')
+exit(0 if fail == 0 else 1)
+"
 
 # my-curator MCP reachable
 # (User runs in Claude Desktop: "Use my-curator. list_domains.")

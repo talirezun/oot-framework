@@ -211,7 +211,7 @@ Per `GENERATIONS.md`:
 
 ## Coding conventions
 
-- **Python ≥3.13** for installer scripts and any glue code. `uv` for dependency management. Type hints required. Black for formatting. Ruff for linting. `pyproject.toml` is committed.
+- **Python ≥3.11 minimum, 3.13 recommended** for installer scripts and any glue code. `pyproject.toml` declares `requires-python = ">=3.11"`; the framework's tooling (`ruff`, `black`, `mypy`) targets 3.13 for new code. `uv` for dependency management when available. Type hints required. Black for formatting. Ruff for linting. The install plan tries `python3.13` / `python3.12` / `python3.11` / `python3` in order and uses whichever first satisfies the floor.
 - **Bash / Zsh** for shell scripts. POSIX-compatible. `set -euo pipefail` at the top.
 - **JSON / YAML** for configuration files.
 - **No new dependencies without justification.** ØØT is a markdown framework. Code is glue, not the substance.
@@ -281,7 +281,15 @@ This section is intended for ephemeral state across sessions.
 
 **Install-path overhaul in flight.** Three install paths are being upgraded for less-technical founders:
 
-- **Path A — coding-agent-assisted install — DONE 2026-05-10.** Built at `installer/agent-assisted/{README.md, AGENT-CAPABILITY-SPEC.md, cloud-install-plan.md, privacy-install-plan.md}`. LLM-agnostic capability spec; known-compatible agents include Claude Code (reference), Augment Code, Aider, OpenCode, Cline, Continue.dev. Cloud install plan is 12 steps, ~60-90 minutes wall-clock. Privacy install plan is 12 steps + hardware shipping pre-week + model download time. **Not yet end-to-end-tested on a real machine** — that's Step 4 of the install-path overhaul plan. README.md "Read in this order" + `installer/README.md` updated to make Path A the recommended primary.
+- **Path A — coding-agent-assisted install — DONE 2026-05-10.** Built at `installer/agent-assisted/{README.md, AGENT-CAPABILITY-SPEC.md, cloud-install-plan.md, privacy-install-plan.md}`. LLM-agnostic capability spec; known-compatible agents include Claude Code (reference), Augment Code, Aider, OpenCode, Cline, Continue.dev.
+
+- **Step 4 — sandbox install test — DONE 2026-05-10.** Drove the cloud install plan against a sandbox at `/tmp/oot-test-install/`. Pattern C verified end-to-end (openpyxl mutates X1 cleanly, named ranges + conditional formatting survive, signed-commit workflow round-trips through a bare git remote). 8 findings recorded in [`docs/internal/install-test-report-2026-05-10.md`](docs/internal/install-test-report-2026-05-10.md); all blocking ones fixed:
+  - **Finding 6 (CRITICAL):** R1 was not writing K (`value_envelope`) and L (`computed_variable`) formulas on appended rows → silent zero-pay bug. Fixed in `templates/excel/SPEC.md` X1 §Formulas, `routines/SPEC.md` R1 implementation, `routines/cloud/R1.md` prompt body.
+  - **Finding 7:** `ws.max_row + 1` is wrong on Output_Log (the value_envelope_table at O1:P5 inflates max_row). R1 must find next empty row via column A. Fixed.
+  - **Findings 1, 3, 4, 5:** install plan Step 0.1 + new Step 0.4 — Python version fallback (3.13/3.12/3.11/3 in order), per-OS install one-liners for gpg/gh/jq, and venv setup at `~/.oot/venv` to handle PEP 668.
+  - **Finding 8:** install plan Step 10.1 referenced `build_excel.py --check` which doesn't exist; replaced with inline openpyxl smoke check.
+  - **Finding 2:** Python ≥3.11 / 3.13-recommended canonicalised in CLAUDE.md.
+- Live install on a fresh machine is the next quality bar (will surface GitHub repo creation, branch protection API, real signed commits, Curator install, Claude Desktop MCP wiring). Sandbox could not test those.
 - **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance." Tracked for v1.x.
 - **Path C — manual (docs)**: `docs/MODULES.md` shipped (Step 2 of overhaul). Cloud + privacy quickstarts updated to point at Path A first. Bitwarden/Trezor/Yubikey re-tiered as recommended-but-optional. Plan-tier guidance (Pro vs Max) shipped throughout.
 
