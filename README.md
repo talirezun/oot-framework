@@ -21,7 +21,8 @@ If you are new to ØØT, read these in order. Each step is timed; the full path 
 | 3 | [`GENERATIONS.md`](GENERATIONS.md) | ~10 min | What's in Gen 1, what's deferred, why. |
 | 4 | [`governance/KLARNA-TEST.md`](governance/KLARNA-TEST.md) | ~10 min | The framework's signature epistemic discipline. Non-negotiable. |
 | 5 | [`docs/MODULES.md`](docs/MODULES.md) | ~10 min | What to install, in what order, and what's optional. The dependency graph + a Day-N progression table. Read this before QUICKSTART. |
-| 6 | [`QUICKSTART.md`](QUICKSTART.md) | ~30 min | Weekend setup path (cloud or privacy). Implementation starts here. |
+| 6 | [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) | ~15 min | How the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, the my-curator-MCP-reachability gap. Read this before installing Routines. |
+| 7 | [`QUICKSTART.md`](QUICKSTART.md) | ~30 min | Weekend setup path (cloud or privacy). Implementation starts here. |
 | 7 | [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) | ~20 min | The external tools the framework rests on. With links to every wiki. |
 | 8 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — screenshot-rich, no shell required. |
 | 9 | [`research/README.md`](research/README.md) | optional | Going deeper — paper summaries, original articles, and the curated ecosystem index. |
