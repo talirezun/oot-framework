@@ -285,7 +285,16 @@ This section is intended for ephemeral state across sessions.
 - **Path B — wizard (`installer/wizard.py`)**: steps 1–4 already work; 5–12 stubbed. Needs module-selection UX, programmatic step implementations, and `--resume` state-file persistence. Reframed from "primary path" to "for founders who explicitly avoid agent assistance."
 - **Path C — manual (docs)**: tighten for less-technical readers; add absolutely-non-technical primer; resolve Excel-writeback ambiguity (now done in ADR-001).
 
-**Excel writeback resolved (Pattern C, ADR-001).** Cloud Routines mutate `.xlsx` files in the firm's Brain GitHub repo via openpyxl + signed commits — not via Google Sheets. Same operation on cloud and privacy. Multiple files needing updates: `routines/SPEC.md`, all `routines/cloud/R*.md`, `templates/excel/SPEC.md`, `docs/00-quickstart-cloud.md`, `docs/02-installing-routines.md`, plus the "Anthropic Remote Routines" → "Claude Code Routines" rename across the repo.
+**Excel writeback resolved (Pattern C, ADR-001) — DONE 2026-05-10.** Cloud Routines mutate `.xlsx` files in the firm's Brain GitHub repo via openpyxl + signed commits — not via Google Sheets. Same operation on cloud and privacy. Implemented across:
+- `docs/internal/ADR-001-cloud-routine-excel-writeback.md` (the design-of-record).
+- `routines/SPEC.md` (rewritten preamble + R1-R8 mcp_servers + prompt bodies).
+- All `routines/cloud/R*.md` (frontmatter v1.1.0, brain_repo_access + code_execution keys, prompt-body Pattern C blocks).
+- All `routines/privacy/R*.md` (per-track delta updated from "Excel MCP" to "openpyxl on local Brain-repo clone").
+- `templates/excel/SPEC.md` (new "Excel files in operation" section + spreadsheet-viewer guidance).
+- `docs/00-quickstart-cloud.md`, `docs/02-installing-routines.md` (Pattern C taught to founders + plan-tier guidance + Bitwarden/Trezor/Yubikey re-tiered).
+- 17 other files renamed "Anthropic Remote Routines" → "Claude Code Routines" + plan-tier nuance + spreadsheet-app-agnostic language.
+
+**Verified (2026-05-10):** `python3 scripts/validate_skills.py` → 12/12 pass; `lychee --offline` → 0 errors / 277 excluded; `python3 scripts/build_excel.py` → all 9 templates regenerate cleanly.
 
 **Bitwarden / Trezor / Yubikey re-tiered as optional for Gen 1.** See decision #13. Quickstart docs will be updated to make these optional rather than gating, with explicit "skip until you grow" affordances.
 
