@@ -28,9 +28,11 @@ For founders who prefer not to use a coding agent:
 python3 installer/wizard.py
 ```
 
-Interactive 12-step terminal wizard. Resumable (`--resume`). Dry-run available (`--dry-run`).
+Interactive **14-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Brain repo creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
 
-v1.0 ships the wizard scaffold (steps 1-4 implemented; steps 5-12 reference the manual docs at [`docs/00-quickstart-cloud.md`](../docs/00-quickstart-cloud.md)). v1.x hardens the remaining steps to be programmatic. Pick this path if you don't have access to a coding agent or are philosophically opposed to handing one shell access.
+Programmatic where safe (folder creation, git operations, GPG key generation, file edits, smoke test); web-UI walkthrough where the user must approve a third-party action (GitHub repo creation, branch protection rule, GPG public-key upload, MCP installation in Claude Desktop).
+
+Pick Path B if you don't have access to a coding agent, are philosophically opposed to handing one shell access, or want a guided form rather than the manual docs.
 
 ## 3. Path C — Manual setup (the docs)
 
