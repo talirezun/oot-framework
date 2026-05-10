@@ -1,0 +1,19 @@
+# lychee ignore patterns — known v1.x-deferred placeholders.
+# Each line is a regex matched against the constructed URL.
+# When a link in a markdown file resolves to one of these, lychee skips the check.
+# Keep this file as small as possible: prefer fixing real broken links over adding ignores.
+
+# Screenshot binaries — Phase 7 docs ship with placeholder paths only.
+# Deferred to v1.x per GENERATIONS.md. See CLAUDE.md "What's deferred".
+docs/images/.*\.png$
+
+# Curly-brace template placeholders inside templates/brain/ pages —
+# these are substituted at provisioning time by R0 / installer.
+# Lychee URL-encodes `{{` to `%7B%7B`, so match the encoded form too.
+(\{\{|%7B%7B).+(\}\}|%7D%7D)
+
+# Intra-file anchor links in docs/07-troubleshooting.md.
+# Headings use a §-prefixed slug convention (§MCP-1 etc.) that GitHub
+# renders correctly when humans click but that lychee's slug generator
+# does not match. Real navigation works; only the offline check trips.
+07-troubleshooting\.md#(mcp|curator|routine|excel|comp|klarna|brain|privacy|secrets|audit)-\d+

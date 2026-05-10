@@ -235,4 +235,4 @@ Is the user MAINTAINING the wiki?
   → scan_wiki_health → loop fix_wiki_issue (auto-fix simple, confirm risky, preview destructive)
 ```
 
-For sample dialogues that show end-to-end flows for each scenario, see [examples.md](examples.md).
+For sample dialogues that show end-to-end flows for each scenario, see the [examples/](examples/) folder.
