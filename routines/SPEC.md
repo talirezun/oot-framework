@@ -1,8 +1,33 @@
 # Routines — SPEC
 
-The eight ØØT scheduled Routines, in two flavours: cloud track (Anthropic Remote Routines) and privacy track (OS-native scheduling hitting headless LM Studio via `llmster`). The substrates differ; the prompts are functionally identical so a firm can switch tracks without rewriting Routine logic.
+The eight ØØT scheduled Routines, in two flavours: cloud track (**Claude Code Routines** — Anthropic's cloud-hosted scheduled-agent product, launched 14 April 2026) and privacy track (OS-native scheduling — cron / launchd / Task Scheduler — hitting headless LM Studio via `llmster`). The substrates differ; the prompts are functionally identical so a firm can switch tracks without rewriting Routine logic.
 
 Claude Code generates 16 markdown files (8 in `routines/cloud/`, 8 in `routines/privacy/`) from this spec.
+
+---
+
+## Operational state lives in the Brain repo (ADR-001)
+
+All `.xlsx` operational state — partner-output-ledger, reward-species-declaration, business-review, klarna-test, agent-skill-roi, eu-ai-act-mapping, treasury-runway, oot-readiness, perception-gap-survey — lives in the **firm's Brain GitHub repo**. Routines mutate these files via **openpyxl in Claude Code's code-execution capability**, then **signed-commit and push** the mutation to the protected `main` branch. No Google Sheets, no native Drive write-in-place, no remote Excel MCP. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../docs/internal/ADR-001-cloud-routine-excel-writeback.md) for the full decision rationale and alternatives considered.
+
+Track symmetry: cloud and privacy Routines perform the same operation. Privacy Routines run against a local clone; cloud Routines run against a fresh clone created on Anthropic's infrastructure for each Routine run.
+
+**Spreadsheet viewers are user choice.** Microsoft Excel, LibreOffice (free, open-source), Apple Numbers, Excel-for-Web, Google Sheets via "Open with" / import — all open `.xlsx` natively or via auto-conversion. The framework does not require any specific paid app.
+
+---
+
+## Plan-tier guidance (cloud track)
+
+Anthropic plan limits drive what's affordable for a firm:
+
+| Plan | Routine runs/day | Suitable for |
+|---|---|---|
+| **Pro** | 5 | Solo founders or 2-partner firms **without** R7 (Klarna gate) activity |
+| **Max** | 15 | 3+ partner firms; any firm with active R7; recommended default |
+| **Team** | 25 | 5+ partner firms with discretionary ad-hoc Routines |
+| **Enterprise** | 25 | >10 partners; firms running R8 + extended R7 |
+
+Steady-state daily-routine cost on the v1.0 schedule: R1 daily + R6 daily + R2/R5/R8 weekly + R3 monthly + R4 quarterly + R7 event-driven ≈ 2.3 runs/day average, peak ≈ 4–5. Pro is sufficient until R7 starts firing; from there, upgrade.
 
 ---
 
@@ -14,27 +39,31 @@ Claude Code generates 16 markdown files (8 in `routines/cloud/`, 8 in `routines/
 
 **Allowed Skills.** Skill Packs the Routine loads at runtime. The Routine inherits the Skill Pack's discipline.
 
-**MCP servers.** MCP tools the Routine uses.
+**MCP servers.** MCP tools the Routine uses. **Cloud Routines support remote-HTTP / SSE MCPs only** (no stdio MCP — there is no local machine for cloud Routines). Stdio MCPs (e.g. `haris-musa/excel-mcp-server` in default mode, Desktop Commander) are privacy-track-only. The Excel writeback canonical pattern uses **no Excel MCP** — it uses Claude Code's built-in code execution + GitHub repo operations.
 
-**Expected output.** Where the Routine writes — Brain pages, Excel files, Slack/dChat posts, audit logs.
+**Code-execution requirement.** Routines that mutate `.xlsx` files require code execution to be enabled in their Claude Code Routine config. This is the default for Pro+ accounts.
 
-**Failure handling.** What happens if the Routine errors (e.g., GitHub API rate-limited, MCP unreachable, model error).
+**Brain-repo access.** Routines that read or write `.xlsx` files require the Brain repo to be cloneable + pushable from the Routine. Configure a deploy key or PAT scoped to the Brain repo, with signing (GPG or SSH) configured per [`governance/SECRETS-POLICY.md`](../governance/SECRETS-POLICY.md). Only the firm's bot identity (e.g. `oot-bot`) commits via Routines; the bot identity is exempted from the `firm/audit-logs/*` reviewer rule per the existing `[skip review]` mechanism (see `skills/code-qa/SKILL.md` §4.0).
 
-**Privacy-track delta.** Where the privacy-track equivalent differs from the cloud version.
+**Expected output.** Where the Routine writes — Brain pages, Excel files (mutated in-repo + signed commit), Slack/dChat posts, audit logs.
+
+**Failure handling.** What happens if the Routine errors (e.g., GitHub API rate-limited, MCP unreachable, model error, signing key unavailable).
+
+**Privacy-track delta.** Where the privacy-track equivalent differs from the cloud version. For Excel writes the operation is identical (openpyxl on a local Brain-repo clone) — only the scheduling substrate differs.
 
 ---
 
 ## R1 — Daily Output Capture
 
 **Trigger:**
-- Cloud: Anthropic Remote Routine, daily 18:00 in the firm's primary timezone.
+- Cloud: Claude Code Routine, daily 18:00 in the firm's primary timezone.
 - Privacy: cron `0 18 * * *` (Linux/macOS) or Task Scheduler equivalent (Windows), invoking `llmster --skill compensation-attribution --prompt-file routines/privacy/r1.prompt.md`.
 
 **Allowed Skills:** S3 (Compensation & Attribution), S1 (My Curator).
 
-**MCP servers:**
-- Cloud: GitHub, Slack, Google Drive (via Anthropic connectors).
-- Privacy: GitHub MCP, Desktop Commander MCP, 4thtech (for dChat thread reads), Excel MCP (for X1 writes).
+**MCP servers and tools:**
+- Cloud: GitHub connector (Brain-repo clone + signed commit + push). Slack connector (read tracked channels + post `#output-log` and `#ops`). Google Workspace connector (**read-only**, for `{{TRACKED_FOLDERS}}` document discovery). Code execution required (openpyxl writes to X1 in the cloned Brain repo).
+- Privacy: same operation locally. GitHub MCP for the commit/push. Local filesystem for the Brain-repo clone. 4thtech CLI/SDK for dChat thread reads (replaces Slack). No Excel MCP needed — openpyxl is a Python library, used directly by `llmster`.
 
 **Prompt body:**
 
@@ -61,23 +90,31 @@ For each output:
 
 - Resolve `partner_multiplier` (column J) by **reading X2 directly at write time** — do not rely on a cross-workbook Excel formula (see `templates/excel/SPEC.md` X1). Compute `value_envelope` (column K) per the lookup table embedded in X1.
 
-Append rows to X1 Output_Log. Do **not** edit existing rows except to flip `rework_within_30d` per the rule above.
+**Implementation (the canonical Pattern C operation per ADR-001):**
 
-Write a daily summary as a Brain page at firm/output-logs/YYYY-MM-DD.md following the template at templates/brain/daily-output-log.md. Include: total outputs captured, breakdown by partner, any anomalies (e.g., a partner with zero outputs for >3 consecutive days), any retroactive rework_within_30d updates.
+1. Clone the firm's Brain repo to a working directory: `git clone <BRAIN_REPO_URL> /tmp/brain && cd /tmp/brain && git pull`.
+2. Open `firm/excel/partner-output-ledger.xlsx` (X1) with openpyxl in code execution.
+3. Append the new rows to the Output_Log sheet per the schema. Resolve column J (`partner_multiplier`) by reading X2 (`firm/excel/reward-species-declaration.xlsx`) at write time per the v1.0 design decision (no cross-workbook formulas).
+4. For any retroactive rework_within_30d updates, edit the corresponding Output_Log rows in place.
+5. Save X1.
+6. Write the daily Brain summary as a markdown file at `firm/output-logs/YYYY-MM-DD.md` following the template at `templates/brain/daily-output-log.md`. Include: total outputs captured, breakdown by partner, any anomalies (e.g., a partner with zero outputs for >3 consecutive days), any retroactive rework_within_30d updates.
+7. Stage and signed-commit both changes: `git add firm/excel/partner-output-ledger.xlsx firm/output-logs/YYYY-MM-DD.md && git commit -S -m "R1: append <N> outputs for <date>; <K> retroactive rework updates"`.
+8. Push to `main`: `git push origin main`. The bot identity is exempted from the `firm/audit-logs/*` reviewer rule per `[skip review]`; for `firm/excel/*` and `firm/output-logs/*` paths, no review is required (these paths are append-mostly Routine output, not audit log).
 
 Post a short summary to Slack #output-log (or 4thtech dChat #output-log on privacy track): "{{TODAY}} captured {{N}} outputs from {{P}} partners. Anomalies: {{LIST_OR_NONE}}."
 
-Failure handling: if any source is unreachable, log the failure to the daily summary, capture from available sources, and post a notice to #ops.
+Failure handling: if any source is unreachable, log the failure to the daily summary, capture from available sources, and post a notice to #ops. If git push fails (signing key unavailable, branch protection rejects, network), retry with exponential backoff up to 3 attempts; if still failing, post to #ops and DO NOT downgrade to an unsigned commit.
 ```
 
 **Expected outputs:**
-- Rows appended to `templates/excel/partner-output-ledger.xlsx`.
+- Rows appended to `firm/excel/partner-output-ledger.xlsx` in the Brain repo.
 - Brain page at `firm/output-logs/YYYY-MM-DD.md`.
+- One signed commit on `main` carrying both changes.
 - Slack/dChat summary post.
 
 **Privacy-track delta:**
 - Sources: GitHub via GitHub MCP, dChat via 4thtech CLI/SDK, local filesystem via Desktop Commander MCP.
-- Output: Excel via Excel MCP (`haris-musa/excel-mcp-server`).
+- Excel writes: same openpyxl operation against a local Brain-repo clone — no Excel MCP needed for the Routine path. (Excel MCP remains available as an *optional* tool for ad-hoc human-in-the-loop work, not a Routine dependency.)
 - Posting: dChat to a designated channel.
 - Cron entry: `0 18 * * * /usr/local/bin/llmster --model qwen-3-14b --skill compensation-attribution --skill my-curator --prompt-file ~/oot/routines/privacy/r1.prompt.md >> ~/oot/logs/r1.log 2>&1`
 
@@ -86,12 +123,12 @@ Failure handling: if any source is unreachable, log the failure to the daily sum
 ## R2 — Weekly BR Prep
 
 **Trigger:**
-- Cloud: Friday 08:00.
+- Cloud: Claude Code Routine, Friday 08:00.
 - Privacy: cron `0 8 * * 5`.
 
 **Allowed Skills:** S5 (Reporting & Business Review), S1 (My Curator).
 
-**MCP servers:** GitHub, Excel/Sheets, Slack/4thtech.
+**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector. Code execution required (openpyxl reads X1, X4, X6 and writes X3 in the cloned Brain repo).
 
 **Prompt body:**
 
@@ -115,27 +152,30 @@ Post a draft summary to Slack #business-review (or dChat equivalent) by 09:00:
 
 After the BR meeting (signaled by manual trigger or by the Decisions_Log getting populated), commit the final summary as a Brain page at firm/business-reviews/YYYY-MM-DD.md.
 
+**Implementation:** clone the Brain repo, read X1 / X4 / X6 via openpyxl, write the new row(s) to X3's Weekly_Review sheet via openpyxl, write the Brain summary markdown, signed-commit both changes, push to `main`. Same Pattern C as R1 (ADR-001).
+
 Failure handling: if any data source is unreachable, populate from what's available and clearly mark the gap in column G (meeting_notes) for the BR participants to address.
 ```
 
 **Expected outputs:**
-- `business-review.xlsx` Weekly_Review sheet populated.
+- `firm/excel/business-review.xlsx` Weekly_Review sheet populated.
 - Slack/dChat draft summary.
 - Post-BR Brain page (after meeting).
+- Signed commit on `main`.
 
-**Privacy-track delta:** Excel via Excel MCP; dChat via 4thtech.
+**Privacy-track delta:** Same openpyxl operation against a local Brain-repo clone; dChat via 4thtech.
 
 ---
 
 ## R3 — Monthly Variable Calc
 
 **Trigger:**
-- Cloud: 1st of month, 09:00.
+- Cloud: Claude Code Routine, 1st of month, 09:00.
 - Privacy: cron `0 9 1 * *`.
 
 **Allowed Skills:** S3 (Compensation & Attribution).
 
-**MCP servers:** Excel/Sheets, Slack/4thtech, Email/dMail.
+**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector for `#compensation` posts. Email / dMail for per-partner statement delivery. Code execution required (openpyxl reads X1, X2 and writes X1's Monthly_Variable sheet in the cloned Brain repo). Polling job to detect partner acknowledgement runs daily as a separate Routine fire (see step 8 below).
 
 **Recommended model:** Cloud — Claude Opus (compensation accuracy is high-stakes). Privacy — largest local model available.
 
@@ -186,25 +226,28 @@ Your task: lock the previous month's Output_Log and produce per-partner variable
 Failure handling: if any partner does not respond within the 5-day window, escalate to founder for review. Never auto-approve a contested calculation.
 ```
 
+**Implementation:** clone Brain repo; read X1 Output_Log (filtered to last_month) and X2 reward-species via openpyxl; write the Monthly_Variable rows + per-partner statement markdown files; signed-commit; push. Same Pattern C as R1 (ADR-001). For the daily acknowledgement polling step, the polling Routine (or a single Routine that handles steps 1-7 on day 1 and step 8 daily through day +5) re-clones the Brain repo, reads each partner's statement page for the checkbox state, updates X1 Monthly_Variable's `sign_off_status` column, signed-commits + pushes. Each polling pass is a separate Routine run; budget for 5–7 R3-polling fires per month in the Anthropic plan calculation.
+
 **Expected outputs:**
-- `partner-output-ledger.xlsx` Monthly_Variable sheet populated.
+- `firm/excel/partner-output-ledger.xlsx` Monthly_Variable sheet populated.
 - Per-partner statement Brain pages.
 - Email/dMail to each partner.
 - Founder-approval packet.
+- One signed commit per Routine fire (initial + daily polling).
 
-**Privacy-track delta:** dMail instead of email; Excel via Excel MCP.
+**Privacy-track delta:** dMail instead of email; same openpyxl operation locally.
 
 ---
 
 ## R4 — Quarterly Long-Tail Settlement
 
 **Trigger:**
-- Cloud: 1st of quarter (1 Jan, 1 Apr, 1 Jul, 1 Oct), 09:00.
+- Cloud: Claude Code Routine, 1st of quarter (1 Jan, 1 Apr, 1 Jul, 1 Oct), 09:00.
 - Privacy: cron `0 9 1 1,4,7,10 *`.
 
 **Allowed Skills:** S3, S10 (Finance & Treasury).
 
-**MCP servers:** Excel/Sheets, GitHub, Email/dMail.
+**MCP servers and tools:** GitHub connector / GitHub MCP. Email / dMail. Code execution required (openpyxl reads X2 Long_Tail_Schedule across all partner sheets, writes settlement rows and per-partner statement markdown). Pattern C as in R1 (ADR-001).
 
 **Prompt body:**
 
@@ -230,21 +273,23 @@ Your task: for every output that has an entry in any partner's reward-species-de
 Failure handling: if outcome attribution data is missing for an output, flag for founder + affected partner review; do not pay until resolved.
 ```
 
-**Expected outputs:** Per-partner long-tail statements; updated Long_Tail_Schedule sheets; founder-approval packet.
+**Implementation:** clone Brain repo; read X2 across all partner sheets via openpyxl; compute and write settlement; write per-partner long-tail statement markdown; signed-commit; push. Pattern C as R1.
 
-**Privacy-track delta:** As R3.
+**Expected outputs:** Per-partner long-tail statements; updated Long_Tail_Schedule sheets; founder-approval packet; signed commit on `main`.
+
+**Privacy-track delta:** Same openpyxl operation locally; dMail instead of email.
 
 ---
 
 ## R5 — Brain Health Check
 
 **Trigger:**
-- Cloud: Sunday 09:00.
+- Cloud: Claude Code Routine, Sunday 09:00.
 - Privacy: cron `0 9 * * 0`.
 
 **Allowed Skills:** S1 (My Curator).
 
-**MCP servers:** Curator MCP, Slack/4thtech.
+**MCP servers and tools:** my-curator MCP (remote-HTTP for cloud, stdio for privacy). Slack / 4thtech connector. GitHub connector / GitHub MCP for the brain-health snapshot commit. No Excel writes; no code-execution requirement beyond what my-curator needs.
 
 **Prompt body:**
 
@@ -271,12 +316,12 @@ Failure handling: if Curator is unreachable, retry hourly until 18:00; if still 
 ## R6 — EU AI Act Audit Trail
 
 **Trigger:**
-- Cloud: daily 23:00.
+- Cloud: Claude Code Routine, daily 23:00.
 - Privacy: cron `0 23 * * *`.
 
 **Allowed Skills:** S7 (Governance & Compliance).
 
-**MCP servers:** Curator MCP, GitHub MCP (commit the audit log).
+**MCP servers and tools:** my-curator MCP (read agent-decision data). GitHub connector / GitHub MCP (signed commit + push of the daily audit log). Code execution required (openpyxl writes X7 Audit_Log_Index after the audit-log markdown is committed).
 
 **Prompt body:**
 
@@ -304,12 +349,12 @@ Failure handling: if any source unreachable, append from available sources and f
 ## R7 — Klarna Test Trigger
 
 **Trigger:**
-- Cloud: GitHub webhook event — PR labelled `ai-replaces-human`. Optionally also: manual trigger from a partner via Slack slash command.
+- Cloud: Claude Code Routine fired by GitHub event (PR labelled `ai-replaces-human`). Optionally also: manual trigger from a partner via Slack slash command.
 - Privacy: GitHub webhook polled by a local listener (every 5 minutes) hitting llmster.
 
 **Allowed Skills:** S6 (Change Management), S4 (Code & QA).
 
-**MCP servers:** GitHub MCP, Excel/Sheets MCP, Slack/4thtech, Email/dMail.
+**MCP servers and tools:** GitHub connector / GitHub MCP (PR status check, Brain-repo clone + signed commit + push). Slack / 4thtech connector. Email / dMail. Code execution required (openpyxl appends row to X4 Decision_Log).
 
 **Prompt body:**
 
@@ -340,12 +385,12 @@ Failure handling: if scoring isn't complete in 5 business days, escalate to foun
 ## R8 — Treasury Runway Update (OPTIONAL — only orgs adopting Unit Fund)
 
 **Trigger:**
-- Cloud: Monday 08:00.
+- Cloud: Claude Code Routine, Monday 08:00.
 - Privacy: cron `0 8 * * 1`.
 
 **Allowed Skills:** S10 (Finance & Treasury).
 
-**MCP servers:** Banking integrations (jurisdiction-specific), Excel/Sheets MCP.
+**MCP servers and tools:** Banking integrations (jurisdiction-specific HTTP APIs — most banks expose REST). GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Code execution required (openpyxl appends today's snapshot row to X8 Runway_Calc).
 
 **Prompt body:**
 
@@ -363,9 +408,11 @@ Your task:
 Failure handling: if any banking API is unreachable, flag in alert; never silently skip an account.
 ```
 
-**Expected outputs:** X8 Runway_Calc updated; alert if thresholds breached.
+**Implementation:** clone Brain repo; openpyxl appends snapshot row to `firm/excel/treasury-runway.xlsx`; signed-commit; push. Pattern C as R1.
 
-**Privacy-track delta:** Banking APIs identical (most are HTTP-callable); Excel via Excel MCP; dChat instead of Slack.
+**Expected outputs:** X8 Runway_Calc updated; alert if thresholds breached; signed commit on `main`.
+
+**Privacy-track delta:** Banking APIs identical (most are HTTP-callable); same openpyxl operation locally; dChat instead of Slack.
 
 ---
 
@@ -373,7 +420,7 @@ Failure handling: if any banking API is unreachable, flag in alert; never silent
 
 **Privacy-track scheduling reliability.** The privacy track requires the always-on machine to be running. Recommended hardware: Mac mini, Intel NUC, or Raspberry Pi 5 with at least 16GB RAM (32GB for R3 with larger models). Recommended UPS for unattended operation.
 
-**Cloud-track concurrency.** Anthropic Remote Routines run on Anthropic infrastructure; they tolerate the partner's laptop being closed. They do not tolerate Anthropic infrastructure being down — design for this with idempotent prompts (running a Routine twice on the same day produces the same output).
+**Cloud-track concurrency.** Claude Code Routines run on Anthropic infrastructure; they tolerate the partner's laptop being closed. They do not tolerate Anthropic infrastructure being down — design for this with idempotent prompts (running a Routine twice on the same day produces the same output; Pattern C makes this natural via git's content-addressed commits).
 
 **Routines and the Klarna Test.** Routines are themselves subject to the Klarna Test. Any new Routine that automates a function previously performed by a partner triggers R7. The framework's authors run R7 against R7 — circular, but the discipline holds.
 

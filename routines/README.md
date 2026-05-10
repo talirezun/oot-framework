@@ -1,8 +1,10 @@
 # Routines
 
-The eight ØØT scheduled Routines, in two flavours: **cloud** (Anthropic Remote Routines) and **privacy** (OS-native scheduling — cron / launchd / Task Scheduler — hitting headless LM Studio via `llmster`).
+The eight ØØT scheduled Routines, in two flavours: **cloud** ([Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code) — Anthropic's cloud-hosted scheduled-agent product) and **privacy** (OS-native scheduling — cron / launchd / Task Scheduler — hitting headless LM Studio via `llmster`).
 
 The substrates differ; **the prompts are functionally identical** so a firm can switch tracks without rewriting Routine logic.
+
+**Excel state lives in the Brain repo (ADR-001).** All `.xlsx` operational state lives in the firm's Brain GitHub repo; Routines mutate it via openpyxl in code execution and signed-commit + push. Track-symmetric. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
 ---
 
@@ -38,20 +40,22 @@ The four Day-1 Routines (R1, R2, R5, R6) are sufficient for the framework's basi
 
 ---
 
-## Cloud track install (Anthropic Remote Routines)
+## Cloud track install (Claude Code Routines)
 
 For each Routine to install:
 
-1. Open the Anthropic Routines dashboard.
-2. Click "New Routine".
+1. Open Claude Code → `/schedule` (or claude.com/routines / Settings → Routines in the desktop app).
+2. Click **"New Routine"**.
 3. Configure trigger per the routine's frontmatter.
 4. Upload the prompt body from `routines/cloud/<R>.md`.
 5. Attach the listed Skill Packs.
-6. Configure connectors (GitHub, Slack, Drive, Email, etc. per the routine's `mcp_servers` frontmatter).
+6. Configure connectors and the Brain repo per the routine's `mcp_servers` frontmatter. Routines that mutate Excel need: GitHub connector with the Brain repo cloneable + pushable, signing key configured (GPG or SSH), and **code execution enabled** (default for Pro+).
 7. Manual test fire.
-8. Verify expected outputs (Brain page lands, Excel row appended, Slack post visible).
+8. Verify expected outputs (Brain page lands, `firm/excel/<file>.xlsx` row appended via signed commit on `main`, Slack post visible).
 
 Estimated setup time per Routine: 10-15 minutes. Total for the 4 Day-1 Routines: ~1 hour.
+
+**Plan-tier guidance.** Pro plan (5 runs/day) is sufficient for solo / 2-partner firms with no R7 activity. **Max plan (15 runs/day) is the recommended default** for 3+ partner firms or any firm with active R7 (Klarna gate enforcement). Team / Enterprise (25 runs/day) for >5 partners with extended R7 + R8.
 
 ---
 
@@ -77,7 +81,7 @@ Estimated setup time per Routine: 15-20 minutes (longer than cloud because of MC
 
 **Privacy-track scheduling reliability.** The privacy track requires the always-on machine to be running. If it sleeps or is offline (power outage), Routines miss. The framework's discipline: missed runs are documented as gaps in the audit trail (per R6's "no agent activity today" entry); never silently faked.
 
-**Cloud-track concurrency.** Anthropic Remote Routines run on Anthropic infrastructure; they tolerate the partner's laptop being closed. They do not tolerate Anthropic infrastructure being down — design Routines as idempotent (running R1 twice on the same day produces the same output: idempotent appends keyed on log_id).
+**Cloud-track concurrency.** Claude Code Routines run on Anthropic infrastructure; they tolerate the partner's laptop being closed. They do not tolerate Anthropic infrastructure being down — design Routines as idempotent (running R1 twice on the same day produces the same output: idempotent appends keyed on log_id, and Pattern C produces a no-op commit if data hasn't changed).
 
 **Routines and the Klarna Test.** Routines are themselves subject to the Klarna Test. Any new Routine that automates a function previously performed by a partner triggers R7. The framework's authors run R7 against R7 (circular but the discipline holds).
 
