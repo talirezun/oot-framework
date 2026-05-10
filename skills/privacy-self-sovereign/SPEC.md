@@ -90,7 +90,7 @@ The reference table from `SPEC.md` Layer 2, reproduced here:
 | Comms — internal | Slack | 4thtech dChat (W2W, on-chain, E2E encrypted) |
 | Comms — external | Email, Slack | 4thtech dMail (wallet-as-identity, self-custodial) |
 | File transfer | Drive | 4thtech on-chain file transfer + PollinationX bulk storage |
-| Automation | Claude Remote Routines (laptop closed) | Local cron / launchd / Task Scheduler + headless LM Studio (laptop on) |
+| Automation | Claude Code Routines (laptop closed) | Local cron / launchd / Task Scheduler + headless LM Studio (laptop on) |
 | Compensation rails | FIAT (Gen 1 default) | FIAT → Stablecoin upgrade path (Gen 2) |
 | Governance | GitHub + EU AI Act Skill Pack | GitHub + EU AI Act Skill Pack (+ Cotrugli Ledger Gen 3) |
 

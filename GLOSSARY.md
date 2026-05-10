@@ -56,9 +56,9 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 **CLAUDE.md.** The Claude Code-specific orientation file. Same purpose as AGENTS.md but Claude Code reads it preferentially. ØØT ships a `CLAUDE.md` at the root.
 
-**Routine.** A scheduled prompt that runs on a trigger (time, GitHub event, API call). Cloud track = Anthropic Remote Routines. Privacy track = OS-native scheduling hitting headless LM Studio. ØØT ships 8 Routines in v1.0.
+**Routine.** A scheduled prompt that runs on a trigger (time, GitHub event, API call). Cloud track = [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code). Privacy track = OS-native scheduling hitting headless LM Studio. ØØT ships 8 Routines in v1.0. Operational `.xlsx` state lives in the firm's Brain repo and is mutated by Routines via openpyxl + signed commits per ADR-001.
 
-**Cloud track.** The canonical, fastest path. Claude Desktop, Claude Code, Drive, Sheets, Slack, GitHub, Curator, MyCuratorMCP, Remote Routines. Anthropic infrastructure where applicable.
+**Cloud track.** The canonical, fastest path. Claude Desktop, Claude Code, Slack, GitHub (Brain repo holds markdown + `.xlsx` state), the Curator, MyCuratorMCP, Claude Code Routines. Anthropic infrastructure where applicable. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
 
 **Privacy track.** The full-Gen-1-parity sovereignty path. LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP, Excel MCP, 4thtech for on-chain communication, PollinationX for decentralised storage, GitHub MCP, OS-native scheduling.
 

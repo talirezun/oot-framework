@@ -32,7 +32,7 @@ By the end of this walkthrough you will have:
 
 *Look for the conversation pane on the left, the input area at the bottom, and the model selector in the top-right (typically "Claude Sonnet" by default).*
 
-> 💡 **Plan choice:** Pro plan unlocks Remote Routines (essential for ØØT cloud track). Max plan unlocks Claude Code at higher limits. The framework's authors recommend Max for partners who do engineering daily.
+> 💡 **Plan choice:** Pro plan unlocks Claude Code Routines (5 runs/day — enough for solo or 2-partner firms with no Klarna gate). **Max plan (15 runs/day) is the recommended default** for 3+ partner firms or any firm with active R7. The framework's authors recommend Max for partners who do engineering daily.
 
 ---
 

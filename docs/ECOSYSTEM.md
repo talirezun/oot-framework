@@ -25,7 +25,7 @@
 ## Cloud track (canonical, fastest path)
 
 ### Anthropic Claude
-- **What:** the cloud track's daily driver. Includes Claude Desktop, Claude Code, Claude Remote Routines, the Anthropic API.
+- **What:** the cloud track's daily driver. Includes Claude Desktop, Claude Code, [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code), the Anthropic API.
 - **Why ØØT uses it:** the framework's reference cloud-track implementation.
 - **Site:** [claude.com](https://claude.com/)
 - **Docs:** [docs.claude.com](https://docs.claude.com/)

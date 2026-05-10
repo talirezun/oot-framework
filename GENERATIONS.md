@@ -30,7 +30,7 @@ The current release. What ships in this repository.
 
 **Tech layer (Gen 1):**
 
-- Cloud track: Claude Desktop, Claude Code, Drive/Sheets/Docs, Slack, GitHub, Curator + MyCuratorMCP, Claude Remote Routines.
+- Cloud track: Claude Desktop, Claude Code, Slack, GitHub (Brain repo holds markdown + `.xlsx` state per ADR-001), Curator + MyCuratorMCP, Claude Code Routines. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
 - Privacy track at full Gen 1 parity: LM Studio + local Qwen/Llama/DeepSeek, Desktop Commander MCP, Excel MCP (`haris-musa/excel-mcp-server`), 4thtech (dMail, dChat, file transfer), PollinationX (decentralised storage), GitHub MCP, OS-native scheduling.
 - Secrets architecture: Bitwarden (passwords/tokens) + Trezor (crypto signing) + Yubikey (org-level admin).
 

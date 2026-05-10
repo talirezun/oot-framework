@@ -56,7 +56,7 @@ Two parallel tracks with full operational parity in Gen 1 (one trade-off: privac
 | T4 | Claude Desktop as daily driver (Cloud) | ✅ Exists | ⚠️ Anthropic dependency |
 | T5 | Claude Code for development (Cloud) | ✅ Exists | Max plan recommended |
 | T6 | Augment Code / Codex CLI / OpenCode | ✅ Exists | Optional; Augment for big builds, Codex for review/audit |
-| T7 | Claude Remote Routines — cloud automation engine | ✅ Exists | The connective tissue; Pro+ required |
+| T7 | Claude Code Routines — cloud automation engine | ✅ Exists | The connective tissue; Pro+ required, Max recommended for 3+ partners |
 | T8 | Google Drive + Sheets + Docs | ✅ Exists | Cloud-track default; Claude connector |
 | T9 | Microsoft Excel + Claude extension | ✅ Exists | Cloud-track alternative |
 | T10 | Claude Chrome extension | ✅ Exists | Beta; works |
@@ -91,7 +91,7 @@ Two parallel tracks with full operational parity in Gen 1 (one trade-off: privac
 | Comms — internal | Slack (Claude integration) | 4thtech dChat (W2W, on-chain, E2E encrypted) |
 | Comms — external | Email, Slack | 4thtech dMail (wallet-as-identity, self-custodial) |
 | File transfer | Drive | 4thtech on-chain file transfer + PollinationX bulk storage |
-| Automation | Claude Remote Routines (laptop closed) | Local cron / launchd / Task Scheduler + headless LM Studio (laptop on) |
+| Automation | Claude Code Routines (laptop closed) | Local cron / launchd / Task Scheduler + headless LM Studio (laptop on) |
 | Compensation rails | FIAT (Gen 1 default) | FIAT → Stablecoin upgrade path (Gen 2) |
 | Governance | GitHub + EU AI Act Skill Pack | GitHub + EU AI Act Skill Pack (+ Cotrugli Ledger Gen 3) |
 
@@ -153,7 +153,7 @@ Detailed schemas, formulas, and Routine integration points are in `templates/exc
 
 ## Layer 5 — Routines (the cloud automation jobs)
 
-Eight scheduled Routines pre-shipped as templates. Cloud track = Anthropic Remote Routines. Privacy track = OS-native scheduling (cron / launchd / Task Scheduler) hitting headless LM Studio. Both use the same Skill Packs and the same prompts; only the execution substrate differs.
+Eight scheduled Routines pre-shipped as templates. Cloud track = Claude Code Routines. Privacy track = OS-native scheduling (cron / launchd / Task Scheduler) hitting headless LM Studio. Both use the same Skill Packs and the same prompts; only the execution substrate differs. Operational `.xlsx` state lives in the firm's Brain repo and is mutated by Routines via openpyxl + signed commits per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
 | # | Routine | Trigger | Output |
 |---|---|---|---|

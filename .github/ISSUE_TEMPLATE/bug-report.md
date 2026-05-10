@@ -26,7 +26,7 @@ labels: bug
 
 ## Logs
 
-(Paste relevant logs from `~/oot-framework/logs/` or Anthropic Routines dashboard.)
+(Paste relevant logs from `~/oot-framework/logs/` or the Claude Code Routines dashboard run details.)
 
 ## Have you tried the troubleshooting doc?
 

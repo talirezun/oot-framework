@@ -11,7 +11,7 @@ The foundation kit deliberately does not write these docs itself; Claude Code ge
 
 ## Documentation philosophy — write for the non-technical partner first
 
-ØØT runs on UI-based tools that the user actually clicks: Claude Desktop, Microsoft Excel or Google Sheets, the Curator desktop app, the Anthropic Remote Routines dashboard, Slack. The framework's most important user is **the founder or partner who can edit a spreadsheet and follow a screenshot, but does not write code, does not use a terminal, and does not want to**.
+ØØT runs on UI-based tools that the user actually clicks: Claude Desktop, the founder's spreadsheet app of choice (Microsoft Excel / LibreOffice / Apple Numbers / Excel for Web), the Curator desktop app, the Claude Code Routines dashboard, Slack. The framework's most important user is **the founder or partner who can edit a spreadsheet and follow a screenshot, but does not write code, does not use a terminal, and does not want to**.
 
 Every Tier-1 doc that involves a UI tool follows the **three-layer pattern**:
 
@@ -122,7 +122,7 @@ Every Tier-1 doc that involves a UI tool follows the **three-layer pattern**:
 
 **Audience:** Cloud-track founder.
 
-**Purpose:** Detailed walkthrough of installing each of the 8 cloud Routines via Anthropic's Remote Routines feature.
+**Purpose:** Detailed walkthrough of installing each of the 8 cloud Routines via Anthropic's Claude Code Routines feature.
 
 **Required sections:**
 
@@ -488,7 +488,7 @@ The day-by-day operational guides. Each one is a single end-to-end task, screens
 **Required sections:**
 
 1. **What you're monitoring** (5 min). Eight Routines run on schedule. Each one writes a Brain page; each one posts to Slack/dChat. Failures should not be silent.
-2. **Cloud track — the Anthropic Routines dashboard.** Where it is, what to look at: the runs panel, the success/failure markers, the daily token spend.
+2. **Cloud track — the Claude Code Routines dashboard.** Where it is, what to look at: the runs panel, the success/failure markers, the daily token spend.
 3. **Privacy track — the always-on machine + cron logs.** Where the logs live, how to tail them, what a successful run looks like, what a failed run looks like.
 4. **Daily check-in** (60 seconds) — open Slack/dChat `#output-log` and `#brain-health`. Confirm yesterday's R1 ran; this week's R5 ran on Sunday; today's R6 will run at 23:00.
 5. **Weekly check-in** (5 minutes) — open `business-review.xlsx` and confirm R2 populated it; open `agent-skill-roi.xlsx` and check the week's spend.

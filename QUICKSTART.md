@@ -20,7 +20,7 @@ Read in order:
 
 Decide:
 
-- **Cloud track or Privacy track?** Cloud is faster, easier, has Anthropic Remote Routines (laptop closed). Privacy is sovereign, requires an always-on machine, uses 4thtech + PollinationX + LM Studio + local cron. Most founders should start cloud unless they have a clear sovereignty mandate.
+- **Cloud track or Privacy track?** Cloud is faster, easier, uses Claude Code Routines (laptop closed). Privacy is sovereign, requires an always-on machine, uses 4thtech + PollinationX + LM Studio + local cron. Most founders should start cloud unless they have a clear sovereignty mandate.
 - **Are you in the EU?** If yes, the EU AI Act (full obligations from 2 August 2026) and GDPR materially affect your build. The Governance & Compliance Skill Pack and `governance/EU-AI-ACT.md` are mandatory reading, not optional.
 - **What jurisdiction will the entity operate in?** Worker classification, variable-pay legality, securities law, and crypto-payroll regulation all vary. `docs/06-when-to-call-a-lawyer.md` lists the eleven touchpoints requiring local counsel. Engage counsel before you ship the first Partner Charter.
 
@@ -32,15 +32,21 @@ Open the ØØT-readiness assessment (`templates/excel/oot-readiness.xlsx`). It i
 
 ### Saturday morning: accounts and credentials
 
-1. **Create a Bitwarden account** (or open 1Password if you prefer commercial). This is where all software credentials will live. Do not use a browser password manager; the secrets policy requires a sharable vault.
-2. **Acquire a Trezor hardware wallet.** Required for crypto signing in the privacy-comms layer (4thtech wallet identity) and for Gen 2 readiness (stablecoin payroll wallet). Initialise it offline; record the seed phrase per Trezor's instructions; store the seed in a fire-safe location separate from the device itself.
-3. **Acquire a Yubikey** (or two). Used for org-level admin accounts. Set it up for GitHub, Anthropic, Google admin.
-4. **Anthropic account.** Pro or Max plan. Needed for Claude Desktop, Claude Code, and Remote Routines. Note: Remote Routines require Pro or higher.
-5. **GitHub organisation.** Create one for your firm. Apply Apache 2.0 default for code repos and CC BY-SA 4.0 for documentation repos.
-6. **Google Workspace.** Drive, Sheets, Docs, Calendar. Needed for the Claude connector. Configure 2FA with the Yubikey on the admin account.
-7. **Slack workspace.** With the Claude integration enabled.
+The Day-1 minimum to operate ØØT cloud track is **three accounts**:
 
-Store all credentials in Bitwarden. Configure shared vaults per partner role: founder (full access), partner (their working credentials), advisor (narrow scope).
+1. **Anthropic account.** Pro or Max plan. **Pro** is enough for solo or 2-partner firms with no R7 (Klarna gate) firing yet; **Max** is the recommended default for 3+ partner firms or any firm with active R7. Pro plan caps Claude Code Routines at 5 runs/day; Max gives 15/day. See [`docs/02-installing-routines.md`](docs/02-installing-routines.md) for the steady-state math.
+2. **GitHub organisation.** Create one for your firm. Apply Apache 2.0 default for code repos and CC BY-SA 4.0 for documentation repos. Your **Brain repo** lives here and holds both markdown wiki pages AND `.xlsx` operational state — see [ADR-001](docs/internal/ADR-001-cloud-routine-excel-writeback.md).
+3. **Slack workspace.** With the Claude integration enabled.
+
+**Recommended-but-optional in Gen 1** (add as the firm matures, not gating for solo founders):
+
+4. **Bitwarden organisation.** Best practice for any firm; not required for solo or 2-partner founders on Day-1. When you do adopt, use the canonical collections per `governance/SECRETS-POLICY.md`. Don't use a browser password manager regardless.
+5. **Yubikey.** ~€60 each. Strongly recommended once you have a second admin or hold customer data.
+6. **Trezor.** Stores crypto keys not used until Generation 2 (stablecoin payroll). Skip until v2.0 unless you're on the privacy track.
+
+(*Optional convenience:* Google Workspace seat — for read-only Drive / Calendar / Gmail integrations into the Anthropic connectors. State does NOT live in Google services.)
+
+**Pick a spreadsheet app.** Microsoft Excel, LibreOffice (free, open-source), Apple Numbers (built into macOS), Excel for Web — all read/write `.xlsx` natively. The framework is app-agnostic.
 
 ### Saturday afternoon: install the stack
 

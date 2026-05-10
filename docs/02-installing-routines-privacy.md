@@ -10,10 +10,12 @@
 
 ## What this is + the first 5 minutes
 
-The privacy track replaces Anthropic's Remote Routines with **OS-native scheduling** on the always-on machine. The Routine prompts are functionally identical to the cloud versions; only the execution substrate differs:
+The privacy track replaces Anthropic's [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code) with **OS-native scheduling** on the always-on machine. The Routine prompts are functionally identical to the cloud versions; only the execution substrate differs:
 
-- **Cloud:** Anthropic Routines dashboard → Anthropic infrastructure runs the Routine.
+- **Cloud:** Claude Code → `/schedule` → Anthropic infrastructure runs the Routine.
 - **Privacy:** cron / launchd / Task Scheduler → your always-on machine runs `llmster --skill <pack> --prompt-file <path>` against headless LM Studio.
+
+In both tracks, Excel writeback follows Pattern C (clone Brain repo → openpyxl → signed commit → push) per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](internal/ADR-001-cloud-routine-excel-writeback.md). The privacy track does this against a local Brain-repo clone; the cloud track against a fresh clone created on Anthropic's infrastructure for each Routine fire.
 
 The trade-off: cloud Routines fire while your laptop is closed; privacy-track Routines fire only while the always-on machine is on. **UPS strongly recommended.**
 

@@ -20,7 +20,7 @@ The framework's 8 Routines run on schedule. **Failures should not be silent.** Y
 
 ---
 
-## Cloud track — the Anthropic Routines dashboard
+## Cloud track — the Claude Code Routines dashboard
 
 ### Where it is
 
@@ -28,7 +28,7 @@ In Claude Desktop: **Settings → Routines**. Or directly at `claude.com/routine
 
 ### What you'll see
 
-![Anthropic Routines dashboard with 4 active routines](../images/W6-1-anthropic-dashboard.png)
+![Claude Code Routines dashboard with 4 active routines](../images/W6-1-anthropic-dashboard.png)
 
 *The dashboard lists each Routine with: status (green = healthy, amber = warning, red = failed), last-run timestamp, next-scheduled timestamp, and a per-Routine drilldown.*
 
@@ -117,7 +117,7 @@ tail -f ~/oot-framework/logs/r1.log
 **Symptom:** no `firm/output-logs/<yesterday>.md`. No `#output-log` post.
 
 **Diagnostic:**
-- Cloud: Anthropic Routines dashboard shows red for that day.
+- Cloud: Claude Code Routines dashboard shows red for that day.
 - Privacy: `tail ~/oot-framework/logs/r1.log` shows error or absence of run.
 
 **Recovery:**

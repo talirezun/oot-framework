@@ -12,7 +12,7 @@ A framework — markdown specs + tools + Skill Packs + templates + Routines + go
 
 **Do I have to use Claude?**
 
-No. The framework's reference implementation uses Claude (Desktop, Code, Remote Routines), but Skill Packs are markdown and load into any MCP-compatible client (Cursor, LM Studio, ChatGPT, Cody, future agents). The privacy track explicitly uses local models. The framework is vendor-neutral by design (per Thesis 5).
+No. The framework's reference implementation uses Claude (Desktop, Code, Claude Code Routines), but Skill Packs are markdown and load into any MCP-compatible client (Cursor, LM Studio, ChatGPT, Cody, future agents). The privacy track explicitly uses local models. The framework is vendor-neutral by design (per Thesis 5).
 
 ---
 

@@ -20,7 +20,7 @@ The privacy track replaces every cloud-track tool with a self-sovereign equivale
 | Slack | 4thtech dChat (on-chain, E2E encrypted) |
 | Email / Gmail | 4thtech dMail (wallet-as-identity) |
 | Google Drive | Desktop Commander MCP (local filesystem) + PollinationX (decentralised storage for bulk files) |
-| Anthropic Remote Routines | OS-native scheduling (cron / launchd / Task Scheduler) on the always-on machine |
+| Claude Code Routines | OS-native scheduling (cron / launchd / Task Scheduler) on the always-on machine |
 | Microsoft Excel + Claude extension | Excel MCP (`haris-musa/excel-mcp-server`) |
 
 By the end of the setup, your data lives on your hardware (Trezor seeds in your fireproof safe; Brain + ledger on your encrypted Mac mini; bulk files on PollinationX you've paid for). The framework's Routines run while the always-on machine is on (and only while it's on — the trade-off vs. cloud).

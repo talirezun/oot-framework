@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased — post-v1.0.0 (in progress, May 2026)
+
+Doc + spec updates that land between v1.0.0 and the next tagged release. Code/spec only — no functional Routine changes.
+
+**Documentation alignment with the actual Anthropic product surface:**
+- "Anthropic Remote Routines" renamed to "Claude Code Routines" repo-wide (the actual product name; Anthropic launched the feature 14 April 2026). Old name preserved in v1.0.0 release notes for historical accuracy.
+- Per-day Routine run limits documented: Pro 5, Max 15, Team 25, Enterprise 25. Plan-tier guidance added to quickstart and routines docs.
+
+**ADR-001 — cloud-track Excel writeback canonical pattern:**
+- Operational `.xlsx` files (X1–X9) now live in the firm's Brain GitHub repo at `firm/excel/`, not in Google Sheets / Drive.
+- Routines mutate them via openpyxl in code execution, signed-commit, push. Track-symmetric: cloud and privacy Routines do the same operation against the same repo.
+- Native Google Workspace connector remains available for read-only Drive / Calendar / Gmail integration; not used as a state store.
+- See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](docs/internal/ADR-001-cloud-routine-excel-writeback.md) for the full decision rationale and alternatives considered.
+
+**User-side spreadsheet app independence:**
+- Microsoft Excel, LibreOffice (free, open-source), Apple Numbers, Excel for Web, WPS Office, OnlyOffice — all officially supported. The framework writes native `.xlsx` and is app-agnostic. Google Sheets is supported for one-off pivots via "Open with" but is not the canonical store.
+
+**Bitwarden / Trezor / Yubikey re-tiered as recommended-but-optional in Gen 1:**
+- Day-1 minimum is Anthropic + GitHub + Slack only. Bitwarden + Yubikey best-practice but not gating for solo / 2-partner founders. Trezor stores keys not used until Gen 2 stablecoin payroll — beginning founders skip it entirely until v2.0.
+
+**Library polish:**
+- `research/articles/` standardised to a single contribution format with visible author block, summary, "why this matters for ØØT", and cross-references. Three Curator articles linked as recommended pre-reading.
+- `.lycheeignore` filters known v1.x-deferred placeholders (screenshot binaries, template-variable fragments) so CI link-check passes.
+
 ## v1.0.0 — 2026-05-09
 
 The framework's first stable release. **Generation 1 is operational.**

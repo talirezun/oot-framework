@@ -73,13 +73,13 @@ Each entry includes: what it is, why ØØT uses it, the canonical URL, the licen
 ## Cloud-track stack
 
 ### Anthropic Claude
-- **What:** the cloud track's daily driver. Includes Claude Desktop, Claude Code, Claude Remote Routines, and the Anthropic API.
+- **What:** the cloud track's daily driver. Includes Claude Desktop, Claude Code, [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code), and the Anthropic API.
 - **Why ØØT uses it:** the framework's reference cloud-track implementation.
 - **Site:** https://claude.com/
 - **Documentation:** https://docs.claude.com/
 - **Claude Desktop:** the user-friendly UI for daily work.
-- **Claude Code:** the developer CLI (used by S4 Code & QA).
-- **Remote Routines:** the cloud automation engine (R1–R8 cloud variants).
+- **Claude Code:** the developer CLI (used by S4 Code & QA) + the cloud-routines runtime.
+- **Claude Code Routines:** the cloud automation engine (R1–R8 cloud variants). Per-day run limits: 5 (Pro) / 15 (Max, Team) / 25 (Enterprise).
 - **Skill format:** SKILL.md is Anthropic's Agent Skills format; ØØT's 12 packs follow it.
 - **Licence:** commercial.
 

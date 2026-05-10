@@ -62,7 +62,7 @@ What lives where.
   - Research section: https://github.com/talirezun/the-curator/tree/main/research
 
 **Cloud-track stack:**
-- **Anthropic Claude** — Desktop, Code, Remote Routines, API. https://claude.com/ · docs: https://docs.claude.com/
+- **Anthropic Claude** — Desktop, Code, Claude Code Routines, API. https://claude.com/ · docs: https://docs.claude.com/
 - **Google Workspace** — Drive, Sheets, Docs, Calendar. https://workspace.google.com/
 - **Slack** — internal comms; Claude integration available. https://slack.com/
 - **GitHub** — repo + CI + Brain sync substrate. https://github.com/
@@ -118,13 +118,13 @@ The full framework, as scaffolded in this repository:
 
 **9 pre-built Excel templates** — partner output ledger, reward-species declaration, business review, Klarna Test, METR baseline, agent-skill ROI, EU AI Act mapping register, treasury runway (optional), ØØT-readiness assessment. All formula-driven. All written to and read from by scheduled Routines so the spreadsheet is a review surface, not a data-entry surface.
 
-**8 scheduled Routines** — daily output capture, weekly Business Review prep, monthly variable pay calculation, quarterly long-tail settlement, weekly Brain health check, daily EU AI Act audit trail, on-event Klarna Test trigger, weekly treasury runway update. Cloud-track runs on Anthropic infrastructure (Remote Routines, laptop closed). Privacy-track runs on local cron / launchd / Task Scheduler hitting headless LM Studio.
+**8 scheduled Routines** — daily output capture, weekly Business Review prep, monthly variable pay calculation, quarterly long-tail settlement, weekly Brain health check, daily EU AI Act audit trail, on-event Klarna Test trigger, weekly treasury runway update. Cloud-track runs on Anthropic infrastructure ([Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code), laptop closed). Privacy-track runs on local cron / launchd / Task Scheduler hitting headless LM Studio.
 
 **4 governance documents** — Klarna Test (the signature epistemic check), EU AI Act mapping methodology, decision rights matrix, secrets policy (Bitwarden + Trezor two-layer architecture).
 
 **Two parallel tool tracks:**
 
-- **Cloud track** (canonical, fastest path): Claude Desktop, Claude Code, Google Drive/Sheets, Slack, GitHub, the Curator + MyCuratorMCP, Claude Remote Routines.
+- **Cloud track** (canonical, fastest path): Claude Desktop, Claude Code, GitHub (your Brain repo holds markdown + `.xlsx` state), Slack, the Curator + MyCuratorMCP, Claude Code Routines. Your spreadsheet app is your choice — Excel, LibreOffice, Numbers, Excel-for-Web.
 - **Privacy track** (full Generation 1 parity): LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP for filesystem, Excel MCP for spreadsheet automation, 4thtech for on-chain end-to-end-encrypted communication, PollinationX for decentralised storage, GitHub MCP for cross-machine sync, OS-native scheduling.
 
 ## Status: Generation 1
