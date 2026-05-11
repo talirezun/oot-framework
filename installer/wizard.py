@@ -227,6 +227,67 @@ def which(cmd: str) -> Optional[str]:
     return shutil.which(cmd)
 
 
+# ----- macOS asyncio + stdin fixups -----------------------------------------
+
+def _force_select_event_loop_on_macos() -> None:
+    """Make asyncio use select() instead of kqueue on macOS.
+
+    macOS's kqueue backend rejects EVFILT_READ registration on certain TTY
+    file descriptors inherited via exec or shell stdin-redirect. Symptom:
+    deep inside prompt_toolkit (the engine under `questionary`), the first
+    interactive prompt blows up with:
+
+        OSError: [Errno 22] Invalid argument
+        at asyncio/selector_events.py: _selector.control([kev], 0, 0)
+
+    `select()` works on the same fds without complaint. Setting the event
+    loop policy before any asyncio loop is created means `asyncio.run()`
+    (called internally by prompt_toolkit) picks up the select-backed loop.
+    """
+    if sys.platform != "darwin":
+        return
+    try:
+        import asyncio
+        import selectors
+
+        class _SelectEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[name-defined]
+            def new_event_loop(self):  # noqa: D401
+                return asyncio.SelectorEventLoop(selectors.SelectSelector())
+
+        asyncio.set_event_loop_policy(_SelectEventLoopPolicy())
+    except Exception:
+        # If anything goes wrong, fall back to the default policy. We don't
+        # want to abort the wizard just because we couldn't tweak asyncio.
+        pass
+
+
+def _reattach_stdin_to_tty_if_needed() -> None:
+    """If our stdin isn't a TTY but /dev/tty is available, attach it.
+
+    Belt-and-suspenders alongside the bootstrap's `< /dev/tty` redirect.
+    Handles the corner case where wizard.py is launched some other way
+    without a real interactive stdin (e.g. `python wizard.py < script`
+    or `curl | bash` without the redirect).
+    """
+    try:
+        if sys.stdin is not None and sys.stdin.isatty():
+            return
+    except (ValueError, OSError):
+        pass
+    try:
+        tty_fd = os.open("/dev/tty", os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.dup2(tty_fd, 0)
+    finally:
+        os.close(tty_fd)
+    try:
+        sys.stdin = os.fdopen(0, "r")
+    except OSError:
+        pass
+
+
 # ----- detection of existing installs ---------------------------------------
 
 def detect_existing_modules(state: dict[str, Any]) -> dict[str, Any]:
@@ -1262,6 +1323,11 @@ def main() -> int:
     parser.add_argument("--track", choices=["cloud", "privacy"], default="cloud",
                         help="Track. Cloud is the default; privacy track support is partial in v1.1 (most steps still apply).")
     args = parser.parse_args()
+
+    # Must run BEFORE any questionary / prompt_toolkit call. Avoids macOS
+    # kqueue rejecting our TTY fd (see _force_select_event_loop_on_macos doc).
+    _force_select_event_loop_on_macos()
+    _reattach_stdin_to_tty_if_needed()
 
     if not _HAS_QUESTIONARY:
         warn("`questionary` not installed. Falling back to plain input(). "
