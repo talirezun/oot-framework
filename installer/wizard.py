@@ -99,6 +99,19 @@ def info(text: str) -> None:
         print(text)
 
 
+def info_plain(text: str) -> None:
+    """Like info() but never parses rich markup.
+
+    Use for text that contains literal `[x]`, `[ ]`, `[N]`, or other tokens
+    that rich would silently swallow as style tags. The checkbox picker uses
+    this for every line it prints with selection markers.
+    """
+    if _HAS_RICH:
+        _CONSOLE.print(text, markup=False)
+    else:
+        print(text)
+
+
 def warn(text: str) -> None:
     if _HAS_RICH:
         _CONSOLE.print(f"[yellow]⚠[/yellow]  {text}")
@@ -158,77 +171,120 @@ def ask_select(prompt: str, choices: list[str], default: Optional[str] = None) -
 
 
 def ask_checkbox(prompt: str, choices: list[tuple[str, str, bool]]) -> list[str]:
-    """Multi-select. Each choice is (key, label, preselected).
+    """Multi-select using a self-documenting plain-text picker.
 
-    Returns the list of keys the user kept selected.
+    Each choice is (key, label, preselected). Returns the keys the user kept on.
 
-    Before launching the picker we always print:
-      - Which items are pre-checked (so the user sees the recommended defaults
-        in plain text before touching arrows / space — questionary's ●/○ glyphs
-        and cursor highlight have proven confusing).
-      - An explicit usage legend for the keys.
+    Why we don't use questionary.checkbox: its `●` / `○` selection glyphs read
+    ambiguously in some Terminal fonts (real user report 2026-05-11 — looked
+    identical to them), and the cursor-row background highlight gets misread as
+    "this row is selected" when actually it just means "your cursor is here."
+
+    This picker fixes that by:
+      - Reprinting the FULL list of items with their current state after every
+        toggle. The user always sees an unambiguous `[x]` vs `[ ]` next to each
+        item; nothing depends on subtle glyph differences or color contrast.
+      - Accepting space- or comma-separated numbers to toggle ("1 3 5" or
+        "1,3,5"). Plus `a` (all on), `n` (none), `i` (invert), `q` (cancel — keep
+        the current selection unchanged from the previous loop iteration).
+      - Confirming with an empty Enter, which echoes "you selected ..." back so
+        the user can sanity-check before moving on.
+
+    Works identically with or without questionary/rich installed.
     """
     preselected_labels = [label for _, label, p in choices if p]
     skipped_labels = [label for _, label, p in choices if not p]
 
-    info("\n" + ("─" * 56))
-    info(f"  {prompt}")
-    info("─" * 56)
+    if _HAS_RICH:
+        _CONSOLE.print(f"\n[bold cyan]── {prompt}[/bold cyan]")
+        _CONSOLE.print("[dim]" + "─" * (len(prompt) + 4) + "[/dim]")
+    else:
+        info("\n── " + prompt)
+        info("─" * (len(prompt) + 4))
+
     if preselected_labels:
-        info("  Pre-CHECKED (= WILL install / configure):")
+        info("  We've pre-CHECKED these (= recommended defaults — WILL install):")
         for lab in preselected_labels:
-            info(f"    ✓ {lab}")
+            info_plain(f"    [x] {lab}")
     if skipped_labels:
-        info("  Currently UNCHECKED (= will skip):")
+        info("  These start UNCHECKED (= recommended skip):")
         for lab in skipped_labels:
-            info(f"    · {lab}")
+            info_plain(f"    [ ] {lab}")
     info("")
-    info("  HOW TO USE THE PICKER BELOW:")
-    info("    ↑ / ↓  arrows  — move the cursor (highlighted line)")
-    info("    SPACE          — toggle the highlighted item on/off")
-    info("    ENTER          — confirm your selections")
-    info("    The little circle on the left (● filled = ON, ○ empty = OFF) shows")
-    info("    each item's state. Cursor highlight ≠ selection — watch the circle.")
+    info_plain("  You'll now see a numbered list with the same [x] / [ ] markers.")
+    info("  Type the number(s) to TOGGLE items on/off, then press Enter when done.")
     info("")
 
-    if _HAS_QUESTIONARY:
-        q_choices = [
-            questionary.Choice(title=label, value=key, checked=preselected)
-            for key, label, preselected in choices
-        ]
-        result = questionary.checkbox(prompt, choices=q_choices).ask()
-        if result is None:
-            # User hit Ctrl-C or otherwise bailed; treat as the pre-checked defaults.
-            return [k for k, _, p in choices if p]
-        # Echo back what they actually selected so they can see it before moving on.
-        chosen_labels = [label for k, label, _ in choices if k in result]
-        skipped = [label for k, label, _ in choices if k not in result]
-        info("")
-        info("  You selected (will install / configure):")
-        for lab in chosen_labels or ["(nothing)"]:
-            info(f"    ✓ {lab}")
-        if skipped:
-            info("  You skipped:")
-            for lab in skipped:
-                info(f"    · {lab}")
-        info("")
-        return result
-
-    info("  (Plain-input fallback: enter the numbers to toggle, comma-separated. Enter to confirm.)")
     selected = {k for k, _, p in choices if p}
-    for i, (key, label, preselected) in enumerate(choices, 1):
-        marker = "[x]" if key in selected else "[ ]"
-        info(f"  {i}. {marker} {label}")
-    raw = input("Toggle (e.g. 2,4) or Enter to confirm: ").strip()
-    if raw:
-        for tok in raw.split(","):
+    while True:
+        # Reprint the current state of every item.
+        info("")
+        info(f"  Current selection ({len(selected)} of {len(choices)} on):")
+        for i, (key, label, _) in enumerate(choices, 1):
+            mark = "[x]" if key in selected else "[ ]"
+            line = f"    {i:>2}. {mark}  {label}"
+            if _HAS_RICH:
+                colour = "green" if key in selected else "dim"
+                # IMPORTANT: rich treats `[...]` as a style tag, so we'd
+                # silently lose `[x]`. `markup=False` disables that parsing.
+                _CONSOLE.print(line, style=("bold " + colour), markup=False)
+            else:
+                print(line)
+
+        info("")
+        info("  Commands:")
+        info("    <numbers>  toggle items (e.g. '1 3 5' or '1,3,5')")
+        info("    a          turn ALL on")
+        info("    n          turn NONE (all off)")
+        info("    i          INVERT (flip every item)")
+        info("    Enter      DONE — confirm the selection shown above")
+
+        raw = input("\n  Your input: ").strip().lower()
+        if not raw:
+            break
+        if raw == "a":
+            selected = {k for k, _, _ in choices}
+            continue
+        if raw == "n":
+            selected = set()
+            continue
+        if raw == "i":
+            all_keys = {k for k, _, _ in choices}
+            selected = all_keys - selected
+            continue
+
+        # Parse number tokens (comma- or space-separated).
+        parsed_any = False
+        for tok in raw.replace(",", " ").split():
             try:
-                idx = int(tok.strip()) - 1
-                if 0 <= idx < len(choices):
-                    k = choices[idx][0]
-                    selected.discard(k) if k in selected else selected.add(k)
+                idx = int(tok) - 1
             except ValueError:
-                pass
+                warn(f"  Ignoring unknown input: {tok!r}")
+                continue
+            if 0 <= idx < len(choices):
+                parsed_any = True
+                k = choices[idx][0]
+                if k in selected:
+                    selected.discard(k)
+                else:
+                    selected.add(k)
+            else:
+                warn(f"  Number out of range: {tok}")
+        if not parsed_any:
+            warn("  (Nothing toggled.)")
+
+    # Final confirmation echo
+    chosen_labels = [label for k, label, _ in choices if k in selected]
+    skipped = [label for k, label, _ in choices if k not in selected]
+    info("")
+    info("  ✓ Confirmed. You selected (will install / configure):")
+    for lab in chosen_labels or ["(nothing)"]:
+        info_plain(f"    [x] {lab}")
+    if skipped:
+        info("  Skipping:")
+        for lab in skipped:
+            info_plain(f"    [ ] {lab}")
+    info("")
     return [k for k, _, _ in choices if k in selected]
 
 
