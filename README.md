@@ -1,18 +1,75 @@
 # ØØT — Organisation of Tomorrow
 
-**An open framework for partner-run, AI-augmented organisations.**
+> **TL;DR:** An open framework for partner-run, AI-augmented organisations. Three install paths below. **Most founders → use Path A.**
 
 ØØT is a complete, opinionated, file-based framework for building and running an organisation in which the people producing value are paid for it as it lands, paid again as it compounds, and own a real stake in what they helped create — while the technical machinery underneath (AI agents, Skills, MCP, the Collecting Brain) compounds the firm's intellectual property in lockstep.
-
-It is not a methodology, a consultancy product, or a manifesto-only document. It is a working stack — markdown specifications, hand-built Skill Packs, pre-formulated Excel templates, scheduled cloud Routines, governance documents, and reference architectures — that a founder can adopt in a weekend and run a real organisation on by the end of the first quarter.
 
 This is **Generation 1**. It is honest about what works today, what is bridged with manual processes, and what is deferred to Generation 2 (crypto rails, smart-contract long-tail, internal unit fund) and Generation 3 (Cotrugli Ledger anchoring, autonomous agent business units).
 
 ---
 
-## 📖 Read in this order
+## ⚡ Get started — install in 60-90 minutes
 
-If you are new to ØØT, read these in order. Each step is timed; the full path is roughly **2 hours of reading** before you write a single line of configuration.
+Three install paths, ordered by recommended-for-most-founders:
+
+### 🤖 Path A — Coding-agent-assisted install *(recommended for ≥80% of founders)*
+
+You have a coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Continue, ChatGPT in code-execution mode). The agent reads the install plan and walks you through. **60-90 min wall-clock.** The agent does the file edits, JSON config, GPG signing-key generation, GitHub branch protection, MCP wiring, and verification. You answer questions when it asks.
+
+→ **[Start here: `installer/agent-assisted/START-HERE.md`](installer/agent-assisted/START-HERE.md)** — single copy-paste prompt for your agent.
+
+### 🛠️ Path B — Wizard (Python terminal)
+
+For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** Same 14-step structure as Path A; interactive terminal prompts; resumable via `--resume`; dry-run via `--dry-run`.
+
+```bash
+python3 installer/wizard.py
+```
+
+→ [Wizard overview: `installer/README.md` §2](installer/README.md)
+
+### 📄 Path C — Manual install (the docs)
+
+For founders who want to type every step themselves. Most transparent; slowest. **~16 hours across two weekends.** Non-technical-founder-friendly: includes a plain-English primer (what's a terminal, what's a JSON file, what's a signed commit, what's an MCP).
+
+→ [Cloud-track quickstart: `docs/00-quickstart-cloud.md`](docs/00-quickstart-cloud.md)
+→ [Privacy-track quickstart: `docs/00-quickstart-privacy.md`](docs/00-quickstart-privacy.md)
+
+---
+
+### 🤔 Not sure which path? 30 seconds of decision-making
+
+| Question | Path A | Path B | Path C |
+|---|---|---|---|
+| **Do you have a coding agent installed?** | yes | n/a | n/a |
+| **Comfortable letting an agent run shell commands on your machine?** | yes | no | n/a |
+| **Want to type every command yourself?** | no | partial | yes |
+| **Have a free weekend (16h) for setup?** | n/a | n/a | yes |
+| **Cloud or privacy track?** | both | both | both |
+
+When in doubt: Path A. The framework was designed to be installed by an agent — that's how the framework's authors install it.
+
+→ Before deciding: skim [`docs/MODULES.md`](docs/MODULES.md) (10 min) to see what you're actually installing.
+
+---
+
+## 🔄 After install — daily / weekly / monthly operations
+
+Once the framework is installed, the same coding agent that did the install also handles day-to-day operations. Three short playbooks the agent reads:
+
+- **[Daily ops](installer/agent-assisted/DAILY-OPS.md)** — every morning. ~2 min. Agent runs `git pull`, summarises what changed overnight, surfaces anomalies, verifies signing-key health.
+- **[Weekly ops](installer/agent-assisted/WEEKLY-OPS.md)** — Fridays + Sundays. Agent reads R2's BR agenda, R5's brain-health snapshot.
+- **[Monthly ops](installer/agent-assisted/MONTHLY-OPS.md)** — 1st-of-month variable-pay flow + partner-acknowledgement polling.
+
+You paste a one-line prompt; the agent does the work. No terminal commands to memorise.
+
+→ For the architecture: [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) — how the 8 Routines + your local clone + GitHub fit together.
+
+---
+
+## 📖 Read in this order *(while you install, or before)*
+
+The framework's intellectual core is ~60 minutes of reading. You don't have to read it all *before* installing — you can read while the install runs. But you do need to read it eventually; the framework is more "discipline" than "tool" and the discipline doesn't fit in code comments.
 
 | # | Read | Time | Why |
 |---|---|---|---|
@@ -20,9 +77,8 @@ If you are new to ØØT, read these in order. Each step is timed; the full path 
 | 2 | [`SPEC.md`](SPEC.md) | ~30 min | The eight-layer technical architecture and the full Lego inventory. |
 | 3 | [`GENERATIONS.md`](GENERATIONS.md) | ~10 min | What's in Gen 1, what's deferred, why. |
 | 4 | [`governance/KLARNA-TEST.md`](governance/KLARNA-TEST.md) | ~10 min | The framework's signature epistemic discipline. Non-negotiable. |
-| 5 | [`docs/MODULES.md`](docs/MODULES.md) | ~10 min | What to install, in what order, and what's optional. The dependency graph + a Day-N progression table. Read this before QUICKSTART. |
-| 6 | [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) | ~15 min | How the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, the my-curator-MCP-reachability gap. Read this before installing Routines. |
-| 7 | [`QUICKSTART.md`](QUICKSTART.md) | ~30 min | Weekend setup path (cloud or privacy). Implementation starts here. |
+| 5 | [`docs/MODULES.md`](docs/MODULES.md) | ~10 min | What to install, in what order, and what's optional. The dependency graph + a Day-N progression table. |
+| 6 | [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) | ~15 min | How the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, the my-curator-MCP-reachability gap. |
 | 7 | [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) | ~20 min | The external tools the framework rests on. With links to every wiki. |
 | 8 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — screenshot-rich, no shell required. |
 | 9 | [`research/README.md`](research/README.md) | optional | Going deeper — paper summaries, original articles, and the curated ecosystem index. |
@@ -37,8 +93,11 @@ What lives where.
 
 | Folder / file | Purpose |
 |---|---|
-| [`README.md`](README.md), [`MANIFESTO.md`](MANIFESTO.md), [`SPEC.md`](SPEC.md), [`GLOSSARY.md`](GLOSSARY.md), [`QUICKSTART.md`](QUICKSTART.md), [`GENERATIONS.md`](GENERATIONS.md) | Tier-1 reading. The intellectual + technical core. |
-| [`CLAUDE.md`](CLAUDE.md), [`AGENTS.md`](AGENTS.md), [`BUILD-INSTRUCTIONS.md`](BUILD-INSTRUCTIONS.md) | Agent-orientation files. CLAUDE for Claude Code; AGENTS for any other agent; BUILD-INSTRUCTIONS for the phased scaffolding script. |
+| **[`installer/`](installer/)** | **Start here.** Three install paths: agent-assisted ([`agent-assisted/`](installer/agent-assisted/)), wizard ([`wizard.py`](installer/wizard.py)), fallback shell scripts ([`cloud/`](installer/cloud/), [`privacy/`](installer/privacy/)). |
+| [`docs/00-quickstart-cloud.md`](docs/00-quickstart-cloud.md), [`docs/00-quickstart-privacy.md`](docs/00-quickstart-privacy.md) | Path C manual quickstarts. Non-technical-founder primer at the top. |
+| [`docs/MODULES.md`](docs/MODULES.md), [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) | Module dependency map + automation pipeline diagrams. **Read these before installing.** |
+| [`README.md`](README.md), [`MANIFESTO.md`](MANIFESTO.md), [`SPEC.md`](SPEC.md), [`GLOSSARY.md`](GLOSSARY.md), [`QUICKSTART.md`](QUICKSTART.md), [`GENERATIONS.md`](GENERATIONS.md) | Top-level intellectual + technical core. |
+| [`CLAUDE.md`](CLAUDE.md), [`AGENTS.md`](AGENTS.md), [`BUILD-INSTRUCTIONS.md`](BUILD-INSTRUCTIONS.md) | Agent-orientation files. CLAUDE.md for Claude Code; AGENTS.md for any other agent; BUILD-INSTRUCTIONS.md for the phased scaffolding script. |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), [`LICENSE`](LICENSE), [`LICENSE-DOCS`](LICENSE-DOCS) | Open-source standards. |
 | [`governance/`](governance/) | Klarna Test, EU AI Act mapping, decision rights, secrets policy. |
 | [`skills/`](skills/) | 12 hand-built Skill Packs — 7 hardened (S1–S6, S12) + 5 scaffolded (S7–S11). |
@@ -46,9 +105,8 @@ What lives where.
 | [`templates/brain/`](templates/brain/) | The Brain ontology + 14 Brain page templates that Routines and Skills write to. |
 | [`templates/partner-onboarding/`](templates/partner-onboarding/) | Onboarding checklist + provisioning script + first-90-days plan. |
 | [`routines/`](routines/) | 8 cloud Routines + 8 privacy-track equivalents. |
-| [`docs/`](docs/) | 12 Tier-1 user guides + 6 Tier-2 UI walkthroughs (`docs/walkthroughs/`) + [`docs/MODULES.md`](docs/MODULES.md) module-dependency map. |
+| [`docs/`](docs/) | 12 Tier-1 user guides + 6 Tier-2 UI walkthroughs ([`docs/walkthroughs/`](docs/walkthroughs/)). |
 | [`research/`](research/) | Paper summaries, original articles, and the curated ecosystem index ([`external-resources.md`](research/external-resources.md)). |
-| [`installer/`](installer/) | Terminal wizard + fallback install scripts (Phase 9 deliverable). |
 | [`examples/`](examples/) | Three reference orgs: small (3-partner), medium (12-partner), regulated-EU (6-partner). |
 | [`.github/workflows/`](.github/workflows/) | CI: SKILL.md frontmatter linter, link checker, Excel validator, Klarna gate. |
 
@@ -59,30 +117,35 @@ What lives where.
 ØØT runs on a stack of well-documented external tools. Each has its own wiki or docs site; the framework links to those rather than duplicating them. The full curated index is at [`research/external-resources.md`](research/external-resources.md).
 
 **The reference Brain implementation:**
+
 - **The Curator** — open-source Brain + MyCuratorMCP server. Skill Pack S1 imports the Curator's `SKILL.md` verbatim.
   - Repo + research articles: https://github.com/talirezun/the-curator
   - Research section: https://github.com/talirezun/the-curator/tree/main/research
 
 **Cloud-track stack:**
-- **Anthropic Claude** — Desktop, Code, Claude Code Routines, API. https://claude.com/ · docs: https://docs.claude.com/
-- **Google Workspace** — Drive, Sheets, Docs, Calendar. https://workspace.google.com/
+
+- **Anthropic Claude** — Desktop, Code, [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code), API. https://claude.com/ · docs: https://docs.claude.com/ · Routines dashboard: https://claude.ai/code/routines
+- **Google Workspace** *(optional)* — Drive, Sheets, Docs, Calendar. https://workspace.google.com/ · Read-only convenience connector; state lives in GitHub, not Google.
 - **Slack** — internal comms; Claude integration available. https://slack.com/
-- **GitHub** — repo + CI + Brain sync substrate. https://github.com/
+- **GitHub** — repo + CI + Brain canonical store. https://github.com/ · **GitHub Team plan ($4/u/mo) recommended** for branch-protection enforcement (see `docs/00-quickstart-cloud.md` §6).
 
 **Privacy-track stack (full Gen 1 parity, sovereignty-first):**
-- **4thtech** — on-chain dMail / dChat / file transfer. Wiki: https://wiki.4thtech.io/ · Quickstart: https://wiki.4thtech.io/quickstart/index · Repo: https://github.com/4thtech
-- **PollinationX** — decentralised storage, NFT-based. Wiki: https://wiki.pollinationx.io/ · Start: https://wiki.pollinationx.io/introduction/start-here
+
+- **4thtech** — on-chain dMail / dChat / file transfer. Wiki: https://wiki.4thtech.io/ · Repo: https://github.com/4thtech
+- **PollinationX** — decentralised storage, NFT-based. Wiki: https://wiki.pollinationx.io/
 - **LM Studio** — local LLM runner with native MCP. https://lmstudio.ai/ · MCP docs: https://lmstudio.ai/docs/local-server/mcp
-- **Excel MCP** (`haris-musa/excel-mcp-server`) — privacy-track Excel automation. https://github.com/haris-musa/excel-mcp-server
+- **Excel MCP** (`haris-musa/excel-mcp-server`) — privacy-track Excel automation (optional in Gen 1; Routines use openpyxl directly). https://github.com/haris-musa/excel-mcp-server
 - **Desktop Commander MCP** — privacy-track filesystem. https://github.com/wonderwhy-er/DesktopCommanderMCP
 - **GitHub MCP** — cross-machine Brain sync. https://github.com/modelcontextprotocol/servers/tree/main/src/github
 
-**Secrets layer (both tracks):**
-- **Bitwarden** — open-source password manager. https://bitwarden.com/ · CLI: https://bitwarden.com/help/cli/
-- **Trezor** — hardware wallet (4thtech identity, treasury wallets). https://trezor.io/
-- **Yubikey** — hardware key for org-admin 2FA. https://yubico.com/
+**Secrets layer (both tracks, recommended-but-optional in Gen 1):**
+
+- **Bitwarden** — open-source password manager. https://bitwarden.com/ · Recommended once 2+ admins.
+- **Trezor** — hardware wallet (4thtech identity in privacy track; deferred to Gen 2 for cloud). https://trezor.io/
+- **Yubikey** — hardware key for org-admin 2FA. https://yubico.com/ · Recommended once 2+ admins.
 
 **Standards bodies:**
+
 - **Linux Foundation Agentic AI Foundation (AAIF)** — governs MCP, AGENTS.md, MCP server cards. https://lfaidata.foundation/
 - **Model Context Protocol (MCP)** — the open standard for agent ↔ tool. https://modelcontextprotocol.io/
 
@@ -127,7 +190,7 @@ The full framework, as scaffolded in this repository:
 **Two parallel tool tracks:**
 
 - **Cloud track** (canonical, fastest path): Claude Desktop, Claude Code, GitHub (your Brain repo holds markdown + `.xlsx` state), Slack, the Curator + MyCuratorMCP, Claude Code Routines. Your spreadsheet app is your choice — Excel, LibreOffice, Numbers, Excel-for-Web.
-- **Privacy track** (full Generation 1 parity): LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP for filesystem, Excel MCP for spreadsheet automation, 4thtech for on-chain end-to-end-encrypted communication, PollinationX for decentralised storage, GitHub MCP for cross-machine sync, OS-native scheduling.
+- **Privacy track** (full Generation 1 parity): LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP for filesystem, optional Excel MCP, 4thtech for on-chain end-to-end-encrypted communication, PollinationX for decentralised storage, GitHub MCP for cross-machine sync, OS-native scheduling.
 
 ## Status: Generation 1
 
@@ -135,7 +198,7 @@ This is the v1.0 release. It is honest about what's deferred:
 
 - **Generation 1 (today):** Everything described above. Full operational parity in cloud track. Full operational parity in privacy track with one trade-off (local cron vs. cloud Routines). FIAT compensation is the default; long-tail is Excel-tracked manually with quarterly settlement.
 
-- **Generation 2 (6–12 months):** Stablecoin payroll rails (Rise / Circle), smart-contract long-tail entitlements, the internal Unit Fund (after 6–9 months of pilot data per the YOLO model's recommendation), Curator local-LLM ingest, hardening of the five Tier-2 Skill Packs.
+- **Generation 2 (6–12 months):** Stablecoin payroll rails (Rise / Circle), smart-contract long-tail entitlements, the internal Unit Fund (after 6–9 months of pilot data per the YOLO model's recommendation), Curator local-LLM ingest, hardening of the five Tier-2 Skill Packs, **ØØT desktop application** (graphical UI for daily ops; replaces the Gen-1 agent-as-daily-UI pattern).
 
 - **Generation 3 (12–24 months, theoretical):** Cotrugli Ledger anchoring (PAC-RO receipts, Cotrugli Score, Vanguard Score, IAAF autonomy levels), Kelly-style autonomous business units (agents with their own LLC, accounts, contracts), per-agent compensation. This is research-stage. We mark it on the roadmap, design v1 so it doesn't conflict with v3, and stop there.
 
@@ -146,6 +209,7 @@ See `GENERATIONS.md` for the full roadmap.
 **Initiator:** Dr. Tali Režun — Vice Dean of Frontier Technologies at COTRUGLI Business School; founder of Lumina AI, Moj AI, Block Labs, 4thTech, Immu3, PollinationX, Online Guerrilla.
 
 **Founding contributors:**
+
 - **Dražen Kapusta** — co-author of the Cotrugli Ledger (the Generation 3 governance backbone) and originator of the institutional thesis ØØT extends.
 - **COTRUGLI Business School** — institutional anchor and EU positioning; ØØT is integrated into the MBA Frontier Technologies curriculum.
 
@@ -160,7 +224,7 @@ See `LICENSE` and `LICENSE-DOCS` for the full texts.
 
 ## Repository
 
-`https://github.com/talirezun/oot-framework`
+https://github.com/talirezun/oot-framework
 
 ## A note on naming
 
