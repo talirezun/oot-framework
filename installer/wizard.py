@@ -161,16 +161,60 @@ def ask_checkbox(prompt: str, choices: list[tuple[str, str, bool]]) -> list[str]
     """Multi-select. Each choice is (key, label, preselected).
 
     Returns the list of keys the user kept selected.
+
+    Before launching the picker we always print:
+      - Which items are pre-checked (so the user sees the recommended defaults
+        in plain text before touching arrows / space — questionary's ●/○ glyphs
+        and cursor highlight have proven confusing).
+      - An explicit usage legend for the keys.
     """
+    preselected_labels = [label for _, label, p in choices if p]
+    skipped_labels = [label for _, label, p in choices if not p]
+
+    info("\n" + ("─" * 56))
+    info(f"  {prompt}")
+    info("─" * 56)
+    if preselected_labels:
+        info("  Pre-CHECKED (= WILL install / configure):")
+        for lab in preselected_labels:
+            info(f"    ✓ {lab}")
+    if skipped_labels:
+        info("  Currently UNCHECKED (= will skip):")
+        for lab in skipped_labels:
+            info(f"    · {lab}")
+    info("")
+    info("  HOW TO USE THE PICKER BELOW:")
+    info("    ↑ / ↓  arrows  — move the cursor (highlighted line)")
+    info("    SPACE          — toggle the highlighted item on/off")
+    info("    ENTER          — confirm your selections")
+    info("    The little circle on the left (● filled = ON, ○ empty = OFF) shows")
+    info("    each item's state. Cursor highlight ≠ selection — watch the circle.")
+    info("")
+
     if _HAS_QUESTIONARY:
         q_choices = [
             questionary.Choice(title=label, value=key, checked=preselected)
             for key, label, preselected in choices
         ]
         result = questionary.checkbox(prompt, choices=q_choices).ask()
-        return result if result is not None else [k for k, _, p in choices if p]
-    info(prompt)
-    info("  (Enter the numbers to toggle, comma-separated. Press Enter to accept defaults.)")
+        if result is None:
+            # User hit Ctrl-C or otherwise bailed; treat as the pre-checked defaults.
+            return [k for k, _, p in choices if p]
+        # Echo back what they actually selected so they can see it before moving on.
+        chosen_labels = [label for k, label, _ in choices if k in result]
+        skipped = [label for k, label, _ in choices if k not in result]
+        info("")
+        info("  You selected (will install / configure):")
+        for lab in chosen_labels or ["(nothing)"]:
+            info(f"    ✓ {lab}")
+        if skipped:
+            info("  You skipped:")
+            for lab in skipped:
+                info(f"    · {lab}")
+        info("")
+        return result
+
+    info("  (Plain-input fallback: enter the numbers to toggle, comma-separated. Enter to confirm.)")
     selected = {k for k, _, p in choices if p}
     for i, (key, label, preselected) in enumerate(choices, 1):
         marker = "[x]" if key in selected else "[ ]"
@@ -186,6 +230,48 @@ def ask_checkbox(prompt: str, choices: list[tuple[str, str, bool]]) -> list[str]
             except ValueError:
                 pass
     return [k for k, _, _ in choices if k in selected]
+
+
+# ----- back-navigation between steps ----------------------------------------
+
+class _GoBack(Exception):
+    """Raised by a step to request the wizard return to the previous step.
+
+    Caught by the main step-runner, which clears the current step's done-flag
+    plus the previous step's done-flag, then loops back into the previous step.
+    """
+
+
+def ask_navigation(label: str = "this step") -> None:
+    """End-of-step navigation prompt.
+
+    Returns normally if the user wants to continue.
+    Raises _GoBack if the user wants to revise the previous step.
+    sys.exit(0) if the user wants to quit (state is already saved).
+    """
+    choice = ask_select(
+        f"Done with {label}. What next?",
+        choices=[
+            "→  Continue to next step",
+            "←  Go back to previous step (revise an earlier answer)",
+            "✗  Quit now (your progress is saved; resume with the same one-liner)",
+        ],
+        default="→  Continue to next step",
+    )
+    if choice.startswith("←"):
+        raise _GoBack()
+    if choice.startswith("✗"):
+        info("Saving and exiting. Resume with the same bootstrap one-liner anytime.")
+        sys.exit(0)
+    # Continue
+
+
+def clear_step_done(state: dict[str, Any], *step_keys: str) -> None:
+    """Forget completion for the given step keys, then save state."""
+    done = state.get("steps_completed", {})
+    for k in step_keys:
+        done.pop(k, None)
+    save_state(state)
 
 
 def ask_path(prompt: str, default: Optional[str] = None, must_exist: bool = False) -> Path:
@@ -507,7 +593,7 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
     return found_python
 
 
-def step_02_python_venv(state: dict[str, Any], dry_run: bool, oot_python: str) -> None:
+def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_02_python_venv"):
         return
     header("Step 2 / 14 — Python virtual environment", level=2)
@@ -516,6 +602,7 @@ def step_02_python_venv(state: dict[str, Any], dry_run: bool, oot_python: str) -
         "Homebrew Python 3.13 enforces PEP 668 — pip install --user is rejected,\n"
         "so we use a venv to isolate the framework's deps from your system Python.\n"
     )
+    oot_python = state.get("preflight", {}).get("python") or state.get("oot_python") or sys.executable
     if not VENV_DIR.exists():
         run([oot_python, "-m", "venv", str(VENV_DIR)], dry_run=dry_run, check=True)
     venv_pip = VENV_DIR / "bin" / "pip"
@@ -535,46 +622,53 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
     info("Three folder questions: where the firm's operational stuff lives, where your\n"
          "knowledge graph (Curator) lives, and how the two relate.\n")
 
+    # Pull prior answers (if any) as defaults so going-back is friction-free.
+    prior = state.get("locations", {})
+
     firm_slug_default = ask_text("Firm slug (lowercase-hyphenated, e.g. 'acme-studio')",
-                                  default=None)
+                                  default=prior.get("firm_slug") or None)
     if not firm_slug_default:
         warn("Firm slug is required.")
         sys.exit(1)
-    firm_folder_default = str(Path.home() / firm_slug_default)
+    firm_folder_default = prior.get("firm_folder") or str(Path.home() / firm_slug_default)
     firm_folder = ask_path(
         f"Firm operational repo folder", default=firm_folder_default
     )
 
     has_curator = ask_confirm(
         "Do you already have the Curator desktop app installed with a populated second-brain?",
-        default=False,
+        default=bool(prior.get("existing_curator", False)),
     )
     curator_vault = None
-    curator_config = "B"
+    curator_config = prior.get("curator_config", "B")
     if has_curator:
-        # Try to auto-detect
         guesses = [
             Path.home() / "second-brain",
             Path.home() / "Documents" / "second-brain",
         ]
         found = next((g for g in guesses if g.exists()), None)
-        cv_default = str(found) if found else str(Path.home() / "second-brain")
+        cv_default = prior.get("curator_vault") or (str(found) if found else str(Path.home() / "second-brain"))
         curator_vault = ask_path("Curator vault folder path", default=cv_default, must_exist=True)
+        cfg_default = (
+            "A — Separate vault and firm repo (recommended for existing Curator users)"
+            if curator_config == "A"
+            else "A — Separate vault and firm repo (recommended for existing Curator users)"
+        )
         curator_config = ask_select(
             "Curator integration mode (see docs/MODULES.md for the trade-off):",
             choices=[
                 "A — Separate vault and firm repo (recommended for existing Curator users)",
                 "B — Unified: firm repo IS the Curator vault (recommended for greenfield)",
             ],
-            default="A — Separate vault and firm repo (recommended for existing Curator users)",
-        )[0]  # take first char "A" or "B"
+            default=cfg_default,
+        )[0]
     else:
-        curator_vault = firm_folder  # Configuration B by default for greenfield
+        curator_vault = firm_folder
         info("No existing Curator detected — defaulting to Configuration B (firm folder = Curator vault root).")
 
     curator_domain = ask_text(
         "Curator domain slug for this firm",
-        default=firm_slug_default,
+        default=prior.get("curator_domain") or firm_slug_default,
     )
 
     locations = {
@@ -588,6 +682,7 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
     }
     state["locations"] = locations
     mark_step_done(state, "step_03_locations")
+    ask_navigation("location choices")
     return locations
 
 
@@ -596,30 +691,33 @@ def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]
         return state.get("firm_profile", {})
     header("Step 4 / 14 — Firm profile", level=2)
 
-    profile = {}
-    profile["name"] = ask_text("Firm full name (e.g. 'Acme Studio')")
+    prior = state.get("firm_profile", {})
+    profile: dict[str, Any] = {}
+    profile["name"] = ask_text("Firm full name (e.g. 'Acme Studio')",
+                                default=prior.get("name", ""))
     profile["partner_count_estimate"] = ask_select(
         "Partner count over next 12 months:",
         choices=["solo", "small (2-5)", "medium (5-10)", "large (10+)"],
-        default="solo",
+        default=prior.get("partner_count_estimate") or "solo",
     )
     profile["jurisdictions"] = ask_text(
         "Jurisdictions (ISO 2-letter codes, comma-separated, e.g. 'SI,HR')",
-        default="",
+        default=prior.get("jurisdictions", ""),
     )
     profile["eu_high_risk"] = ask_select(
         "EU AI Act high-risk Annex III exposure (employment / essential services / biometrics):",
         choices=["yes", "no", "not-sure"],
-        default="not-sure",
+        default=prior.get("eu_high_risk") or "not-sure",
     )
     profile["klarna_gate_choice"] = ask_select(
         "Configure Klarna gate today, or defer until first AI-replaces-human PR?",
         choices=["now", "later"],
-        default="later",
+        default=prior.get("klarna_gate_choice") or "later",
     )
-    profile["track"] = state.get("firm_profile", {}).get("track", "cloud")
+    profile["track"] = prior.get("track", "cloud")
     state["firm_profile"] = profile
     mark_step_done(state, "step_04_firm_profile")
+    ask_navigation("firm profile")
     return profile
 
 
@@ -633,144 +731,199 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
     klarna_now = profile.get("klarna_gate_choice") == "now"
     big_firm = profile.get("partner_count_estimate", "").startswith(("medium", "large"))
 
-    # First: probe the machine and tell the user what we found.
+    # Probe once, up-front.
     found = detect_existing_modules(state)
     render_detection_report(found)
 
     info(
-        "Now pick the modules. Defaults are pre-checked based on your firm profile.\n"
-        "Anything already detected above will be REUSED — not reinstalled.\n"
-        "Use Space to toggle, Enter to confirm.\n"
+        "You'll now make four sets of choices (Foundation / Curator / Skills /\n"
+        "Routines / Optional security). Each is shown with recommended defaults\n"
+        "pre-checked. At the end you'll see a summary and can re-do anything\n"
+        "before we commit.\n"
     )
 
-    # ----- Foundation (essentially required to have any working framework) ---
-    info("─" * 60)
-    info("FOUNDATION — the minimum to have any working ØØT install")
-    info("─" * 60)
-    foundation_choices: list[tuple[str, str, bool]] = [
-        ("github_brain_repo",   "GitHub Brain repo (your firm's operational data)",   True),
-        ("signing_key",         "GPG signing key for signed commits "
-                                + ("(found one already — will reuse)" if found["gpg_signing_key"]["present"]
-                                   else "(will create a new one)"),                    True),
-        ("my_curator_mcp",      "my-curator MCP wired into Claude Desktop",            True),
-        ("spreadsheet_app",     "Spreadsheet viewer (Excel / Numbers / LibreOffice / Sheets)", True),
-    ]
-    foundation = ask_checkbox("Foundation modules:", foundation_choices)
-    if not all(m in foundation for m in ("github_brain_repo", "my_curator_mcp")):
-        warn("You opted out of GitHub Brain repo and/or my-curator MCP. The framework will not work without these.")
-        if not ask_confirm("Continue anyway (advanced — you'll need to wire equivalents yourself)?", default=False):
-            info("Aborting. Re-run to start fresh.")
-            sys.exit(0)
+    # Helper to keep the four-checkbox + curator-select cycle re-runnable.
+    def _run_selection_cycle(prior: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Run all five selection prompts. Returns the modules dict.
 
-    # ----- The Curator app (3 options) --------------------------------------
-    info("\n" + "─" * 60)
-    info("THE CURATOR — second-brain desktop app (essential for the Brain)")
-    info("─" * 60)
-    if found["curator"]["user_said_existing"] or found["curator"]["app_present"]:
-        curator_default = "use-existing"
-        info("Existing Curator detected — defaulting to use-existing.")
-    else:
-        curator_default = "install-fresh"
-    curator_choice = ask_select(
-        "How should we handle the Curator app?",
-        choices=[
+        `prior` (if given) is consulted for re-do defaults so the user doesn't
+        lose their previous picks when they ask to revise.
+        """
+        prior = prior or {}
+        prior_foundation = set(prior.get("foundation", [])) if prior else set()
+        prior_skills     = set(prior.get("skills", []))     if prior else set()
+        prior_routines   = set(prior.get("routines", []))   if prior else set()
+        prior_security   = set(prior.get("security", []))   if prior else set()
+        prior_curator    = prior.get("curator_mode")
+
+        def _pre(key: str, default: bool, prior_set: set[str]) -> bool:
+            return key in prior_set if prior_set else default
+
+        # Foundation — looped until user keeps at least the hard-required items
+        # OR explicitly opts to continue "advanced".
+        while True:
+            foundation_choices: list[tuple[str, str, bool]] = [
+                ("github_brain_repo",
+                    "GitHub Brain repo (your firm's operational data — the heart of the framework)",
+                    _pre("github_brain_repo", True, prior_foundation)),
+                ("signing_key",
+                    "GPG signing key for signed commits "
+                    + ("(found one already — will reuse)" if found["gpg_signing_key"]["present"]
+                       else "(will create a new one in Step 9)"),
+                    _pre("signing_key", True, prior_foundation)),
+                ("my_curator_mcp",
+                    "my-curator MCP wired into Claude Desktop (lets Claude read your Brain)",
+                    _pre("my_curator_mcp", True, prior_foundation)),
+                ("spreadsheet_app",
+                    "Spreadsheet viewer (Excel / Numbers / LibreOffice / Sheets) — you almost certainly already have one",
+                    _pre("spreadsheet_app", True, prior_foundation)),
+            ]
+            foundation = ask_checkbox("FOUNDATION — minimum for a working ØØT install", foundation_choices)
+            missing_required = [m for m in ("github_brain_repo", "my_curator_mcp") if m not in foundation]
+            if not missing_required:
+                break
+            warn(f"⚠  You unchecked: {', '.join(missing_required)}.")
+            warn("These are essential — without them, the framework will not work.")
+            choice = ask_select(
+                "What would you like to do?",
+                choices=[
+                    "Re-do the foundation checkboxes (recommended — probably accidental)",
+                    "Continue anyway (advanced — you'll wire equivalents yourself)",
+                ],
+                default="Re-do the foundation checkboxes (recommended — probably accidental)",
+            )
+            if choice.startswith("Continue"):
+                break
+            # else: loop and re-prompt
+            prior_foundation = set(foundation)  # keep their other picks as new defaults
+
+        # Curator mode — 3 options
+        if prior_curator:
+            curator_default_key = prior_curator
+        elif found["curator"]["user_said_existing"] or found["curator"]["app_present"]:
+            curator_default_key = "use-existing"
+            info("(Existing Curator detected — defaulting to 'use-existing'.)")
+        else:
+            curator_default_key = "install-fresh"
+        curator_choices_labels = [
             "use-existing      (reuse the Curator you already have)",
             "install-fresh     (run Curator's one-line installer in Step 11)",
-            "skip-for-now      (install later yourself — most steps will still work, but R5 won't)",
-        ],
-        default={
-            "use-existing":   "use-existing      (reuse the Curator you already have)",
-            "install-fresh":  "install-fresh     (run Curator's one-line installer in Step 11)",
-        }[curator_default],
-    )
-    curator_mode = curator_choice.split()[0]  # 'use-existing' / 'install-fresh' / 'skip-for-now'
+            "skip-for-now      (install later yourself — most steps still work, R5 won't)",
+        ]
+        curator_default = next((c for c in curator_choices_labels if c.startswith(curator_default_key)),
+                                curator_choices_labels[0])
+        curator_choice = ask_select(
+            "THE CURATOR — second-brain desktop app — how should we handle it?",
+            choices=curator_choices_labels,
+            default=curator_default,
+        )
+        curator_mode = curator_choice.split()[0]
 
-    # ----- Skill packs ------------------------------------------------------
-    info("\n" + "─" * 60)
-    info("SKILL PACKS — domain knowledge bundles your Routines + agents use")
-    info("─" * 60)
-    info("Tier-1 packs are production-ready. Tier-2 packs (S7-S11) ship as scaffolds in v1.0\n"
-         "and will be hardened in v1.x — you can install them now and they'll auto-update.\n")
-    skill_choices: list[tuple[str, str, bool]] = [
-        ("S1",  "S1  my-curator (Brain operations)",            True),
-        ("S2",  "S2  context-engineering",                       True),
-        ("S3",  "S3  compensation-attribution (variable pay)",   True),
-        ("S4",  "S4  code-qa",                                   klarna_now or True),
-        ("S5",  "S5  reporting-business-review",                 True),
-        ("S6",  "S6  change-management",                         klarna_now or True),
-        ("S12", "S12 privacy-self-sovereign",                    profile.get("track") == "privacy"),
-        ("S7",  "S7  governance-compliance (Tier-2 scaffold)",   eu),
-        ("S8",  "S8  legal-operations (Tier-2 scaffold)",        big_firm),
-        ("S9",  "S9  marketing (Tier-2 scaffold)",               False),
-        ("S10", "S10 finance-treasury (Tier-2 scaffold)",        big_firm),
-        ("S11", "S11 sales-bd (Tier-2 scaffold)",                False),
-    ]
-    skills = ask_checkbox("Skill packs to install:", skill_choices)
+        # Skill packs
+        skill_choices: list[tuple[str, str, bool]] = [
+            ("S1",  "S1  my-curator (Brain operations)",                      _pre("S1",  True,  prior_skills)),
+            ("S2",  "S2  context-engineering",                                _pre("S2",  True,  prior_skills)),
+            ("S3",  "S3  compensation-attribution (variable pay)",            _pre("S3",  True,  prior_skills)),
+            ("S4",  "S4  code-qa",                                            _pre("S4",  True,  prior_skills)),
+            ("S5",  "S5  reporting-business-review",                          _pre("S5",  True,  prior_skills)),
+            ("S6",  "S6  change-management",                                  _pre("S6",  True,  prior_skills)),
+            ("S12", "S12 privacy-self-sovereign",                             _pre("S12", profile.get("track") == "privacy", prior_skills)),
+            ("S7",  "S7  governance-compliance (Tier-2 scaffold)",            _pre("S7",  eu, prior_skills)),
+            ("S8",  "S8  legal-operations (Tier-2 scaffold)",                 _pre("S8",  big_firm, prior_skills)),
+            ("S9",  "S9  marketing (Tier-2 scaffold)",                        _pre("S9",  False, prior_skills)),
+            ("S10", "S10 finance-treasury (Tier-2 scaffold)",                 _pre("S10", big_firm, prior_skills)),
+            ("S11", "S11 sales-bd (Tier-2 scaffold)",                         _pre("S11", False, prior_skills)),
+        ]
+        skills = ask_checkbox("SKILL PACKS — domain knowledge bundles your Routines + agents use", skill_choices)
 
-    # ----- Routines ---------------------------------------------------------
-    info("\n" + "─" * 60)
-    info("ROUTINES — Anthropic Claude Code Routines that run on schedule")
-    info("─" * 60)
-    info("Day-1 capable: R5, R6, R7. Others need partner data first (we'll set them up later).\n")
-    routine_choices: list[tuple[str, str, bool]] = [
-        ("R5", "R5 Brain Health Check (Sunday 09:00) — recommended for every firm",     True),
-        ("R6", "R6 EU AI Act Audit Trail (daily 23:00) — recommended for any firm with EU exposure",
-                                                                                          eu or True),
-        ("R7", "R7 Klarna Test gate (PR webhook) — only if you're configuring Klarna now",
-                                                                                          klarna_now),
-        ("R1", "R1 Daily Output Capture — deferred until first partner onboarded",       False),
-        ("R2", "R2 Weekly BR Prep — deferred until R1 has ≥7 days of data",              False),
-        ("R3", "R3 Partner Acknowledgement Polling — deferred to month-1",               False),
-        ("R4", "R4 Monthly Compensation Calc — deferred to month-1",                     False),
-        ("R8", "R8 Quarterly Sentiment Sweep — deferred to quarter-1",                   False),
-    ]
-    routines = ask_checkbox("Routines to configure now:", routine_choices)
+        # Routines
+        routine_choices: list[tuple[str, str, bool]] = [
+            ("R5", "R5 Brain Health Check (Sunday 09:00) — recommended for every firm",   _pre("R5", True, prior_routines)),
+            ("R6", "R6 EU AI Act Audit Trail (daily 23:00) — recommended; required if EU exposure",
+                                                                                            _pre("R6", True, prior_routines)),
+            ("R7", "R7 Klarna Test gate (PR webhook) — only if you're configuring Klarna now",
+                                                                                            _pre("R7", klarna_now, prior_routines)),
+            ("R1", "R1 Daily Output Capture — needs first partner onboarded (set up later)", _pre("R1", False, prior_routines)),
+            ("R2", "R2 Weekly BR Prep — needs R1 to have ≥7 days of data (set up later)",   _pre("R2", False, prior_routines)),
+            ("R3", "R3 Partner Acknowledgement Polling — month-1+ (set up later)",          _pre("R3", False, prior_routines)),
+            ("R4", "R4 Monthly Compensation Calc — month-1+ (set up later)",                _pre("R4", False, prior_routines)),
+            ("R8", "R8 Quarterly Sentiment Sweep — quarter-1+ (set up later)",              _pre("R8", False, prior_routines)),
+        ]
+        routines_picked = ask_checkbox("ROUTINES — Claude Code Routines running on schedule", routine_choices)
 
-    # ----- Optional security ------------------------------------------------
-    info("\n" + "─" * 60)
-    info("OPTIONAL SECURITY — recommended-but-optional in Gen 1")
-    info("─" * 60)
-    sec_choices: list[tuple[str, str, bool]] = [
-        ("branch_protection", "GitHub branch protection on main "
-                              + ("(enforced — Team plan)" if profile.get("github_plan_tier") == "team"
-                                 else "(advisory only on Free — but still worth setting)"),
-                                                                                          True),
-        ("bitwarden",          "Bitwarden password manager + CLI"
-                              + (" (CLI already installed)" if found["bitwarden_cli"]["present"] else ""),
-                                                                                          found["bitwarden_cli"]["present"]),
-        ("yubikey",            "Yubikey for org-admin 2FA (recommended with ≥2 admins)",  big_firm),
-        ("trezor",             "Trezor for crypto-key storage (Gen-2 — not used in v1.0)", False),
-    ]
-    security = ask_checkbox("Optional security modules:", sec_choices)
+        # Optional security
+        sec_choices: list[tuple[str, str, bool]] = [
+            ("branch_protection",
+                "GitHub branch protection on main "
+                + ("(enforced — Team plan)" if profile.get("github_plan_tier") == "team"
+                   else "(advisory only on Free — still worth setting)"),
+                _pre("branch_protection", True, prior_security)),
+            ("bitwarden",
+                "Bitwarden password manager + CLI"
+                + (" (CLI already installed)" if found["bitwarden_cli"]["present"] else ""),
+                _pre("bitwarden", found["bitwarden_cli"]["present"], prior_security)),
+            ("yubikey",
+                "Yubikey for org-admin 2FA (recommended with ≥2 admins)",
+                _pre("yubikey", big_firm, prior_security)),
+            ("trezor",
+                "Trezor for crypto-key storage (Gen-2 — not used in v1.0)",
+                _pre("trezor", False, prior_security)),
+        ]
+        security = ask_checkbox("OPTIONAL SECURITY — recommended-but-optional in Gen 1", sec_choices)
 
-    # ----- Render the plan + ask to confirm ---------------------------------
-    modules: dict[str, Any] = {
-        "foundation":      foundation,
-        "curator_mode":    curator_mode,   # 'use-existing' | 'install-fresh' | 'skip-for-now'
-        "skills":          skills,
-        "routines":        routines,
-        "security":        security,
-        # Convenience flags downstream steps consult:
-        "install_curator": curator_mode == "install-fresh",
-        "skip_curator":    curator_mode == "skip-for-now",
-        "use_existing_curator": curator_mode == "use-existing",
-        "install_signing_key": "signing_key" in foundation and not found["gpg_signing_key"]["present"],
-        "install_branch_protection": "branch_protection" in security,
-    }
+        return {
+            "foundation":      foundation,
+            "curator_mode":    curator_mode,
+            "skills":          skills,
+            "routines":        routines_picked,
+            "security":        security,
+            "install_curator": curator_mode == "install-fresh",
+            "skip_curator":    curator_mode == "skip-for-now",
+            "use_existing_curator": curator_mode == "use-existing",
+            "install_signing_key": "signing_key" in foundation and not found["gpg_signing_key"]["present"],
+            "install_branch_protection": "branch_protection" in security,
+        }
+
+    # Run the cycle, then loop on user request until they accept.
+    modules: dict[str, Any] = {}
+    while True:
+        modules = _run_selection_cycle(prior=modules if modules else None)
+
+        info("\n" + "─" * 60)
+        info("YOUR PLAN")
+        info("─" * 60)
+        info(f"  Foundation:   {', '.join(modules['foundation']) or '(none)'}")
+        info(f"  Curator:      {modules['curator_mode']}")
+        info(f"  Skill packs:  {', '.join(modules['skills']) or '(none)'}")
+        info(f"  Routines now: {', '.join(modules['routines']) or '(none)'}")
+        info(f"  Security:     {', '.join(modules['security']) or '(none)'}")
+        info("")
+
+        next_step = ask_select(
+            "Are you happy with this plan?",
+            choices=[
+                "→  Yes, proceed",
+                "↻  Re-do the module selections (with these as new defaults)",
+                "←  Go back to the previous step (firm profile)",
+                "✗  Quit now (progress saved)",
+            ],
+            default="→  Yes, proceed",
+        )
+        if next_step.startswith("→"):
+            break
+        if next_step.startswith("↻"):
+            continue   # rerun the cycle with current modules as defaults
+        if next_step.startswith("←"):
+            state["modules_chosen"] = modules  # save current draft so re-entry can default to it
+            save_state(state)
+            raise _GoBack()
+        if next_step.startswith("✗"):
+            state["modules_chosen"] = modules
+            save_state(state)
+            info("Saving and exiting. Resume with the same bootstrap one-liner.")
+            sys.exit(0)
+
     state["modules_chosen"] = modules
-
-    info("\n" + "─" * 60)
-    info("YOUR PLAN")
-    info("─" * 60)
-    info(f"  Foundation:   {', '.join(foundation) or '(none)'}")
-    info(f"  Curator:      {curator_mode}")
-    info(f"  Skill packs:  {', '.join(skills) or '(none)'}")
-    info(f"  Routines now: {', '.join(routines) or '(none)'}")
-    info(f"  Security:     {', '.join(security) or '(none)'}")
-    info("")
-    if not ask_confirm("Proceed with this plan?", default=True):
-        info("Re-run the wizard to adjust your selections (it'll skip earlier steps).")
-        sys.exit(0)
     mark_step_done(state, "step_05_module_selection")
     return modules
 
@@ -791,10 +944,11 @@ def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
         "  free   — GitHub Free + private. Branch protection advisory only.\n"
         "           Acceptable for solo / 2-person v1 pilot only.\n"
     )
+    prior_tier = state.get("firm_profile", {}).get("github_plan_tier") or "free"
     choice = ask_select(
         "GitHub plan tier:",
         choices=["team", "public", "free"],
-        default="free",
+        default=prior_tier,
     )
     state.setdefault("firm_profile", {})["github_plan_tier"] = choice
     if choice == "free":
@@ -805,6 +959,7 @@ def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
         if not ask_confirm("Confirm you have GitHub Team active (or will upgrade now)?", default=True):
             warn("Continuing — you can come back to this step.")
     mark_step_done(state, "step_06_github_plan_tier")
+    ask_navigation("GitHub plan choice")
     return choice
 
 
@@ -828,10 +983,11 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
         warn("Claude Code CLI not found. Install per https://docs.claude.com/en/docs/claude-code")
         info("(Optional — you can configure Routines via the web dashboard at https://claude.ai/code/routines instead. Routines run on Anthropic's cloud either way; CLI is just one of three management interfaces.)")
 
+    prior_plan = state.get("firm_profile", {}).get("anthropic_plan") or "pro"
     plan = ask_select(
         "Anthropic plan tier:",
         choices=["pro", "max", "team", "enterprise"],
-        default="pro",
+        default=prior_plan,
     )
     state.setdefault("firm_profile", {})["anthropic_plan"] = plan
     profile = state["firm_profile"]
@@ -840,6 +996,10 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
         warn("Pro plan caps Routines at 5/day. With your firm size + Klarna gate, "
              "you'll exceed that. Strongly recommend Max plan.")
     mark_step_done(state, "step_07_anthropic_check")
+    info("\nNext: Step 8 will start creating real things (Brain repo on disk + on GitHub).")
+    info("After Step 8 launches, going back gets harder — it would mean undoing side effects.")
+    info("This is your last clean checkpoint to revise earlier answers.\n")
+    ask_navigation("Anthropic check (last clean checkpoint before side-effects begin)")
 
 
 def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
@@ -1350,22 +1510,43 @@ def main() -> int:
     state.setdefault("firm_profile", {})["track"] = args.track
     save_state(state)
 
+    # Step navigator. Each entry: (state-key, human-label, fn).
+    # `_GoBack` raised from a step rewinds one position; later steps' state is
+    # preserved so the user only re-confirms what they want to change.
+    steps = [
+        ("step_00_welcome",          "Welcome",               step_00_welcome),
+        ("step_01_preflight",        "Preflight",             step_01_preflight),
+        ("step_02_python_venv",      "Python venv",           step_02_python_venv),
+        ("step_03_locations",        "Locations",             step_03_locations),
+        ("step_04_firm_profile",     "Firm profile",          step_04_firm_profile),
+        ("step_05_module_selection", "Module selection",      step_05_module_selection),
+        ("step_06_github_plan_tier", "GitHub plan tier",      step_06_github_plan_tier),
+        ("step_07_anthropic_check",  "Anthropic check",       step_07_anthropic_check),
+        ("step_08_brain_repo",       "Brain repo",            step_08_brain_repo),
+        ("step_09_signing_key",      "Signing key",           step_09_signing_key),
+        ("step_10_branch_protection","Branch protection",     step_10_branch_protection),
+        ("step_11_curator",          "Curator",               step_11_curator),
+        ("step_12_routines",         "Routines",              step_12_routines),
+        ("step_13_smoke_test",       "Smoke test",            step_13_smoke_test),
+        ("step_14_summary",          "Summary",               step_14_summary),
+    ]
+
     try:
-        step_00_welcome(state, args.dry_run)
-        oot_python = step_01_preflight(state, args.dry_run)
-        step_02_python_venv(state, args.dry_run, oot_python)
-        step_03_locations(state, args.dry_run)
-        step_04_firm_profile(state, args.dry_run)
-        step_05_module_selection(state, args.dry_run)
-        step_06_github_plan_tier(state, args.dry_run)
-        step_07_anthropic_check(state, args.dry_run)
-        step_08_brain_repo(state, args.dry_run)
-        step_09_signing_key(state, args.dry_run)
-        step_10_branch_protection(state, args.dry_run)
-        step_11_curator(state, args.dry_run)
-        step_12_routines(state, args.dry_run)
-        step_13_smoke_test(state, args.dry_run)
-        step_14_summary(state, args.dry_run)
+        i = 0
+        while i < len(steps):
+            key, label, fn = steps[i]
+            try:
+                fn(state, args.dry_run)
+            except _GoBack:
+                if i == 0:
+                    warn("Already at the first step — nothing to go back to.")
+                    continue
+                prev_key, prev_label, _ = steps[i - 1]
+                info(f"← Going back to: {prev_label}")
+                clear_step_done(state, key, prev_key)
+                i -= 1
+                continue
+            i += 1
     except KeyboardInterrupt:
         warn("\nInterrupted. State saved at " + str(STATE_FILE) + ". Re-run with --resume to continue.")
         return 130
