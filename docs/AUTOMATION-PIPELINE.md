@@ -98,6 +98,20 @@ Three options for staying in sync:
 
 For most founders: manual `git pull` is fine. Routines write to GitHub; when you open your laptop and want today's state, you pull. The `.xlsx` files are mostly *written by Routines + read by humans*; real-time sync isn't necessary.
 
+### Agent-as-daily-UI (recommended for non-technical founders)
+
+`git pull` is a one-line command, but for a non-technical founder it's the kind of one-line command that easily doesn't get done. **Better pattern:** use the same coding agent that installed the framework (Claude Code, Augment, Aider, OpenCode, Cline) as a daily-driver assistant. Three short playbooks the agent reads:
+
+- [`installer/agent-assisted/DAILY-OPS.md`](../installer/agent-assisted/DAILY-OPS.md) — every morning. Agent runs `git pull`, summarises what changed, surfaces anomalies, verifies signing key health, updates `~/.oot/firm-state.yaml`. ~2 minutes of your attention.
+- [`installer/agent-assisted/WEEKLY-OPS.md`](../installer/agent-assisted/WEEKLY-OPS.md) — Fridays before the BR + Sundays for brain-health. Agent reads R2's agenda + R5's health snapshot and walks you through.
+- [`installer/agent-assisted/MONTHLY-OPS.md`](../installer/agent-assisted/MONTHLY-OPS.md) — 1st of month + the 5 business days after. Agent surfaces R3's variable-pay draft, polls partner acknowledgements, walks you through the founder-approval flow.
+
+Each playbook has a copy-paste prompt at the top — you don't type git commands; you type one English sentence and the agent does the work. The agent already has GitHub access from the install (GitHub OAuth or a PAT), so no extra setup needed.
+
+For founders who prefer not to use a coding agent for daily ops: GitHub Desktop ([desktop.github.com](https://desktop.github.com/)) provides a graphical "fetch + pull" UX with a click. Less powerful than the agent (no anomaly surfacing, no acknowledgement polling, no failure diagnostics) but gets the basic sync done.
+
+**Gen-2 candidate:** an ØØT desktop application that wraps the agent-as-daily-UI pattern in a native macOS / Windows / Linux app with auto-sync, a dashboard, and click-to-acknowledge for partner statements. Tracked in [`GENERATIONS.md`](../GENERATIONS.md).
+
 ---
 
 ## Connectors needed per Routine

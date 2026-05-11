@@ -93,6 +93,7 @@ The first major upgrade. Adds the compensation primitives that require crypto ra
 
 - Curator local-LLM ingest (T12). Removes the cloud dependency for Brain ingest. Privacy track gains end-to-end local operation.
 - Multi-agent orchestration (T22). Augment Intent, Claude Agent Teams, and equivalent multi-agent patterns mature enough for org-wide use. The Code & QA Skill Pack v2.0 documents safe orchestration patterns.
+- **ØØT desktop application (T23, NEW)**. Native macOS / Windows / Linux app that wraps the Gen-1 "agent-as-daily-UI" pattern in a graphical interface: auto-sync of the firm operational repo (`git pull` in the background); a dashboard showing recent Routine fires + their outcomes; click-to-acknowledge for partner variable-pay statements; Brain-page viewer with wikilink navigation; one-click manual Routine fire; signed-commit health indicator. Replaces the need for the founder to interact with a coding agent for daily ops (see [`installer/agent-assisted/DAILY-OPS.md`](installer/agent-assisted/DAILY-OPS.md) for the Gen-1 interim pattern). Goal: a non-technical founder operates the framework without ever touching a terminal or markdown playbook.
 
 **Skills:**
 

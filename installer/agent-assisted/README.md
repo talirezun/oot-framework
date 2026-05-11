@@ -1,8 +1,18 @@
-# Path A — Coding-agent-assisted install
+# Path A — Coding-agent-assisted install + daily ops
 
-The recommended install path for ≥80% of founders. **You hand a markdown brief to a coding agent and the agent installs the framework.** You answer questions when the agent asks; the agent handles the file edits, the JSON config, the GPG signing-key generation, the GitHub branch protection, the MCP wiring, and the verification.
+The recommended path for ≥80% of founders, for both **install** and **daily operations**.
 
-> 🚀 **Just want to start?** → [`START-HERE.md`](START-HERE.md) gives you a single copy-paste prompt to feed your coding agent.
+**Install:** you hand a markdown brief to a coding agent and the agent installs the framework. You answer questions when the agent asks; the agent handles the file edits, JSON config, GPG signing-key generation, GitHub branch protection, MCP wiring, and verification.
+
+**Daily ops:** the same agent reads three short playbooks (DAILY / WEEKLY / MONTHLY) and runs the routine maintenance — sync GitHub to local, surface anomalies, prep BR agenda, poll partner acknowledgements. You paste a one-line prompt and the agent handles the rest.
+
+> 🚀 **Just want to start?** → [`START-HERE.md`](START-HERE.md) gives you a single copy-paste prompt to feed your coding agent for the install.
+
+After install, the daily-driver playbooks live alongside the install plans:
+
+- [`DAILY-OPS.md`](DAILY-OPS.md) — every morning sync + state summary (~2 min)
+- [`WEEKLY-OPS.md`](WEEKLY-OPS.md) — Friday BR prep + Sunday brain-health
+- [`MONTHLY-OPS.md`](MONTHLY-OPS.md) — 1st-of-month variable pay + acknowledgement polling
 
 This is the primary path because it best matches the framework's own discipline: humans direct, agents implement, and the artefact is the audit trail. The agent reads the install plan, executes against your machine, asks for your decisions, and produces a written summary you can hand to your accountant or your lawyer.
 
