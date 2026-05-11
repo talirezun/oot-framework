@@ -1,5 +1,26 @@
 # Installer
 
+## ⚡ Fresh laptop? One command.
+
+Open Terminal and paste this. That's it — no `git clone`, no `cd`, nothing else to know first:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash
+```
+
+The bootstrap checks your prerequisites (git, python ≥3.11, curl, gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv at `~/.oot/venv/`, installs the wizard's nice-UI dependencies, and hands you off to the 14-step interactive wizard. Safe to re-run — it detects an existing install and resumes.
+
+If anything is missing, it prints the exact copy-paste command to install it (no auto-sudo, no auto-Homebrew). Re-run the same one-liner to continue.
+
+To resume an interrupted install or do a dry-run, pass flags through:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash -s -- --resume
+curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash -s -- --dry-run
+```
+
+---
+
 Three ways to install ØØT, in order of preference for v1.0.1+:
 
 ## 1. Path A — Coding-agent-assisted (recommended)
@@ -22,13 +43,13 @@ This path is recommended for ≥80% of founders, especially less-technical ones.
 
 ## 2. Path B — The wizard (Python terminal)
 
-For founders who prefer not to use a coding agent:
+For founders who prefer not to use a coding agent. **The bootstrap above is the canonical entry point** — it handles every prerequisite and then launches this wizard for you. If you already have the framework cloned and just want to re-launch the wizard directly:
 
 ```bash
-python3 installer/wizard.py
+~/.oot/venv/bin/python ~/.oot/oot-framework/installer/wizard.py --resume
 ```
 
-Interactive **14-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Brain repo creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
+Interactive **14-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Brain repo creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
 
 Programmatic where safe (folder creation, git operations, GPG key generation, file edits, smoke test); web-UI walkthrough where the user must approve a third-party action (GitHub repo creation, branch protection rule, GPG public-key upload, MCP installation in Claude Desktop).
 

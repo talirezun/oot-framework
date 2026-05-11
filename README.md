@@ -18,15 +18,19 @@ You have a coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Cont
 
 → **[Start here: `installer/agent-assisted/START-HERE.md`](installer/agent-assisted/START-HERE.md)** — single copy-paste prompt for your agent.
 
-### 🛠️ Path B — Wizard (Python terminal)
+### 🛠️ Path B — Wizard (Python terminal) — **one-line install**
 
-For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** Same 14-step structure as Path A; interactive terminal prompts; resumable via `--resume`; dry-run via `--dry-run`.
+For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** Same 14-step structure as Path A; interactive terminal prompts; resumable; dry-run available.
+
+**Fresh laptop, nothing installed?** Open Terminal and paste this single line:
 
 ```bash
-python3 installer/wizard.py
+curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash
 ```
 
-→ [Wizard overview: `installer/README.md` §2](installer/README.md)
+The bootstrap checks prerequisites (git / python 3.11+ / curl / gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv, installs the wizard's UI dependencies, then hands off to the 14-step wizard. The wizard then guides you through every folder location, the Brain repo, the GPG signing key, GitHub branch protection, **installing the Curator app via its own one-line installer**, wiring the my-curator MCP into Claude Desktop, and the Day-1 Routines. Safe to re-run — picks up where you left off.
+
+→ [Wizard overview: `installer/README.md`](installer/README.md) (incl. `--resume` / `--dry-run` flags)
 
 ### 📄 Path C — Manual install (the docs)
 
