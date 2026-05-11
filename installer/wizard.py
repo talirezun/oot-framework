@@ -313,6 +313,90 @@ def which(cmd: str) -> Optional[str]:
     return shutil.which(cmd)
 
 
+# ----- explainer panels -----------------------------------------------------
+
+def explainer(title: str, body: str, tone: str = "info") -> None:
+    """Render a small bordered "what is this step / why does it matter" panel.
+
+    Goal: a non-technical founder reads the body and understands what's about
+    to happen and why, before being asked to make a decision. Always shown
+    BEFORE the first interactive prompt of a step.
+
+    tone is "info" (default cyan), "warn" (yellow), or "danger" (red).
+    """
+    colour = {"info": "cyan", "warn": "yellow", "danger": "red"}.get(tone, "cyan")
+    if _HAS_RICH:
+        _CONSOLE.print(Panel(body.strip(), title=f"  {title}  ", title_align="left",
+                              border_style=colour, padding=(0, 2)))
+        return
+    bar = "─" * 70
+    print(f"\n┌─ {title} {bar[: max(0, 67 - len(title))]}")
+    for line in body.strip().splitlines():
+        print(f"│ {line}")
+    print(f"└{bar}")
+
+
+# ----- gh CLI automation helpers --------------------------------------------
+
+_GH_STATUS_CACHE: dict[str, Any] = {}
+
+
+def gh_available_and_authed() -> bool:
+    """True iff the `gh` CLI is installed AND `gh auth status` is clean.
+
+    Result is cached for the lifetime of the wizard process. We call this from
+    Steps 8/9/10/12; without caching the user would see `$ gh auth status`
+    echoed four times for no good reason. The status doesn't change mid-run.
+    """
+    if "ok" in _GH_STATUS_CACHE:
+        return _GH_STATUS_CACHE["ok"]
+    if not which("gh"):
+        _GH_STATUS_CACHE["ok"] = False
+        return False
+    # Direct subprocess to skip the run() helper's command-echo for this probe.
+    try:
+        result = subprocess.run(
+            ["gh", "auth", "status"], capture_output=True, text=True, check=False,
+        )
+        _GH_STATUS_CACHE["ok"] = result.returncode == 0
+    except FileNotFoundError:
+        _GH_STATUS_CACHE["ok"] = False
+    return _GH_STATUS_CACHE["ok"]
+
+
+def gh_user_login() -> Optional[str]:
+    """Return the authenticated GitHub username, or None if not available."""
+    if not gh_available_and_authed():
+        return None
+    if "login" in _GH_STATUS_CACHE:
+        return _GH_STATUS_CACHE["login"]
+    try:
+        result = subprocess.run(
+            ["gh", "api", "user", "--jq", ".login"],
+            capture_output=True, text=True, check=False,
+        )
+        login = result.stdout.strip() if result.returncode == 0 else None
+    except FileNotFoundError:
+        login = None
+    _GH_STATUS_CACHE["login"] = login
+    return login
+
+
+def offer_gh_automation(action_description: str, default: bool = True) -> bool:
+    """Ask the user whether to take a `gh`-automated path for this action.
+
+    Returns False if gh isn't available/authed (so callers can skip prompting).
+    Returns the user's choice otherwise.
+    """
+    if not gh_available_and_authed():
+        return False
+    return ask_confirm(
+        f"Use the `gh` CLI to {action_description} automatically? "
+        "(recommended — faster, less click-error; N = walk through the github.com web UI instead)",
+        default=default,
+    )
+
+
 # ----- macOS asyncio + stdin fixups -----------------------------------------
 
 def _force_select_event_loop_on_macos() -> None:
@@ -549,6 +633,17 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
     """Returns the absolute path of the Python interpreter to use."""
     header("Step 1 / 14 — Preflight: required tools", level=2)
 
+    explainer(
+        "What this step does and why",
+        "We need four small command-line tools on your machine before anything else:\n\n"
+        "  git    — version control. Tracks every change to your Brain repo.\n"
+        "  python ≥3.11 — runs this wizard + the framework's Excel-writing scripts.\n"
+        "  curl   — downloads things (the framework, Curator, etc.).\n"
+        "  gpg    — generates and uses the signing key that makes commits verifiable.\n\n"
+        "If any are missing, the wizard prints exact copy-paste commands to install\n"
+        "them via your OS package manager (brew/apt/dnf). No auto-sudo, no surprises.",
+    )
+
     info("Checking required CLI tools...\n")
     found_python = None
     for cand in PYTHON_CANDIDATES:
@@ -597,10 +692,15 @@ def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_02_python_venv"):
         return
     header("Step 2 / 14 — Python virtual environment", level=2)
-    info(
-        "Setting up a Python venv at ~/.oot/venv for the framework's dependencies.\n"
-        "Homebrew Python 3.13 enforces PEP 668 — pip install --user is rejected,\n"
-        "so we use a venv to isolate the framework's deps from your system Python.\n"
+    explainer(
+        "What this step does and why",
+        "We create an isolated Python environment at ~/.oot/venv and install the\n"
+        "framework's dependencies (openpyxl for Excel, pyyaml for state files,\n"
+        "questionary/rich for the wizard UI, httpx for HTTP). Modern Python on macOS\n"
+        "and Debian rejects `pip install` outside a venv (PEP 668) — this is the\n"
+        "right way around it without messing with your system Python.\n\n"
+        "If you ran the bootstrap one-liner, this is mostly already done — we just\n"
+        "verify it's healthy.",
     )
     oot_python = state.get("preflight", {}).get("python") or state.get("oot_python") or sys.executable
     if not VENV_DIR.exists():
@@ -618,6 +718,22 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
     if is_step_done(state, "step_03_locations"):
         return state.get("locations", {})
     header("Step 3 / 14 — Choose locations", level=2)
+
+    explainer(
+        "What this step does and why",
+        "Two folders matter to ØØT:\n\n"
+        "  1. Firm folder (the Brain repo)  — a local git clone of your firm's\n"
+        "     operational data (Excel files, output logs, audit logs). This is what\n"
+        "     Routines read and write. Default: ~/<firm-slug>/\n\n"
+        "  2. Curator vault  — where The Curator app stores the knowledge-graph\n"
+        "     markdown pages it generates from your documents. This is your\n"
+        "     'second brain'.\n\n"
+        "Two configurations:\n"
+        "  A — Separate: vault and firm repo are different folders. Use this if you\n"
+        "      already have a populated Curator vault you don't want to disturb.\n"
+        "  B — Unified: the firm folder IS the Curator vault root. Cleanest for\n"
+        "      a greenfield install — everything in one place.",
+    )
 
     info("Three folder questions: where the firm's operational stuff lives, where your\n"
          "knowledge graph (Curator) lives, and how the two relate.\n")
@@ -690,6 +806,20 @@ def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]
     if is_step_done(state, "step_04_firm_profile"):
         return state.get("firm_profile", {})
     header("Step 4 / 14 — Firm profile", level=2)
+
+    explainer(
+        "What this step does and why",
+        "We ask 5 questions about your firm. Your answers shape what gets installed\n"
+        "by default at Step 5 (which Skills, which Routines, what plan-tier guidance\n"
+        "we give you):\n\n"
+        "  - Firm name + partner count + jurisdictions  — for the Brain README and\n"
+        "    later compensation/onboarding flows.\n"
+        "  - EU AI Act exposure  — if yes, we add S7 (governance) + R6 (audit trail)\n"
+        "    to the recommended defaults.\n"
+        "  - Klarna gate timing  — if 'now', we add R7 (PR webhook) + S4 (code-qa) +\n"
+        "    S6 (change-management) to the defaults.\n\n"
+        "Honest answers help you, not us — nothing is sent off-machine.",
+    )
 
     prior = state.get("firm_profile", {})
     profile: dict[str, Any] = {}
@@ -932,6 +1062,21 @@ def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
     if is_step_done(state, "step_06_github_plan_tier"):
         return state.get("firm_profile", {}).get("github_plan_tier", "free")
     header("Step 6 / 14 — GitHub plan-tier choice (CRITICAL)", level=2)
+    explainer(
+        "What this step does and why  ⚠️  (structural choice)",
+        "GitHub Free + private repos display branch-protection rules in the UI but\n"
+        "DO NOT enforce them. A bad actor with push access could `git push --force`\n"
+        "and rewrite your audit trail; GitHub Free wouldn't stop them. For ADR-001's\n"
+        "tamper-evidence claim to hold, branch protection must be enforced — which\n"
+        "means GitHub Team ($4/user/month) or higher, OR a public repo.\n\n"
+        "Three valid choices:\n"
+        "  team   — $4/user/mo. Branch protection is ENFORCED. Recommended default.\n"
+        "  public — Free, but your firm operational data is publicly visible.\n"
+        "  free   — Free + private. Branch protection ADVISORY only.\n"
+        "           Acceptable for a solo / 2-person pilot; upgrade within 90 days.\n\n"
+        "This choice affects whether your audit trail is actually trustworthy.",
+        tone="warn",
+    )
     info(
         "GitHub Free private repos do NOT enforce branch protection rules.\n"
         "The rule shows in the UI but it's advisory only. This affects whether\n"
@@ -967,6 +1112,20 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_07_anthropic_check"):
         return
     header("Step 7 / 14 — Anthropic check", level=2)
+    explainer(
+        "What this step does and why",
+        "Two Anthropic products you'll need:\n\n"
+        "  - Claude Desktop  — the chat app. This is where the my-curator MCP runs.\n"
+        "    Download free: https://claude.com/download\n\n"
+        "  - Claude Code CLI (or web dashboard at claude.ai/code/routines) — used to\n"
+        "    create and manage Routines at Step 12. Either works.\n\n"
+        "Plan tiers:\n"
+        "  pro   — 5 Routine runs/day. OK for solo founders with no R7.\n"
+        "  max   — 15/day. Recommended for any firm taking R7 / Klarna gate seriously.\n"
+        "  team / enterprise — higher caps + shared billing. Pick if you've already chosen one.\n\n"
+        "We don't ask for your API key — Routines authenticate via your Anthropic\n"
+        "account, not via API keys.",
+    )
 
     macos_app = Path("/Applications/Claude.app")
     if macos_app.exists():
@@ -1006,54 +1165,58 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_08_brain_repo"):
         return
     header("Step 8 / 14 — Create the Brain GitHub repo", level=2)
+
     locations = state["locations"]
     profile = state["firm_profile"]
     firm_slug = locations["firm_slug"]
     firm_folder = Path(locations["firm_folder"])
+    plan_tier = profile.get("github_plan_tier", "free")
+    visibility = "public" if plan_tier == "public" else "private"
 
-    info(
-        f"Step 1 of 5 — Create the empty repo on github.com (web UI):\n\n"
-        f"  1. Open https://github.com/new in your browser.\n"
-        f"  2. Repository name: {firm_slug}-brain\n"
-        f"  3. Description: ØØT Brain repo for {profile['name']}\n"
-        f"  4. Visibility: Private (or Public if you chose 'public' at Step 6)\n"
-        f"  5. Initialize: leave all three checkboxes UNCHECKED (no README, no .gitignore, no licence)\n"
-        f"  6. Click Create repository.\n"
+    explainer(
+        "What this step does and why",
+        "Your firm's operational data — Excel files, output logs, audit logs, partner\n"
+        "ledgers — lives in a GitHub repository. The framework's Routines read from it\n"
+        "and write back to it via signed commits (that's how the audit trail stays\n"
+        "tamper-evident). This step does FOUR things:\n\n"
+        "  1. Creates a folder on YOUR machine (the local clone).\n"
+        "  2. Scaffolds the firm/ subfolder structure (excel/, output-logs/, etc.)\n"
+        "     and copies in the 9 Excel templates from the framework.\n"
+        "  3. Makes the first commit (unsigned for now — signing key comes next step).\n"
+        "  4. Creates the GitHub repo and pushes everything to it.\n\n"
+        "If your `gh` CLI is installed and you're logged in, step 4 is one command and\n"
+        "5 seconds. Otherwise we walk you through clicking through github.com.",
     )
-    if not ask_confirm("Repo created on GitHub.com?", default=True):
-        info("Pausing. Re-run with --resume after the repo is created.")
-        sys.exit(0)
-    repo_url = ask_text(
-        "Repo HTTPS URL (e.g. https://github.com/<you>/<repo>.git)",
-        default=f"https://github.com/<you>/{firm_slug}-brain.git",
-    )
-    state["brain_repo_url"] = repo_url
 
-    info("\nStep 2 of 5 — Local folder + git init")
+    # --- Substep 1: local folder + git init -------------------------------
+    info("\n[1/4] Local folder + git init")
     if not firm_folder.exists():
         firm_folder.mkdir(parents=True)
         ok(f"Created {firm_folder}")
-    elif (firm_folder / ".git").exists():
-        warn(f"{firm_folder} already has a .git directory; skipping init.")
+    os.chdir(firm_folder)
     if not (firm_folder / ".git").exists():
         run(["git", "init", "-b", "main"], dry_run=dry_run, check=False)
-        os.chdir(firm_folder)
-        run(["git", "init", "-b", "main"], dry_run=dry_run, check=False)
+        ok("git init")
+    else:
+        info(f"  (Already a git repo at {firm_folder} — skipping init.)")
 
-    os.chdir(firm_folder)
-    info("\nStep 3 of 5 — Email matching for signed commits")
-    info("GitHub marks commits Verified only if the commit-author email matches the GPG key UID.\n"
-         "Use a real email here; we'll match the GPG key to it at Step 9.")
-    email = ask_text("Email for commit authorship in this repo", default="")
+    # --- Substep 2: author identity + scaffold + Excel templates ----------
+    info("\n[2/4] Commit author identity + folder scaffold + Excel templates")
+    explainer(
+        "Why we ask for an email here",
+        "GitHub marks a commit 'Verified' (green badge) only when the commit-author\n"
+        "email matches an email on the GPG key you'll upload at Step 9. So use a real\n"
+        "email you control — e.g. the one tied to your GitHub account. You can use a\n"
+        "GitHub noreply address (the privacy-friendly one in Settings → Emails).",
+    )
+    prior_email = state.get("brain_repo_email", "")
+    email = ask_text("Email for commit authorship in this repo", default=prior_email or "")
     name = ask_text("Name for commit authorship", default=profile.get("name", ""))
-    state.setdefault("brain_repo_email", email)
+    state["brain_repo_email"] = email
     if email and not dry_run:
-        run(["git", "config", "--local", "user.email", email], dry_run=False)
-        run(["git", "config", "--local", "user.name", name], dry_run=False)
-    if not dry_run:
-        run(["git", "remote", "add", "origin", repo_url], dry_run=False, check=False)
+        run(["git", "config", "--local", "user.email", email], dry_run=False, check=False)
+        run(["git", "config", "--local", "user.name", name], dry_run=False, check=False)
 
-    info("\nStep 4 of 5 — Scaffold firm/ folder + copy Excel templates")
     subfolders = ["excel", "output-logs", "audit-logs", "business-reviews",
                   "klarna-tests", "compensation", "brain-health", "partners"]
     for sub in subfolders:
@@ -1062,14 +1225,12 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             gitkeep = firm_folder / "firm" / sub / ".gitkeep"
             if not gitkeep.exists():
                 gitkeep.touch()
-    # Copy Excel templates
     excel_dst = firm_folder / "firm" / "excel"
     if not dry_run:
         for xlsx in TEMPLATES_EXCEL.glob("*.xlsx"):
             shutil.copy2(xlsx, excel_dst / xlsx.name)
         ok(f"Copied {len(list(excel_dst.glob('*.xlsx')))} .xlsx templates to firm/excel/")
 
-    # README at repo root
     readme = firm_folder / "README.md"
     if not readme.exists():
         readme_text = (
@@ -1086,14 +1247,92 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             readme.write_text(readme_text)
             ok(f"Wrote README at {readme}")
 
-    info("\nStep 5 of 5 — Initial commit + push")
-    info("This first commit will be UNSIGNED. The signing key gets generated at Step 9.")
-    if ask_confirm("Stage everything and commit?", default=True):
-        run(["git", "add", "."], dry_run=dry_run, check=False)
+    # --- Substep 3: initial commit ----------------------------------------
+    info("\n[3/4] Initial unsigned commit")
+    info("  (The first commit is unsigned. Step 9 generates the signing key + reconfigures\n"
+         "   git to sign every subsequent commit. All Routine-written commits will be signed.)")
+    if not dry_run:
+        run(["git", "add", "."], check=False)
+        # If nothing to commit, this is a no-op (existing repo).
         run(["git", "commit", "-m",
              "scaffold: initial Brain folder + Excel templates from framework v1.0.0"],
-            dry_run=dry_run, check=False)
-        if ask_confirm("Push to origin/main now? (Will prompt for GitHub credentials if not cached.)", default=True):
+            check=False)
+
+    # --- Substep 4: create the GitHub repo + push -------------------------
+    info("\n[4/4] Create the GitHub repo + push")
+    repo_name_default = f"{firm_slug}-brain"
+    repo_name = ask_text("Repository name on GitHub", default=repo_name_default)
+
+    repo_created_via_gh = False
+    if gh_available_and_authed():
+        login = gh_user_login() or "(you)"
+        full_repo = f"{login}/{repo_name}"
+        info(f"  ✓ `gh` CLI detected (authenticated as {login}).")
+        if ask_confirm(
+            f"Create the repo {full_repo} ({visibility}) automatically via `gh`, "
+            "and push our initial commit? (recommended — faster, no clicking)",
+            default=True,
+        ):
+            info(f"  Creating {full_repo}...")
+            rc, out = run(
+                ["gh", "repo", "create", full_repo,
+                 f"--{visibility}",
+                 "--description", f"ØØT Brain repo for {profile['name']}",
+                 "--source", str(firm_folder),
+                 "--remote", "origin",
+                 "--push"],
+                dry_run=dry_run, capture=True, check=False,
+            )
+            if rc == 0:
+                ok(f"Repo created: https://github.com/{full_repo}")
+                state["brain_repo_url"] = f"https://github.com/{full_repo}.git"
+                state["brain_repo_owner"] = login
+                state["brain_repo_name"] = repo_name
+                repo_created_via_gh = True
+            else:
+                warn("`gh repo create` failed. Output:")
+                if out:
+                    info(out)
+                warn("Falling back to the web UI walkthrough.")
+        else:
+            info("  OK — using the web UI path.")
+    else:
+        if not which("gh"):
+            info("  `gh` CLI not installed. We'll walk through the github.com web UI instead.")
+            info("  (Install gh anytime via `brew install gh` for one-command repo creation.)")
+        else:
+            info("  `gh` is installed but not authenticated. Run `gh auth login` separately to\n"
+                 "  enable automation next time. For now we'll walk through the web UI.")
+
+    if not repo_created_via_gh:
+        info(
+            "\n  Manual GitHub repo creation:\n"
+            f"    1. Open https://github.com/new in your browser.\n"
+            f"    2. Repository name:        {repo_name}\n"
+            f"    3. Description:            ØØT Brain repo for {profile['name']}\n"
+            f"    4. Visibility:             {visibility.capitalize()}\n"
+            f"    5. Initialize:             leave ALL THREE checkboxes UNCHECKED\n"
+            f"                               (no README, no .gitignore, no licence —\n"
+            f"                                we've already made the initial commit locally)\n"
+            f"    6. Click 'Create repository'.\n"
+        )
+        if not ask_confirm("Repo created on GitHub.com?", default=True):
+            info("Pausing. Re-run the bootstrap to resume.")
+            sys.exit(0)
+        repo_url = ask_text(
+            "Repo HTTPS URL (copy the URL bar — e.g. https://github.com/you/your-brain)",
+            default=f"https://github.com/<you>/{repo_name}.git",
+        )
+        if not repo_url.endswith(".git"):
+            repo_url = repo_url.rstrip("/") + ".git"
+        state["brain_repo_url"] = repo_url
+        # Add remote + push
+        if not dry_run:
+            os.chdir(firm_folder)
+            run(["git", "remote", "remove", "origin"], capture=True, check=False)  # idempotent
+            run(["git", "remote", "add", "origin", repo_url], check=False)
+            ok("Added remote 'origin'.")
+        if ask_confirm("Push to origin/main now? (May prompt for GitHub credentials.)", default=True):
             run(["git", "push", "-u", "origin", "main"], dry_run=dry_run, check=False)
 
     mark_step_done(state, "step_08_brain_repo")
@@ -1103,6 +1342,21 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_09_signing_key"):
         return
     header("Step 9 / 14 — Generate signing key + upload to GitHub", level=2)
+
+    explainer(
+        "What this step does and why",
+        "A GPG signing key is what lets GitHub mark a commit 'Verified' (green badge).\n"
+        "Once we configure git to sign every commit, every Routine-written change to\n"
+        "your Brain repo gets a cryptographic stamp tying it to this key. With branch\n"
+        "protection in place (Step 10) that gives you a tamper-evident audit trail —\n"
+        "the core of the framework's compliance story (ADR-001 / EU AI Act §12).\n\n"
+        "We'll: (1) generate a 4096-bit RSA key in your gpg keychain, (2) export the\n"
+        "public half, (3) upload it to GitHub (automatically via `gh gpg-key add` if\n"
+        "your gh CLI is logged in, otherwise via the web UI), (4) tell git in your\n"
+        "Brain repo to sign with this key, (5) make a test signed commit and push it.\n\n"
+        "The key has no passphrase (so Routines can sign non-interactively). This is\n"
+        "fine for a bot identity; a human signing key would use a passphrase + pinentry.",
+    )
 
     modules = state.get("modules_chosen", {})
     if "signing_key" not in modules.get("foundation", []):
@@ -1165,31 +1419,51 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
     key_id = ask_text("GPG key ID", default="")
     state["signing_key_id"] = key_id
 
+    pub_path: Optional[Path] = None
     if not dry_run and key_id:
-        # Export public key to file the user can open
+        # Export public key to file (also used by gh gpg-key add).
         pub_path = Path("/tmp/oot-gpg-public.asc")
         rc, out = run(["gpg", "--armor", "--export", key_id], capture=True, check=False)
         if rc == 0 and out:
             pub_path.write_text(out)
             ok(f"Public key written to {pub_path}")
-            # Try to open in user's text editor
+
+    uploaded_via_gh = False
+    if pub_path and gh_available_and_authed():
+        if ask_confirm(
+            "Upload the public key to GitHub automatically via `gh gpg-key add`? "
+            "(recommended — no copy-paste, no opening browser)",
+            default=True,
+        ):
+            rc, out = run(["gh", "gpg-key", "add", str(pub_path)],
+                          dry_run=dry_run, capture=True, check=False)
+            if rc == 0:
+                ok("GPG key uploaded to GitHub.")
+                uploaded_via_gh = True
+            else:
+                warn("`gh gpg-key add` failed. Output:")
+                if out:
+                    info(out)
+                warn("Falling back to manual upload.")
+
+    if not uploaded_via_gh:
+        if pub_path:
             opener = "open" if sys.platform == "darwin" else ("xdg-open" if sys.platform.startswith("linux") else None)
             if opener:
                 run([opener, str(pub_path)], dry_run=False, check=False)
-                info(f"\nThe key is now open in your text editor. Cmd+A, Cmd+C to copy.")
+                info(f"\nThe key is now open in your text editor. Cmd+A, Cmd+C to copy the whole block.")
             else:
                 info(f"\nThe key is at {pub_path}. Open it in any text editor and copy the entire block.")
-
-    info(
-        "\nUpload the public key to GitHub:\n"
-        "  1. Open https://github.com/settings/gpg/new in your browser.\n"
-        f"  2. Title: {profile['name']} — ØØT signing key\n"
-        "  3. Key: paste the block (Cmd+V).\n"
-        "  4. Click Add GPG key. Confirm with your password.\n"
-    )
-    if not ask_confirm("Public key uploaded?", default=True):
-        info("Pausing. Re-run with --resume.")
-        sys.exit(0)
+        info(
+            "\nUpload the public key to GitHub manually:\n"
+            "  1. Open https://github.com/settings/gpg/new in your browser.\n"
+            f"  2. Title: {profile['name']} — ØØT signing key\n"
+            "  3. Key: paste the block (Cmd+V).\n"
+            "  4. Click 'Add GPG key'. Confirm with your password if asked.\n"
+        )
+        if not ask_confirm("Public key uploaded?", default=True):
+            info("Pausing. Re-run the bootstrap to resume.")
+            sys.exit(0)
 
     info("\nConfiguring git to sign commits in this repo...")
     if not dry_run and key_id:
@@ -1222,33 +1496,97 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
 def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_10_branch_protection"):
         return
-    header("Step 10 / 14 — Branch protection (web UI)", level=2)
+    header("Step 10 / 14 — Branch protection on main", level=2)
     modules = state.get("modules_chosen", {})
     if not modules.get("install_branch_protection", True):
         info("Branch protection opted out at Step 5. Skipping.")
-        info("You can configure it later at any time: GitHub repo → Settings → Branches.")
+        info("You can configure it later anytime: GitHub repo → Settings → Branches.")
         mark_step_done(state, "step_10_branch_protection")
         return
     plan_tier = state["firm_profile"].get("github_plan_tier", "free")
-    repo_url = state.get("brain_repo_url", "<repo>")
+    repo_url = state.get("brain_repo_url", "")
+    owner = state.get("brain_repo_owner")
+    repo_name = state.get("brain_repo_name")
 
-    if plan_tier == "free":
-        warn("On GitHub Free + private, branch protection is advisory only. Configure it anyway "
-             "(structurally correct for the day you upgrade to Team).")
-    info(
-        f"\nOpen {repo_url.removesuffix('.git')}/settings/branches in your browser.\n"
-        "Click 'Add classic branch protection rule' (or 'Add ruleset' in newer UI).\n\n"
-        "Branch name pattern: main\n\n"
-        "Configure these checkboxes EXACTLY:\n"
-        "  ☑  Require signed commits     ← REJECTS unsigned commits (ADR-001 keystone)\n"
-        "  ☐  Allow force pushes          ← KEEPS history immutable\n"
-        "  ☐  Allow deletions             ← Branch can't be deleted (audit trail safety)\n"
-        "  ☐  Require pull request before merging   ← Allow Routine writes; turn on once stable\n"
-        "\nClick Create.\n"
+    explainer(
+        "What this step does and why",
+        "Branch protection on `main` is what makes your audit trail trustworthy.\n"
+        "Specifically, we'll set these rules:\n\n"
+        "  ✓ Require signed commits      — rejects unsigned pushes (ADR-001 keystone)\n"
+        "  ✗ Allow force pushes          — preserves immutable history\n"
+        "  ✗ Allow deletions             — main branch can't be deleted\n"
+        "  ✗ Require pull request        — Routines can commit directly (turn on later)\n\n"
+        f"Your GitHub plan: {plan_tier}.\n"
+        + ("⚠  GitHub Free + private repos do NOT enforce these rules — they're\n"
+           "   advisory only. We configure them anyway so your repo is structurally\n"
+           "   correct the day you upgrade to Team ($4/user/month). Per ADR-001 the\n"
+           "   audit-trail-immutability claim requires enforced protection."
+           if plan_tier == "free" else
+           "Enforcement is active on your plan — these rules will actually be enforced."),
     )
-    if not ask_confirm("Branch protection rule created?", default=True):
-        info("Pausing.")
-        sys.exit(0)
+
+    applied_via_gh = False
+    if gh_available_and_authed() and owner and repo_name:
+        if ask_confirm(
+            "Apply branch protection automatically via `gh api`? "
+            "(recommended — sets all four rules in one call)",
+            default=True,
+        ):
+            # PUT /repos/{owner}/{repo}/branches/{branch}/protection
+            # Note: required_status_checks/restrictions must be null; the API
+            # rejects missing keys, so we send the full minimal payload.
+            payload = {
+                "required_status_checks": None,
+                "enforce_admins": True,
+                "required_pull_request_reviews": None,
+                "restrictions": None,
+                "required_signatures": True,
+                "allow_force_pushes": False,
+                "allow_deletions": False,
+            }
+            payload_path = Path("/tmp/oot-branch-protection.json")
+            import json as _json
+            payload_path.write_text(_json.dumps(payload))
+            rc, out = run(
+                ["gh", "api", "-X", "PUT",
+                 f"repos/{owner}/{repo_name}/branches/main/protection",
+                 "-H", "Accept: application/vnd.github+json",
+                 "--input", str(payload_path)],
+                dry_run=dry_run, capture=True, check=False,
+            )
+            # required_signatures sometimes needs a follow-up call on newer API versions
+            if rc == 0:
+                run(["gh", "api", "-X", "POST",
+                     f"repos/{owner}/{repo_name}/branches/main/protection/required_signatures",
+                     "-H", "Accept: application/vnd.github.zzzax-preview+json"],
+                    dry_run=dry_run, capture=True, check=False)
+                ok("Branch protection applied on main.")
+                applied_via_gh = True
+            else:
+                warn("`gh api` failed. Output:")
+                if out:
+                    info(out)
+                warn("Falling back to the web UI walkthrough.")
+            payload_path.unlink(missing_ok=True)
+
+    if not applied_via_gh:
+        settings_url = (repo_url.removesuffix(".git") or "<repo>") + "/settings/branches"
+        info(
+            f"\nManual branch-protection setup:\n"
+            f"  1. Open {settings_url} in your browser.\n"
+            "  2. Click 'Add classic branch protection rule' (or 'Add ruleset').\n"
+            "  3. Branch name pattern: main\n"
+            "  4. Configure these checkboxes EXACTLY:\n"
+            "       ☑  Require signed commits     ← REJECTS unsigned commits (ADR-001)\n"
+            "       ☐  Allow force pushes          ← KEEPS history immutable\n"
+            "       ☐  Allow deletions             ← Branch can't be deleted\n"
+            "       ☐  Require pull request before merging\n"
+            "  5. Click 'Create'.\n"
+        )
+        if not ask_confirm("Branch protection rule created?", default=True):
+            info("Pausing.")
+            sys.exit(0)
+
     mark_step_done(state, "step_10_branch_protection")
 
 
@@ -1275,12 +1613,18 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
         mark_step_done(state, "step_11_curator")
         return
 
-    info(
+    explainer(
+        "What this step does and why",
         "The Curator is the desktop app that turns your firm's documents into a\n"
-        "queryable knowledge graph (the 'Brain' in framework terms). Claude Code\n"
-        "talks to it via the my-curator MCP server. Without it, the Routines\n"
-        "have no Brain to read or write — so this step is essential.\n\n"
-        "Repo + docs: https://github.com/talirezun/the-curator\n"
+        "queryable knowledge graph (the 'Brain' in framework terms). Claude talks\n"
+        "to it via the my-curator MCP server running locally on your machine.\n"
+        "Without it, the Routines have nothing to read or write — so this step is\n"
+        "essential.\n\n"
+        "Configuration B (greenfield, what you picked): we install Curator, point\n"
+        "it at your firm folder, configure ingest with a free Gemini API key, and\n"
+        "wire its MCP into Claude Desktop. Some bits are programmatic; the first-run\n"
+        "wizard (API key + permissions) needs human eyes.\n\n"
+        "Repo + docs: https://github.com/talirezun/the-curator",
     )
 
     if mode == "use-existing" or locations.get("existing_curator"):
@@ -1299,38 +1643,65 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
             "domains you already had.\n"
         )
     else:
-        info(
-            "\n— Configuration B: greenfield install —\n\n"
-            "Step 11a — Install the Curator desktop app.\n"
-            "  The Curator ships its own one-line installer. Open a *new* Terminal\n"
-            "  window (keep this wizard running here), then paste:\n\n"
-            "    curl -fsSL https://raw.githubusercontent.com/talirezun/the-curator/main/install.sh | bash\n\n"
-            "  This installs the Curator app + its local MCP server. On macOS the\n"
-            "  installer drops the app in /Applications and registers it with launchd\n"
-            "  so it starts automatically. Total time: 3-5 minutes.\n\n"
-            "  If the one-liner doesn't fit your setup, download the installer for\n"
-            "  your OS from: https://github.com/talirezun/the-curator/releases/latest\n\n"
-            "Step 11b — First-run setup.\n"
-            "  Open the Curator app. The first-run wizard asks for:\n"
-            "    - API key for ingest (Gemini Flash Lite recommended — free tier at\n"
-            "      https://aistudio.google.com/ — or Anthropic Claude if you prefer).\n"
-            f"    - Vault folder. Point it at: {locations['firm_folder']}\n"
-            f"    - First domain name: {locations['curator_domain']}\n\n"
-            "  If macOS prompts for filesystem permission:\n"
-            "    System Settings → Privacy & Security → Files and Folders → Curator\n"
-            "    → toggle the relevant folder access ON. Then quit and reopen Curator.\n\n"
-            "Step 11c — Wire my-curator MCP into Claude Desktop.\n"
-            "  The Curator's first-run wizard shows you an MCP config snippet to copy.\n"
-            "  In Claude Desktop:\n"
-            "    Settings (⌘,) → Developer → Edit Config → paste into mcpServers block.\n"
-            "  Then quit Claude Desktop fully (⌘Q) and reopen. The my-curator MCP\n"
-            "  should show a green checkmark in the bottom-left tools panel.\n\n"
-            "  Verify in a new Claude chat:\n"
-            "    > Use my-curator. List domains.\n"
-            f"  Expected output: `{locations['curator_domain']}` listed.\n"
-        )
+        info("\n— Configuration B: greenfield install —")
+        info("\n[11a] Install the Curator desktop app.")
+        installed = False
+        if ask_confirm(
+            "Run Curator's one-line installer from here? "
+            "(Recommended — saves opening a new Terminal. Downloads + installs the app.)",
+            default=True,
+        ):
+            info("  Fetching Curator's installer (this is the same one-liner from the project's README)...")
+            # We can't `curl | bash` directly without giving up our wizard's stdin/stdout
+            # cleanly, but we CAN download the script and exec it as a child process.
+            installer_url = "https://raw.githubusercontent.com/talirezun/the-curator/main/install.sh"
+            tmp_installer = Path("/tmp/oot-curator-install.sh")
+            rc, _ = run(["curl", "-fsSL", "-o", str(tmp_installer), installer_url],
+                        dry_run=dry_run, capture=True, check=False)
+            if rc == 0 and tmp_installer.exists():
+                ok(f"Downloaded → {tmp_installer}")
+                info("  Running the installer now (3-5 minutes; you may see Curator's own progress output)...\n")
+                rc2, _ = run(["bash", str(tmp_installer)],
+                             dry_run=dry_run, capture=False, check=False)
+                if rc2 == 0:
+                    ok("Curator app installed.")
+                    installed = True
+                else:
+                    warn("Curator installer returned non-zero. Check its output above for the failure mode.")
+            else:
+                warn("Could not download the Curator installer (no network? GitHub rate-limit?).")
+            tmp_installer.unlink(missing_ok=True)
+        if not installed:
+            info(
+                "\n  Manual install option:\n"
+                "    Open a *new* Terminal window (keep this wizard running here), then paste:\n\n"
+                "      curl -fsSL https://raw.githubusercontent.com/talirezun/the-curator/main/install.sh | bash\n\n"
+                "    Or download the per-OS installer from:\n"
+                "      https://github.com/talirezun/the-curator/releases/latest\n"
+            )
+            ask_confirm("Curator app installed?", default=True)
+
+        info("\n[11b] First-run setup (this part is GUI-only — you'll click through it).")
+        info("  Open the Curator app. Its first-run wizard asks for:")
+        info("    - API key for ingest (Gemini Flash Lite is recommended — free tier at")
+        info("      https://aistudio.google.com/ — or Anthropic Claude if you prefer).")
+        info(f"    - Vault folder. Point it at: {locations['firm_folder']}")
+        info(f"    - First domain name: {locations['curator_domain']}")
+        info("\n  If macOS prompts for filesystem permission:")
+        info("    System Settings → Privacy & Security → Files and Folders → Curator")
+        info("    → toggle relevant folder access ON. Then quit and reopen Curator.")
+
+        info("\n[11c] Wire my-curator MCP into Claude Desktop.")
+        info("  The Curator's first-run wizard shows you an MCP config snippet to copy.")
+        info("  In Claude Desktop:")
+        info("    Settings (⌘,) → Developer → Edit Config → paste into mcpServers block.")
+        info("  Then quit Claude Desktop fully (⌘Q) and reopen. The my-curator MCP")
+        info("  should show a green checkmark in the bottom-left tools panel.")
+        info("\n  Verify in a new Claude chat:")
+        info("    > Use my-curator. List domains.")
+        info(f"  Expected output: `{locations['curator_domain']}` listed.")
     if not ask_confirm("Curator integration complete (Curator running + MCP green)?", default=True):
-        info("Pausing here. Re-run the bootstrap (or `python3 installer/wizard.py --resume`) to continue.")
+        info("Pausing here. Re-run the bootstrap to resume.")
         sys.exit(0)
     mark_step_done(state, "step_11_curator")
 
@@ -1343,17 +1714,32 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
     chosen = modules.get("routines", [])
 
     schedules = {
-        "R5": ("Sunday 09:00",      "Brain Health Check"),
-        "R6": ("daily 23:00",       "EU AI Act Audit Trail"),
-        "R7": ("PR webhook",        "Klarna Test gate"),
-        "R1": ("daily 18:00",       "Daily Output Capture"),
-        "R2": ("Friday 08:00",      "Weekly BR Prep"),
-        "R3": ("monthly 1st",       "Partner Acknowledgement Polling"),
-        "R4": ("monthly 1st",       "Monthly Compensation Calc"),
-        "R8": ("quarterly",         "Quarterly Sentiment Sweep"),
+        "R5": ("Sunday 09:00",      "Brain Health Check",         "firm/brain-health"),
+        "R6": ("daily 23:00",       "EU AI Act Audit Trail",      "firm/audit-logs"),
+        "R7": ("PR webhook",        "Klarna Test gate",           None),  # verified differently
+        "R1": ("daily 18:00",       "Daily Output Capture",       "firm/output-logs"),
+        "R2": ("Friday 08:00",      "Weekly BR Prep",             "firm/business-reviews"),
+        "R3": ("monthly 1st",       "Partner Acknowledgement",    "firm/partners"),
+        "R4": ("monthly 1st",       "Monthly Compensation Calc",  "firm/compensation"),
+        "R8": ("quarterly",         "Quarterly Sentiment Sweep",  "firm/brain-health"),
     }
     day1_chosen = [r for r in chosen if r in ("R5", "R6", "R7")]
     deferred = [r for r in chosen if r not in ("R5", "R6", "R7")]
+
+    explainer(
+        "What this step does and why",
+        "Routines are Anthropic's hosted scheduled agents — they run on Anthropic's\n"
+        "cloud (not your laptop) and commit signed changes back to your Brain repo.\n"
+        "Day-1 Routines we recommend:\n\n"
+        "  R5  Brain Health Check  — Sundays 09:00; writes firm/brain-health/<YYYY-WW>.md\n"
+        "  R6  EU AI Act Audit Trail — daily 23:00; writes firm/audit-logs/<YYYY-MM-DD>.md\n"
+        "  R7  Klarna Test gate    — PR webhook; blocks merges that fail the Klarna test\n\n"
+        "Routine creation is the ONE step we can't fully automate yet — there's no\n"
+        "headless `claude routines create` command. You'll create each Routine\n"
+        "interactively via Claude Code's `/schedule` command or the web dashboard at\n"
+        "https://claude.ai/code/routines. After each, we'll verify the Routine\n"
+        "actually worked by checking your Brain repo for the file it should commit.",
+    )
 
     if not day1_chosen:
         info("No Day-1 Routines selected at Step 5. Skipping the walkthrough.")
@@ -1364,21 +1750,60 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
         return
 
     info(
-        "Each Routine is configured via Claude Code → /schedule, or the web dashboard at\n"
-        "https://claude.ai/code/routines, or the Claude Code desktop app's 'New Remote Task'\n"
-        "feature. Routines run on Anthropic's cloud regardless.\n\n"
-        f"You selected: {', '.join(day1_chosen)} for Day-1.\n"
-        + (f"Deferred (will set up later when prerequisites are met): {', '.join(deferred)}.\n" if deferred else "")
+        f"\nYou selected: {', '.join(day1_chosen)} for Day-1."
+        + (f"\nDeferred (will set up later when prerequisites are met): {', '.join(deferred)}." if deferred else "")
     )
+
+    owner = state.get("brain_repo_owner")
+    repo_name = state.get("brain_repo_name")
+    can_verify_via_gh = gh_available_and_authed() and owner and repo_name
+
     for r in day1_chosen:
-        sched, name = schedules[r]
-        info(f"\n--- {r} ({name}) setup walkthrough ---")
-        info(f"  See routines/cloud/{r}.md for the prompt body and full checklist.")
-        info(f"  Trigger: {sched}.")
-        info(f"  In Claude Code: /schedule → New Routine → upload prompt body.")
-        info(f"  Configure GitHub connector with Brain repo + signing key.")
-        info(f"  Manual fire to test.")
-        ask_confirm(f"{r} configured and verified?", default=True)
+        sched, name, watch_dir = schedules[r]
+        info(f"\n--- {r} ({name}) — setup ---")
+        info(f"  Routine prompt body:  routines/cloud/{r}.md  ({REPO_ROOT / 'routines' / 'cloud' / (r + '.md')})")
+        info(f"  Schedule:             {sched}")
+        info(f"  GitHub connector:     {state.get('brain_repo_url', '<repo>')} (with signing key from Step 9)")
+        info("\n  In Claude Code (CLI or desktop app):")
+        info("    /schedule  →  New Routine  →  upload the prompt body file above")
+        info("    Attach the my-curator MCP. Configure the GitHub connector with your")
+        info("    Brain repo URL and the signing key from Step 9. Save.")
+        info("\n  Web alternative: https://claude.ai/code/routines  →  'New Routine'")
+        info("\n  Once saved: click 'Run now' (or `/run-now` in the CLI) to do a test fire.")
+
+        configured = ask_confirm(f"{r} created and manually fired once?", default=True)
+        if not configured:
+            warn(f"{r} skipped. Re-run wizard later to come back to it.")
+            continue
+
+        # Programmatic verification — check for the file the Routine should have committed.
+        if can_verify_via_gh and watch_dir:
+            info(f"\n  Verifying {r} by checking {watch_dir}/ in your Brain repo...")
+            rc, out = run(
+                ["gh", "api", f"repos/{owner}/{repo_name}/contents/{watch_dir}",
+                 "--jq", ".[] | .name"],
+                capture=True, check=False,
+            )
+            if rc == 0 and out.strip():
+                files = [ln for ln in out.strip().splitlines() if ln and ln != ".gitkeep"]
+                if files:
+                    ok(f"Found {len(files)} file(s) in {watch_dir}/ — Routine appears to be working.")
+                    info(f"     Latest: {files[-1]}")
+                else:
+                    warn(f"  {watch_dir}/ exists but has no Routine-written files yet.")
+                    info(f"     The Routine may still be running. Check logs at: https://claude.ai/code/routines")
+                    info(f"     Or verify manually: {state.get('brain_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir}")
+            else:
+                warn(f"  Could not read {watch_dir}/ via gh API (it may not exist yet, or the Routine errored).")
+                info(f"     Inspect logs: https://claude.ai/code/routines")
+        elif r == "R7":
+            info("  R7 verification: this is a PR-webhook routine; no file output to check.")
+            info("     Verify by opening a test PR with an AI-replaces-human label and watching for the oot/klarna-test status check.")
+        else:
+            info("  (Programmatic verification needs the `gh` CLI authenticated. Skip — manual verification:")
+            info(f"     Visit {state.get('brain_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir or 'firm'}")
+            info("     and look for the file the Routine should have written.)")
+
     mark_step_done(state, "step_12_routines")
 
 
