@@ -619,12 +619,34 @@ _STATE_KEY_RENAMES = {
     "brain_repo_email":  "ledger_repo_email",
 }
 
+# v1.0.1 → v1.1.0: a new Second Brain bridge step was inserted between Curator
+# (11) and Routines (was 12). Existing state files have step_12_routines /
+# step_13_smoke_test / step_14_summary marked done; renumber so the navigator
+# keeps resuming at the right place.
+_STATE_STEP_RENAMES = {
+    "step_12_routines":    "step_13_routines",
+    "step_13_smoke_test":  "step_14_smoke_test",
+    "step_14_summary":     "step_15_summary",
+}
+
 
 def _migrate_state_keys(state: dict[str, Any]) -> dict[str, Any]:
     """Backward-compat: promote pre-rename state keys to current names."""
     for old, new in _STATE_KEY_RENAMES.items():
         if old in state and new not in state:
             state[new] = state.pop(old)
+    # Renumber completed-step flags for the v1.1.0 step-insert.
+    steps_completed = state.get("steps_completed", {})
+    for old, new in _STATE_STEP_RENAMES.items():
+        if old in steps_completed and new not in steps_completed:
+            steps_completed[new] = steps_completed.pop(old)
+    # If the user has step_13_routines marked done from a pre-bridge install
+    # but the new bridge step isn't done, reset step_13_routines so they re-
+    # configure the Routines with the new Second Brain connector. Stale
+    # connectors won't have the new repo wired.
+    if ("step_13_routines" in steps_completed
+            and "step_12_secondbrain_sync" not in steps_completed):
+        steps_completed.pop("step_13_routines", None)
     return state
 
 
@@ -708,7 +730,7 @@ def step_00_welcome(state: dict[str, Any], dry_run: bool) -> None:
 
 def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
     """Returns the absolute path of the Python interpreter to use."""
-    header("Step 1 / 14 — Preflight: required tools", level=2)
+    header("Step 1 / 15 — Preflight: required tools", level=2)
 
     explainer(
         "What this step does and why",
@@ -768,7 +790,7 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
 def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_02_python_venv"):
         return
-    header("Step 2 / 14 — Python virtual environment", level=2)
+    header("Step 2 / 15 — Python virtual environment", level=2)
     explainer(
         "What this step does and why",
         "We create an isolated Python environment at ~/.oot/venv and install the\n"
@@ -794,7 +816,7 @@ def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
 def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
     if is_step_done(state, "step_03_locations"):
         return state.get("locations", {})
-    header("Step 3 / 14 — Choose locations", level=2)
+    header("Step 3 / 15 — Choose locations", level=2)
 
     explainer(
         "What this step does and why",
@@ -882,7 +904,7 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
 def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]:
     if is_step_done(state, "step_04_firm_profile"):
         return state.get("firm_profile", {})
-    header("Step 4 / 14 — Firm profile", level=2)
+    header("Step 4 / 15 — Firm profile", level=2)
 
     explainer(
         "What this step does and why",
@@ -931,7 +953,7 @@ def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]
 def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, Any]:
     if is_step_done(state, "step_05_module_selection"):
         return state.get("modules_chosen", {})
-    header("Step 5 / 14 — Module selection (choose what to install)", level=2)
+    header("Step 5 / 15 — Module selection (choose what to install)", level=2)
 
     profile = state.get("firm_profile", {})
     eu = profile.get("eu_high_risk") in {"yes", "not-sure"}
@@ -1138,7 +1160,7 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
 def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
     if is_step_done(state, "step_06_github_plan_tier"):
         return state.get("firm_profile", {}).get("github_plan_tier", "free")
-    header("Step 6 / 14 — GitHub plan-tier choice (CRITICAL)", level=2)
+    header("Step 6 / 15 — GitHub plan-tier choice (CRITICAL)", level=2)
     explainer(
         "What this step does and why  ⚠️  (structural choice)",
         "GitHub Free + private repos display branch-protection rules in the UI but\n"
@@ -1188,7 +1210,7 @@ def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
 def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_07_anthropic_check"):
         return
-    header("Step 7 / 14 — Anthropic check", level=2)
+    header("Step 7 / 15 — Anthropic check", level=2)
     explainer(
         "What this step does and why",
         "Two Anthropic products you'll need:\n\n"
@@ -1241,7 +1263,7 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
 def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_08_brain_repo"):
         return
-    header("Step 8 / 14 — Create the Ledger GitHub repo", level=2)
+    header("Step 8 / 15 — Create the Ledger GitHub repo", level=2)
 
     locations = state["locations"]
     profile = state["firm_profile"]
@@ -1418,7 +1440,7 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
 def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_09_signing_key"):
         return
-    header("Step 9 / 14 — Generate signing key + upload to GitHub", level=2)
+    header("Step 9 / 15 — Generate signing key + upload to GitHub", level=2)
 
     explainer(
         "What this step does and why",
@@ -1573,7 +1595,7 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
 def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_10_branch_protection"):
         return
-    header("Step 10 / 14 — Branch protection on main", level=2)
+    header("Step 10 / 15 — Branch protection on main", level=2)
     modules = state.get("modules_chosen", {})
     if not modules.get("install_branch_protection", True):
         info("Branch protection opted out at Step 5. Skipping.")
@@ -1670,7 +1692,7 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
 def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_11_curator"):
         return
-    header("Step 11 / 14 — Curator integration (the second-brain app)", level=2)
+    header("Step 11 / 15 — Curator integration (the second-brain app)", level=2)
     locations = state["locations"]
     modules = state.get("modules_chosen", {})
     mode = modules.get("curator_mode", "install-fresh" if not locations.get("existing_curator") else "use-existing")
@@ -1783,10 +1805,227 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     mark_step_done(state, "step_11_curator")
 
 
-def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
-    if is_step_done(state, "step_12_routines"):
+def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
+    """Bridge step: hook Routines into the Second Brain via Curator's GitHub sync.
+
+    The gap this fills: cloud Routines (running on Anthropic's infrastructure)
+    cannot reach the user's local my-curator MCP. The bridge is the Curator's
+    built-in two-way sync to a private GitHub repo — once that's running, cloud
+    Routines clone the synced repo at execution time and read company-context
+    knowledge from plain markdown files. See docs/AUTOMATION-PIPELINE.md.
+    """
+    if is_step_done(state, "step_12_secondbrain_sync"):
         return
-    header("Step 12 / 14 — Configure Day-1 Routines", level=2)
+    header("Step 12 / 15 — Connect Routines to your Second Brain (the bridge)", level=2)
+
+    profile = state.get("firm_profile", {})
+    track = profile.get("track", "cloud")
+    modules = state.get("modules_chosen", {})
+    locations = state.get("locations", {})
+
+    # Privacy track has no gap — my-curator MCP runs locally alongside Routines.
+    if track == "privacy":
+        info("Privacy track detected. The my-curator MCP runs locally on your")
+        info("always-on machine alongside the Routines themselves, so there is no gap")
+        info("to bridge. Skipping this step.")
+        info("(If you switch to cloud track later, re-run with --resume.)")
+        mark_step_done(state, "step_12_secondbrain_sync")
+        return
+
+    # If user opted out of Curator entirely, skip — no Second Brain exists.
+    if modules.get("skip_curator"):
+        info("Curator skipped at Step 5 (skip-for-now). No Second Brain to bridge.")
+        info("When you install Curator later, re-run the wizard and we'll wire it up.")
+        mark_step_done(state, "step_12_secondbrain_sync")
+        return
+
+    curator_domain = locations.get("curator_domain") or profile.get("name", "<firm>").lower().replace(" ", "-")
+
+    explainer(
+        "What this step does and why",
+        "Your Curator app stores the firm's Second Brain locally — its 17 MCP tools\n"
+        "(semantic search, graph traversal, scan_wiki_health, etc.) only run on YOUR\n"
+        "machine. Cloud-hosted Routines on Anthropic's infrastructure can't reach\n"
+        "your local MCP. Without a bridge, the R5 Brain Health Check has no way to\n"
+        "see your Second Brain — it just commits empty reports.\n\n"
+        "The bridge: Curator already has a two-way GitHub sync feature. Enable it,\n"
+        "and your Second Brain is mirrored to a private GitHub repo. Cloud Routines\n"
+        "then clone that repo at execution time and read your markdown files\n"
+        "directly. Read-only — Routines never write to your Second Brain.\n\n"
+        f"What we'll do:\n"
+        f"  1. Check your Curator app for an existing sync setup. If none, walk you\n"
+        f"     through enabling it (target: <{profile.get('name', 'firm')}>-secondbrain).\n"
+        f"  2. Have you create a fine-grained PAT with Contents:Read only on that\n"
+        f"     repo — much safer than full repo scope.\n"
+        f"  3. Verify a clone works.\n"
+        f"  4. Save the repo URL + the curator domain ({curator_domain}) so Routines\n"
+        f"     in Step 13 can be configured against it.\n\n"
+        "Trade-off: cloud Routines lose the 17 MCP tools — they fall back to plain\n"
+        "file reads + grep. For R5 (the only Day-1 Routine that actually needs the\n"
+        "Second Brain) this is enough; broken-wikilink and orphan scans are file-\n"
+        "level operations. The 17 tools come back via a stateless cloud-MCP variant\n"
+        "in Gen-2 (or Anthropic's hosted Curator, whichever ships first).",
+    )
+
+    # ----- 1. Detect existing Curator sync -------------------------------
+    curator_vault = locations.get("curator_vault")
+    sync_config_path: Optional[Path] = None
+    if curator_vault:
+        candidate = Path(curator_vault).expanduser() / ".sync-config.json"
+        if candidate.exists():
+            sync_config_path = candidate
+
+    existing_sync_url: Optional[str] = None
+    if sync_config_path:
+        try:
+            import json as _json
+            data = _json.loads(sync_config_path.read_text())
+            existing_sync_url = (
+                data.get("remoteUrl")
+                or data.get("remote_url")
+                or data.get("repo")
+                or data.get("repoUrl")
+            )
+        except Exception as e:
+            warn(f"Found {sync_config_path} but couldn't parse it: {e}")
+
+    info("\n[1/4] Checking for existing Curator GitHub sync...")
+    if existing_sync_url:
+        ok(f"Detected an existing sync target: {existing_sync_url}")
+        info("We'll reuse this repo as the Second Brain bridge target.")
+        sync_url = existing_sync_url
+    else:
+        info("No existing sync config detected (or vault path not configured).")
+        info("")
+        info("  In the Curator app:")
+        info("    1. Open the Sync tab in Settings (or Preferences → Sync).")
+        info("    2. Click 'Enable GitHub sync' / 'Connect to GitHub'.")
+        info(f"    3. Create a NEW private repository called  "
+             f"  {profile.get('name', 'firm').lower().replace(' ', '-')}-secondbrain")
+        info("       (or pick an existing private repo you want to sync to).")
+        info("    4. Generate a PAT with `repo` scope (Curator uses this for two-way sync).")
+        info("    5. Paste the PAT into Curator. Curator saves it locally in .sync-config.json.")
+        info("    6. Click 'Sync Up' to do the initial push.")
+        info("")
+        if not ask_confirm("Curator sync is configured and the initial push succeeded?", default=True):
+            info("Pausing here. When sync is configured, re-run with --resume.")
+            sys.exit(0)
+        default_url = f"https://github.com/<you>/{profile.get('name', 'firm').lower().replace(' ', '-')}-secondbrain"
+        sync_url = ask_text(
+            "Paste the Second Brain repo URL (HTTPS or git@)",
+            default=default_url,
+        ).strip()
+        if not sync_url.endswith(".git") and "github.com" in sync_url:
+            sync_url = sync_url.rstrip("/") + ".git"
+
+    state["second_brain_repo_url"] = sync_url
+
+    # Parse owner/name for later API calls + Routine connector config.
+    sb_owner = sb_name = None
+    try:
+        # crude URL parse for github.com/<owner>/<name>(.git)
+        import re
+        m = re.search(r"github\.com[:/](?P<owner>[^/]+)/(?P<name>[^/.]+)(\.git)?$", sync_url)
+        if m:
+            sb_owner = m.group("owner")
+            sb_name = m.group("name")
+            state["second_brain_repo_owner"] = sb_owner
+            state["second_brain_repo_name"] = sb_name
+    except Exception:
+        pass
+
+    # ----- 2. Have user create the read-only fine-grained PAT for Routines -
+    info("\n[2/4] Create a fine-grained PAT for Routines (read-only).")
+    info("  Routines need to clone the Second Brain repo at execution time. We'll")
+    info("  use a fine-grained PAT scoped to ONLY that one repo with Contents:Read")
+    info("  permission — much safer than a full `repo`-scope token.")
+    info("")
+    info("  In your browser:")
+    info("    1. Open https://github.com/settings/personal-access-tokens/new")
+    info("    2. Token name: 'oot-routines-secondbrain-read' (or similar)")
+    info("    3. Expiration: 1 year (renew at expiry)")
+    info("    4. Resource owner: yourself (or the firm's org, if relevant)")
+    info("    5. Repository access: 'Only select repositories' → "
+         + (f"{sb_owner}/{sb_name}" if sb_owner else "the Second Brain repo above"))
+    info("    6. Permissions → Repository permissions → Contents: Read-only")
+    info("       (leave everything else as 'No access')")
+    info("    7. Generate token. Copy it immediately — GitHub only shows it once.")
+    info("")
+    info("  IMPORTANT: store this PAT in your password manager (Bitwarden / 1Password /")
+    info("  keychain) — we'll NOT save it to the wizard state file. You'll paste it")
+    info("  when configuring R5's GitHub connector in Step 13.")
+    info("")
+
+    pat_for_test = ""
+    if ask_confirm("Paste the PAT here ONLY for a one-time clone verification? "
+                   "(We won't write it to disk — it's used in memory then discarded.)",
+                   default=True):
+        pat_for_test = ask_text("PAT (will be used once then forgotten)", default="").strip()
+
+    # ----- 3. Verify clone works -----------------------------------------
+    info("\n[3/4] Verifying clone access...")
+    verified = False
+    if pat_for_test and sb_owner and sb_name and not dry_run:
+        test_dir = Path("/tmp") / f"oot-sb-clone-test-{datetime.now(timezone.utc).strftime('%H%M%S')}"
+        try:
+            clone_url = f"https://{pat_for_test}@github.com/{sb_owner}/{sb_name}.git"
+            rc, _ = run(
+                ["git", "clone", "--depth", "1", "--quiet", clone_url, str(test_dir)],
+                capture=True, check=False,
+            )
+            if rc == 0:
+                # Check that the curator domain folder exists in the synced repo.
+                domain_folder = test_dir / "wiki" / curator_domain
+                if domain_folder.exists() and any(domain_folder.iterdir()):
+                    ok(f"Clone succeeded. Found wiki/{curator_domain}/ with content.")
+                    verified = True
+                elif (test_dir / "wiki").exists():
+                    warn(f"Clone succeeded, but wiki/{curator_domain}/ is empty or missing.")
+                    info("  Tip: in the Curator app, make sure the firm domain is created,")
+                    info("       then click 'Sync Up' again to push pages for that domain.")
+                else:
+                    warn("Clone succeeded but there's no wiki/ folder yet.")
+                    info("  Add a few pages in the Curator app, then 'Sync Up'.")
+            else:
+                warn("Clone failed. Common causes: wrong PAT, PAT lacks Contents:Read,")
+                warn("PAT scoped to a different repo, or the repo doesn't exist yet.")
+        finally:
+            # Scrub the working directory regardless of outcome (it never contained
+            # the PAT itself, but defence in depth).
+            import shutil as _shutil
+            if test_dir.exists():
+                _shutil.rmtree(test_dir, ignore_errors=True)
+        # Discard the PAT from local scope — never written to state.
+        pat_for_test = ""
+    elif not pat_for_test:
+        info("  Skipped verification (no PAT pasted). You can verify later by cloning")
+        info(f"  {sync_url} manually with the PAT.")
+
+    # ----- 4. Save state + summary --------------------------------------
+    info("\n[4/4] Saved Second Brain bridge config.")
+    state["second_brain_curator_domain"] = curator_domain
+    state["second_brain_subfolder"] = f"wiki/{curator_domain}"
+    state["second_brain_verified"] = verified
+
+    info("")
+    info("Summary of what's saved (to state file):")
+    info(f"  Second Brain repo URL:     {sync_url}")
+    info(f"  Curator domain scope:      wiki/{curator_domain}")
+    info(f"  PAT:                       NOT saved (you'll paste it at Step 13)")
+    info(f"  Clone-test verified:       {'yes' if verified else 'no (do this manually later)'}")
+    info("")
+    info("At Step 13 we'll configure R5 (and any other Routine that needs Second Brain")
+    info("access) with a GitHub connector pointing at this repo. You'll paste the PAT")
+    info("there, and the Routine clones the repo at every scheduled run.")
+
+    mark_step_done(state, "step_12_secondbrain_sync")
+    ask_navigation("Second Brain bridge")
+
+
+def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
+    if is_step_done(state, "step_13_routines"):
+        return
+    header("Step 13 / 15 — Configure Day-1 Routines", level=2)
     modules = state.get("modules_chosen", {})
     chosen = modules.get("routines", [])
 
@@ -1823,7 +2062,7 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
         if deferred:
             info(f"Deferred (need partner data first): {', '.join(deferred)}.")
         info("You can configure Routines anytime via Claude Code → /schedule or https://claude.ai/code/routines")
-        mark_step_done(state, "step_12_routines")
+        mark_step_done(state, "step_13_routines")
         return
 
     info(
@@ -1835,16 +2074,29 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
     repo_name = state.get("ledger_repo_name")
     can_verify_via_gh = gh_available_and_authed() and owner and repo_name
 
+    # Which Routines need the Second Brain bridge connector?
+    sb_url = state.get("second_brain_repo_url")
+    sb_subfolder = state.get("second_brain_subfolder", "wiki/<your-firm-domain>")
+    routines_needing_secondbrain = {"R5"}  # R5 = Brain Health Check; depends on Second Brain access
+
     for r in day1_chosen:
         sched, name, watch_dir = schedules[r]
         info(f"\n--- {r} ({name}) — setup ---")
         info(f"  Routine prompt body:  routines/cloud/{r}.md  ({REPO_ROOT / 'routines' / 'cloud' / (r + '.md')})")
         info(f"  Schedule:             {sched}")
-        info(f"  GitHub connector:     {state.get('ledger_repo_url', '<repo>')} (with signing key from Step 9)")
+        info(f"  Primary GitHub connector (Ledger, read+write):")
+        info(f"    {state.get('ledger_repo_url', '<repo>')} — signing key from Step 9")
+        if r in routines_needing_secondbrain and sb_url:
+            info(f"  Secondary GitHub connector (Second Brain, READ-ONLY):")
+            info(f"    {sb_url}")
+            info(f"    Scope:  {sb_subfolder}/")
+            info(f"    PAT:    the fine-grained Contents:Read PAT you created at Step 12")
+            info(f"            (paste it from your password manager when prompted)")
         info("\n  In Claude Code (CLI or desktop app):")
         info("    /schedule  →  New Routine  →  upload the prompt body file above")
-        info("    Attach the my-curator MCP. Configure the GitHub connector with your")
-        info("    Ledger URL and the signing key from Step 9. Save.")
+        info("    Attach the my-curator MCP (privacy-track only — cloud Routines use")
+        info("    the Second Brain bridge instead; see Step 12).")
+        info("    Configure the GitHub connector(s) listed above. Save.")
         info("\n  Web alternative: https://claude.ai/code/routines  →  'New Routine'")
         info("\n  Once saved: click 'Run now' (or `/run-now` in the CLI) to do a test fire.")
 
@@ -1881,20 +2133,20 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
             info(f"     Visit {state.get('ledger_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir or 'firm'}")
             info("     and look for the file the Routine should have written.)")
 
-    mark_step_done(state, "step_12_routines")
+    mark_step_done(state, "step_13_routines")
 
 
-def step_13_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
-    if is_step_done(state, "step_13_smoke_test"):
+def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
+    if is_step_done(state, "step_14_smoke_test"):
         return
-    header("Step 13 / 14 — Smoke test", level=2)
+    header("Step 14 / 15 — Smoke test", level=2)
     locations = state["locations"]
     firm_folder = Path(locations["firm_folder"])
     info("Running smoke test against your firm folder...")
 
     if not firm_folder.exists():
         warn(f"Firm folder {firm_folder} doesn't exist. Skipping.")
-        mark_step_done(state, "step_13_smoke_test")
+        mark_step_done(state, "step_14_smoke_test")
         return
 
     os.chdir(firm_folder)
@@ -1925,13 +2177,13 @@ def step_13_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
         path = firm_folder / "firm" / sub
         marker = "✓" if path.exists() else "✗"
         info(f"  {marker} firm/{sub}/")
-    mark_step_done(state, "step_13_smoke_test")
+    mark_step_done(state, "step_14_smoke_test")
 
 
-def step_14_summary(state: dict[str, Any], dry_run: bool) -> None:
-    if is_step_done(state, "step_14_summary"):
+def step_15_summary(state: dict[str, Any], dry_run: bool) -> None:
+    if is_step_done(state, "step_15_summary"):
         return
-    header("Step 14 / 14 — Install summary", level=2)
+    header("Step 15 / 15 — Install summary", level=2)
     summary_path = OOT_HOME / "install-summary.md"
     profile = state.get("firm_profile", {})
     locations = state.get("locations", {})
@@ -1967,7 +2219,7 @@ def step_14_summary(state: dict[str, Any], dry_run: bool) -> None:
         OOT_HOME.mkdir(parents=True, exist_ok=True)
         summary_path.write_text(summary)
         ok(f"Install summary written to {summary_path}")
-    mark_step_done(state, "step_14_summary")
+    mark_step_done(state, "step_15_summary")
     info("\nInstall complete. Next steps:")
     info("  - Read docs/03-onboarding-a-partner.md for the first partner onboarding.")
     info("  - Read docs/MODULES.md for what to add over the next 30 / 90 / 180 days.")
@@ -2028,9 +2280,10 @@ def main() -> int:
         ("step_09_signing_key",      "Signing key",           step_09_signing_key),
         ("step_10_branch_protection","Branch protection",     step_10_branch_protection),
         ("step_11_curator",          "Curator",               step_11_curator),
-        ("step_12_routines",         "Routines",              step_12_routines),
-        ("step_13_smoke_test",       "Smoke test",            step_13_smoke_test),
-        ("step_14_summary",          "Summary",               step_14_summary),
+        ("step_12_secondbrain_sync", "Second Brain bridge",   step_12_secondbrain_sync),
+        ("step_13_routines",         "Routines",              step_13_routines),
+        ("step_14_smoke_test",       "Smoke test",            step_14_smoke_test),
+        ("step_15_summary",          "Summary",               step_15_summary),
     ]
 
     try:

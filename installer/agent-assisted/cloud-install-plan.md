@@ -730,17 +730,63 @@ Expected: clean report. Walk through `fix_wiki_issue` for any broken wikilinks."
 
 ---
 
+## Step 9b — Connect Routines to the Second Brain (the bridge)
+
+**What you're about to do (tell the user):** "Cloud Routines can't reach your local my-curator MCP. We bridge this via the Curator's built-in GitHub sync. About 10 minutes."
+
+**Why this step exists (background — keep brief in chat):** R5 (Brain Health Check) needs to read the firm's Second Brain (the Curator semantic graph). The Curator's MCP is local-stdio only. The Curator already supports two-way GitHub sync — Routines clone that synced repo at execution time and scan markdown files directly. The trade-off: cloud Routines lose the 17 MCP tools, but R5's broken-wikilink / orphan / stale scans are file-level operations that work fine without them. See [`docs/AUTOMATION-PIPELINE.md`](../../docs/AUTOMATION-PIPELINE.md) § "How the bridge works".
+
+🟡 **ASK USER:** "In the Curator app, open Settings → Sync (or Preferences → Sync). Create a NEW private GitHub repository called `<FIRM_SLUG>-secondbrain` (or pick an existing private repo if you have one). Generate a PAT with `repo` scope, paste into Curator, click Enable Sync. Then click 'Sync Up' to do the initial push. Once that's done, paste me the HTTPS URL of the Second Brain repo."
+
+Save as `SECOND_BRAIN_REPO_URL` in state. Parse to extract `SECOND_BRAIN_OWNER` and `SECOND_BRAIN_NAME`.
+
+🟡 **ASK USER (read-only PAT):** "Now create a fine-grained PAT scoped to ONLY `<SECOND_BRAIN_OWNER>/<SECOND_BRAIN_NAME>`. Open https://github.com/settings/personal-access-tokens/new. Token name: `oot-routines-secondbrain-read`. Expiration: 1 year. Resource owner: yourself. Repository access: Only select repositories → `<SECOND_BRAIN_OWNER>/<SECOND_BRAIN_NAME>`. Permissions → Repository permissions → Contents: Read-only (leave everything else as 'No access'). Generate. Copy it immediately. Save it in your password manager — you'll paste it when configuring R5 at Step 10. Tell me when saved."
+
+Verify the PAT works (optional but recommended — only if user is willing to paste it once for verification):
+
+```bash
+# In a /tmp working dir, attempt a shallow clone using the PAT
+git clone --depth 1 --quiet \
+  "https://<PAT>@github.com/<SECOND_BRAIN_OWNER>/<SECOND_BRAIN_NAME>.git" \
+  /tmp/oot-sb-verify
+# Expected: success. Look for wiki/<CURATOR_DOMAIN>/ subdirectory with content.
+ls /tmp/oot-sb-verify/wiki/<CURATOR_DOMAIN>/ | head -5
+rm -rf /tmp/oot-sb-verify
+```
+
+If clone fails:
+- Wrong PAT → re-do.
+- PAT lacks Contents:Read → re-do.
+- `wiki/<CURATOR_DOMAIN>/` missing → in Curator app, make sure the firm domain has at least one page, then 'Sync Up' again.
+
+Save state:
+- `second_brain_repo_url: <url>`
+- `second_brain_repo_owner: <owner>`
+- `second_brain_repo_name: <name>`
+- `second_brain_subfolder: wiki/<CURATOR_DOMAIN>`
+- `second_brain_verified: true` (or false if user skipped verification)
+
+**DO NOT save the PAT in any state file.** The user keeps it in their password manager and pastes it into Claude Code's Routine connector at Step 10.
+
+`step_9b_secondbrain_sync: done`.
+
+---
+
 ## Step 10 — Configure Day-1 Routines
 
 **What you're about to do (tell the user):** "I'll walk you through configuring R5 (and optionally R6, R1, R2) in Claude Code Routines. About 20-30 minutes."
 
 For each Routine, follow the per-Routine setup checklist at `routines/cloud/<R>.md`. Pause-and-confirm at each.
 
-R5 first (no dependencies):
+R5 first (uses the bridge from Step 9b):
 
-🟡 **ASK USER:** "Open Claude Code → run `/schedule`. Or visit https://claude.ai/code/routines. Or use the Claude Code desktop app's 'New Remote Task' feature. Configure R5 per the checklist at `routines/cloud/R5.md`. Use the prompt body from that file. Attach the `my-curator` Skill Pack. Configure the GitHub connector pointing at `<LEDGER_REPO_URL>` (with the bot identity's signing key). Manual fire to test. Verify a signed commit lands on `main` adding `firm/brain-health/<YYYY-WW>.md`. Tell me `done`."
+🟡 **ASK USER:** "Open Claude Code → run `/schedule`. Or visit https://claude.ai/code/routines. Or use the Claude Code desktop app's 'New Remote Task' feature. Configure R5 per the checklist at `routines/cloud/R5.md`. Use the prompt body from that file. Configure **two GitHub connectors**:
+- **Primary (Ledger):** `<LEDGER_REPO_URL>` with the bot identity's signing key. **Read-write.**
+- **Secondary (Second Brain):** `<SECOND_BRAIN_REPO_URL>` with the fine-grained Contents:Read PAT you created at Step 9b. **Read-only.** Paste the PAT from your password manager.
 
-Repeat for R6, R1, R2 if user opted in at Step 2.
+Set template variables: `LEDGER_REPO_URL`, `SECOND_BRAIN_REPO_URL`, `SECOND_BRAIN_SUBFOLDER`. Confirm code execution is enabled. Manual fire to test. Verify a signed commit lands on `main` adding `firm/brain-health/<YYYY-WW>.md` in the Ledger AND that the report content references the Second Brain pages (i.e. the scan actually ran). Tell me `done`."
+
+For R6, R1, R2 — these don't need the Second Brain bridge. Just one GitHub connector (Ledger) each. Repeat for R6, R1, R2 if user opted in at Step 2.
 
 `step_10_routines: done`. Log which Routines configured vs. deferred.
 

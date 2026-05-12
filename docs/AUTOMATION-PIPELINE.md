@@ -129,7 +129,7 @@ Each Routine needs a specific set of connectors configured in the Claude Code Ro
 | R7 — Klarna Trigger | ✅ | ✅ | ✅ post | ✅ send | — | — | — |
 | R8 — Treasury (optional) | ✅ | ✅ | ✅ post | ✅ alert | — | — | ✅ jurisdiction-specific |
 
-¹ **my-curator MCP is local to your machine, not reachable from Anthropic's cloud.** Routines that depend on it (R5 critically; R6 indirectly) hit the [Gen-1 reachability gap](#-known-gen-1-gap-my-curator-mcp-reachability-from-cloud-routines). For solo / pilot founders: defer R5; R1/R2/R3 work without it.
+¹ **my-curator MCP is local to your machine, not reachable from Anthropic's cloud.** R5 (Brain Health Check) used to be broken on cloud track because of this. **Resolved in v1.0.1 by the Second Brain bridge** — see [How the bridge works](#how-the-bridge-works-cloud-routines-reaching-the-second-brain-via-curator-github-sync). R5 now clones the Curator-synced Second Brain repo at execution time (scoped to `wiki/<firm-curator-domain>/`) and scans markdown files directly.
 
 ### What each connector does
 
@@ -138,7 +138,7 @@ Each Routine needs a specific set of connectors configured in the Claude Code Ro
 - **Slack** — read tracked channels (R1: `#output`, `#commercial`, `#sales` for tags); post to result channels (`#output-log`, `#brain-health`, `#klarna-test`, etc.). Configure per-Routine which channels.
 - **Email** — for sending per-partner statements (R3 monthly variable, R4 long-tail, R7 Klarna trigger). Anthropic's native email connector or a third-party Gmail/Outlook MCP.
 - **Google Drive / Workspace** — *optional*, read-only. Only used by R1 if your firm tracks Drive folders for documents-as-output. Not used by any Routine that mutates state — Drive is never the source of truth (per ADR-001).
-- **my-curator MCP** — *local stdio MCP* on your machine. Reachable from Anthropic's cloud only if you self-host (e.g. on a Tailscale-routed Pi 5). Documented gap for v1; alternatives in the section below.
+- **my-curator MCP** — *local stdio MCP* on your machine; not reachable from Anthropic's cloud. Cloud Routines bridge this via the Curator's two-way GitHub sync (see [How the bridge works](#how-the-bridge-works-cloud-routines-reaching-the-second-brain-via-curator-github-sync)). Privacy-track Routines reach my-curator directly since everything runs on the same always-on machine.
 - **Banking APIs** — jurisdiction-specific HTTP APIs. Most large banks expose REST endpoints; the Routine calls them with API keys stored as Routine secrets.
 
 ### Configuring connectors
@@ -414,27 +414,47 @@ graph TD
 
 ---
 
-## ⚠ Known Gen-1 gap: my-curator MCP reachability from cloud Routines
+## How the bridge works: cloud Routines reaching the Second Brain via Curator GitHub sync
 
-**This is honest about a real limitation in v1.0.**
+**The gap, restated:** Claude Code Routines run on Anthropic's infrastructure. They can call MCP servers, but only **remote-HTTP / SSE MCPs** — not local stdio MCPs. The Curator desktop app installs my-curator as a stdio MCP (or local-HTTP at `127.0.0.1:8765`), reachable from Claude Desktop on the founder's machine but **not from Anthropic's cloud**. Without a workaround, R5 (Brain Health Check) — the only Day-1 Routine that genuinely needs Second Brain access — has nothing to scan.
 
-Claude Code Routines run on Anthropic's infrastructure. They can call MCP servers — but only **remote-HTTP / SSE MCPs**, not local stdio MCPs. The Curator desktop app installs my-curator as a stdio MCP (or a local-HTTP MCP at `127.0.0.1:8765`), reachable from Claude Desktop on the same machine but **not from Anthropic's cloud**.
+**The Gen-1 solution: the Curator's existing two-way GitHub sync.** Curator already ships a sync feature: it pushes the entire local vault (all wiki domains, conversations, schemas) to a private GitHub repo, two-way, with conflict-handling via rebase. Once that's enabled, the Second Brain content lives on GitHub in plain markdown form — and cloud Routines can clone it at execution time, scoped to the firm's Curator domain folder (`wiki/<firm-curator-domain>/`).
 
-This affects every Routine that calls my-curator MCP tools:
+This is what the wizard's **Step 12 — Second Brain bridge** configures, and what R5's v1.2.0 prompt body uses:
 
-- **R5 (Brain Health Check)** — directly calls `scan_wiki_health` etc. *Cannot run on cloud track* with the default local Curator install.
-- **R6 (Audit Trail)** — reads agent decisions via my-curator. Same issue.
-- **R1, R2, R3** — don't directly need my-curator at runtime; their Excel writes work via openpyxl + GitHub MCP. They might *indirectly* benefit from my-curator for partner-id lookups, but the prompt body's primary path uses X2 (Excel) for that.
+```
+1. Routine clones the Ledger   (read-write,  GPG-signed commits — for the report writeback)
+2. Routine clones Second Brain (read-only,  fine-grained PAT Contents:Read — for the scan)
+3. Routine scans wiki/<firm-curator-domain>/*.md for broken wikilinks, orphans, stale pages
+4. Routine writes the report  to firm/brain-health/YYYY-WW.md in the Ledger
+5. Routine commits + pushes   (Ledger; the Second Brain repo is read-only)
+```
 
-**Three practical options for cloud-track founders:**
+**Routine-by-Routine impact of the bridge:**
 
-1. **Skip my-curator-dependent Routines initially.** Run R1 + R6 (with R6's prompt adjusted to not call Curator MCP, just commit a daily-summary markdown page) and R2 only. Add R5 once one of options 2/3 is in place.
-2. **Self-host my-curator MCP.** Deploy on a Tailscale-accessible always-on machine (Pi 5, ~€350) so cloud Routines can reach it via the Tailscale IP. Adds ~30 min of setup but unlocks all Routines.
-3. **Wait for Anthropic-hosted Curator.** A hosted variant of the Curator app is on the Curator project's Q3 2026 roadmap; once available, R5 will work in cloud mode without self-hosting.
+| Routine | Needs Second Brain? | Status without bridge | Status with bridge |
+|---|---|---|---|
+| R5 (Brain Health Check) | Yes — entire job | **Broken** on cloud | ✅ Works |
+| R2 (Weekly BR Prep) | Marginal — could enrich agenda | Works (reads Ledger only) | Could enrich but not required Gen-1 |
+| R8 (Quarterly Sentiment) | Marginal | Works (reads Ledger only) | Could enrich but not required Gen-1 |
+| R1 (Daily Output Capture) | No — partner-id lookups via X2 Excel | Works | Works |
+| R3, R4, R6, R7 | No | Work | Work |
 
-For most solo / pilot founders **option 1** is fine — R5 isn't urgent during a pilot anyway (you've got one domain; broken wikilinks are rare). Add R5 once the firm's Brain has 30+ pages and option 2 or 3 is in place.
+**Trade-offs the bridge accepts:**
 
-The privacy track doesn't have this gap — my-curator MCP runs on the same machine as the Routines.
+- **Lost:** the 17 my-curator MCP tools. Cloud Routines fall back to plain markdown parsing + grep. For R5 this is enough (broken-wikilink detection and orphan scans are file-level operations). For *semantic similarity* (`scan_semantic_duplicates`, `get_connected_nodes`, cross-domain queries), cloud Routines remain limited — defer to Gen-2.
+- **Auto-fix capability:** R5 on cloud track can *list* typo-correctable broken wikilinks but cannot auto-fix them (the Second Brain repo is read-only from cloud — fixes must go through the Curator app, which then syncs back to GitHub). Privacy-track R5 keeps the auto-fix behaviour.
+- **Sync freshness:** the Second Brain on GitHub is as fresh as the user's last "Sync Up" in the Curator app. R5's report includes the latest-sync timestamp so this is visible.
+
+**Three founder paths from here:**
+
+1. **Recommended (Gen-1 cloud-track default):** Enable Curator GitHub sync at wizard Step 12, install R5. Works for ~95% of founders without an always-on machine.
+2. **Advanced / sovereignty-mandate:** Privacy track. my-curator MCP runs locally on a Mac mini / NUC / Pi 5 alongside the Routines. Full 17-tool access, no sync lag. ~€2,400 hardware + maintenance overhead.
+3. **Wait for cloud Curator MCP:** Hosted Curator variant on the project's Q3 2026 roadmap. When it lands, the bridge can be deprecated; until then, the GitHub-sync bridge is the right approach.
+
+**Skip the bridge entirely?** Yes — set `curator_mode: skip-for-now` at Step 5. R5 will then commit empty reports flagged "Second Brain unreachable" each Sunday, and other Routines (R1, R6, R7) continue to work. Add the bridge later when you're ready.
+
+Setup detail: see [`installer/wizard.py`](../installer/wizard.py) `step_12_secondbrain_sync` for the install-time wiring, and [`routines/cloud/R5.md`](../routines/cloud/R5.md) for the R5 prompt body that consumes the bridge.
 
 ---
 
@@ -474,4 +494,4 @@ All 4 Day-1 Routines (R5, R6, R1, R2) install identically on the always-on machi
 - **For the canonical install order:** [`routines/README.md`](../routines/README.md).
 - **For the operational state schemas (X1...X9):** [`templates/excel/SPEC.md`](../templates/excel/SPEC.md).
 - **For end-to-end install:** Path A ([`installer/agent-assisted/cloud-install-plan.md`](../installer/agent-assisted/cloud-install-plan.md) Step 10), Path B (`python3 installer/wizard.py` Step 12), or Path C ([`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) "Sunday afternoon").
-- **For the my-curator MCP reachability gap:** track via [v1.x roadmap](../GENERATIONS.md). Self-hosting via Tailscale is the most pragmatic interim.
+- **For semantic / graph-traversal queries** (the 17 MCP tools): the GitHub-sync bridge handles file-level scans for R5 in v1.0.1; full MCP tool surface on cloud track waits for Anthropic's hosted Curator (Q3 2026 roadmap) or a stateless cloud-MCP variant in Gen-2.
