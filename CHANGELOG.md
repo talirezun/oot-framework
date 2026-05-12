@@ -9,7 +9,7 @@ Doc + spec updates that land between v1.0.0 and the next tagged release. Code/sp
 - Per-day Routine run limits documented: Pro 5, Max 15, Team 25, Enterprise 25. Plan-tier guidance added to quickstart and routines docs.
 
 **ADR-001 — cloud-track Excel writeback canonical pattern:**
-- Operational `.xlsx` files (X1–X9) now live in the firm's Brain GitHub repo at `firm/excel/`, not in Google Sheets / Drive.
+- Operational `.xlsx` files (X1–X9) now live in the firm's Ledger GitHub repo at `firm/excel/`, not in Google Sheets / Drive.
 - Routines mutate them via openpyxl in code execution, signed-commit, push. Track-symmetric: cloud and privacy Routines do the same operation against the same repo.
 - Native Google Workspace connector remains available for read-only Drive / Calendar / Gmail integration; not used as a state store.
 - See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](docs/internal/ADR-001-cloud-routine-excel-writeback.md) for the full decision rationale and alternatives considered.

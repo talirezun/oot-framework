@@ -179,7 +179,7 @@ step_2_github() {
     gh api -X PUT "/orgs/$GITHUB_ORG/teams/$TEAM_SLUG/memberships/$GITHUB_USERNAME"
 
     if [[ "$COHORT" == "full-time-partner" ]]; then
-        log "  Granting Brain repo push access..."
+        log "  Granting Ledger push access..."
         gh api -X PUT "/repos/$BRAIN_REPO/collaborators/$GITHUB_USERNAME" -f permission=push
     fi
 
@@ -251,7 +251,7 @@ step_5_brain() {
     if $DRY_RUN; then log "[dry-run] Would create Brain folder stub for $PARTNER_ID."; mark_step_done 5; return; fi
 
     BRAIN_REPO_PATH="${BRAIN_REPO_PATH:-$HOME/oot-brain}"
-    [[ -d "$BRAIN_REPO_PATH" ]] || fatal "Brain repo not found at $BRAIN_REPO_PATH (set BRAIN_REPO_PATH env var)"
+    [[ -d "$BRAIN_REPO_PATH" ]] || fatal "Ledger not found at $BRAIN_REPO_PATH (set BRAIN_REPO_PATH env var)"
 
     cd "$BRAIN_REPO_PATH"
     git checkout -b "onboarding/$PARTNER_ID"
@@ -361,7 +361,7 @@ step_7_curator_self_test() {
 Partner runs the following on their own machine:
   1. Install the Curator desktop app from https://github.com/talirezun/the-curator/releases/latest
   2. Configure cloud-LLM ingest with the firm's API key (founder provides via Bitwarden Send).
-  3. Add the firm Brain repo as the Curator's sync target.
+  3. Add the firm Ledger as the Curator's sync target.
   4. Run \`scan_wiki_health\` — should return clean.
   5. Open firm/partners/$PARTNER_ID/profile.md and add one personal note.
   6. Commit, push.

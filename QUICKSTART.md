@@ -1,6 +1,6 @@
 # ØØT Quickstart — pick your install path
 
-This is a 30-second routing page. The framework has three install paths; pick one and follow the linked doc. Each path produces the same outcome: a working Generation-1 ØØT instance, signed-commits to GitHub Brain repo, Routines configured.
+This is a 30-second routing page. The framework has three install paths; pick one and follow the linked doc. Each path produces the same outcome: a working Generation-1 ØØT instance, signed commits to the firm's GitHub Ledger repo, Routines configured.
 
 ---
 

@@ -4,7 +4,7 @@
 
 ØØT is a complete, opinionated, file-based framework for building and running an organisation in which the people producing value are paid for it as it lands, paid again as it compounds, and own a real stake in what they helped create — while the technical machinery underneath (AI agents, Skills, MCP, the Collecting Brain) compounds the firm's intellectual property in lockstep.
 
-This is **Generation 1**. It is honest about what works today, what is bridged with manual processes, and what is deferred to Generation 2 (crypto rails, smart-contract long-tail, internal unit fund) and Generation 3 (Cotrugli Ledger anchoring, autonomous agent business units).
+This is **Generation 1**. It is honest about what works today, what is bridged with manual processes, and what is deferred to Generation 2 (crypto rails, smart-contract long-tail, internal unit fund) and Generation 3 (Cotrugli Ledger anchoring — *the Gen-3 accounting/governance backbone, distinct from the operational Ledger you'll install in v1.0* — and autonomous agent business units).
 
 ---
 
@@ -28,7 +28,7 @@ For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** 
 curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash
 ```
 
-The bootstrap checks prerequisites (git / python 3.11+ / curl / gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv, installs the wizard's UI dependencies, then hands off to the 14-step wizard. The wizard then guides you through every folder location, the Brain repo, the GPG signing key, GitHub branch protection, **installing the Curator app via its own one-line installer**, wiring the my-curator MCP into Claude Desktop, and the Day-1 Routines. Safe to re-run — picks up where you left off.
+The bootstrap checks prerequisites (git / python 3.11+ / curl / gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv, installs the wizard's UI dependencies, then hands off to the 14-step wizard. The wizard then guides you through every folder location, the Ledger repo (operational state), the GPG signing key, GitHub branch protection, **installing the Curator app via its own one-line installer** (the Second Brain — your semantic knowledge graph), wiring the my-curator MCP into Claude Desktop, and the Day-1 Routines. Safe to re-run — picks up where you left off.
 
 → [Wizard overview: `installer/README.md`](installer/README.md) (incl. `--resume` / `--dry-run` flags)
 
@@ -193,7 +193,7 @@ The full framework, as scaffolded in this repository:
 
 **Two parallel tool tracks:**
 
-- **Cloud track** (canonical, fastest path): Claude Desktop, Claude Code, GitHub (your Brain repo holds markdown + `.xlsx` state), Slack, the Curator + MyCuratorMCP, Claude Code Routines. Your spreadsheet app is your choice — Excel, LibreOffice, Numbers, Excel-for-Web.
+- **Cloud track** (canonical, fastest path): Claude Desktop, Claude Code, GitHub (your Ledger holds markdown + `.xlsx` state; your Second Brain repo holds the Curator-synced semantic graph), Slack, the Curator + MyCuratorMCP, Claude Code Routines. Your spreadsheet app is your choice — Excel, LibreOffice, Numbers, Excel-for-Web.
 - **Privacy track** (full Generation 1 parity): LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP for filesystem, optional Excel MCP, 4thtech for on-chain end-to-end-encrypted communication, PollinationX for decentralised storage, GitHub MCP for cross-machine sync, OS-native scheduling.
 
 ## Status: Generation 1

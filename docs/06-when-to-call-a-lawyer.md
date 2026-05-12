@@ -100,7 +100,7 @@ If your firm operates in multiple jurisdictions (e.g. an EU-based firm with US c
 
 **Why it matters:** when long-tail entitlement is "a percentage of revenue from a specific output", many jurisdictions classify this as a security or revenue-share arrangement requiring registration / disclosure.
 
-**What ØØT provides:** the Long_Tail_Schedule sheet in X2; the Brain page convention; quarterly settlement via R4.
+**What ØØT provides:** the Long_Tail_Schedule sheet in X2; the Ledger page convention; quarterly settlement via R4.
 
 **What ØØT does NOT provide:** securities-law analysis. **This is the most legally-fraught compensation layer.**
 

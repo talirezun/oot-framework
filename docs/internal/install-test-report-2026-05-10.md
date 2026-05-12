@@ -149,7 +149,7 @@ Not yet exercised in this test (Tali's MCP was already authorised), but install 
 
 ### Finding 12 — `noreply.github.com` email vs. real-email mismatch for signed commits
 
-Tali's global git config used `61226945+talirezun@users.noreply.github.com` (GitHub's privacy email). The GPG key generated for the test uses `blocklabstech@gmail.com`. For GitHub to mark commits "Verified", the commit author's email must match the GPG key UID's email. **Fix:** install plan must set `user.email` *locally* in the Brain repo to match the GPG key's email — not change global config.
+Tali's global git config used `61226945+talirezun@users.noreply.github.com` (GitHub's privacy email). The GPG key generated for the test uses `blocklabstech@gmail.com`. For GitHub to mark commits "Verified", the commit author's email must match the GPG key UID's email. **Fix:** install plan must set `user.email` *locally* in the Ledger to match the GPG key's email — not change global config.
 
 ### Finding 13 — Install plan over-relies on `gh` CLI; web-UI path must be canonical fallback
 

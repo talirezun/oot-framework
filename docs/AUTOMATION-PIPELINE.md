@@ -10,7 +10,7 @@
 
 ## What "automation" means in ØØT
 
-The framework ships **eight scheduled Routines (R1–R8)** that turn the firm's daily work into compounding state. Each Routine is a prompt + a schedule + a set of integrations. It runs automatically (no human at the keyboard), reads from a few sources, writes to your Brain repo via signed commits, and notifies the team on Slack / dChat.
+The framework ships **eight scheduled Routines (R1–R8)** that turn the firm's daily work into compounding state. Each Routine is a prompt + a schedule + a set of integrations. It runs automatically (no human at the keyboard), reads from a few sources, writes to your Ledger via signed commits, and notifies the team on Slack / dChat.
 
 The Routines are the *only* automation in Gen 1. Everything else (partner onboarding, Klarna scoring, output spec drafting) is human-driven with AI assistance, not scheduled.
 
@@ -74,7 +74,7 @@ When a Routine fires:
 
 1. Anthropic spins up a fresh sandbox container on their infrastructure.
 2. Claude Code (the agent) runs inside that sandbox with a Python interpreter, `openpyxl`, the standard library, and any other packages the framework needs.
-3. The agent clones your Brain repo into the sandbox, mutates the `.xlsx`, signed-commits, pushes back.
+3. The agent clones your Ledger into the sandbox, mutates the `.xlsx`, signed-commits, pushes back.
 4. The sandbox is torn down. Nothing persists on Anthropic's side except billing/usage logs.
 
 Each Routine fire is its own ephemeral sandbox. They don't share state across runs — state lives on GitHub.
@@ -116,7 +116,7 @@ For founders who prefer not to use a coding agent for daily ops: GitHub Desktop 
 
 ## Connectors needed per Routine
 
-Each Routine needs a specific set of connectors configured in the Claude Code Routines dashboard. The universal requirement is **GitHub** (with the Brain repo cloneable + pushable + signing key) plus **code execution** (default for Pro+). Beyond that, each Routine adds the specific connectors it needs.
+Each Routine needs a specific set of connectors configured in the Claude Code Routines dashboard. The universal requirement is **GitHub** (with the Ledger cloneable + pushable + signing key) plus **code execution** (default for Pro+). Beyond that, each Routine adds the specific connectors it needs.
 
 | Routine | GitHub | Code exec | Slack | Email | Drive | my-curator MCP | Banking |
 |---|---|---|---|---|---|---|---|
@@ -133,8 +133,8 @@ Each Routine needs a specific set of connectors configured in the Claude Code Ro
 
 ### What each connector does
 
-- **GitHub** — primary connector. Clones the Brain repo into the Routine's sandbox at fire time; signed-commits and pushes back at end. Also reads commit/PR history of firm code repos for R1's output capture. **Universal requirement.**
-- **Code execution (Python + openpyxl)** — runs the openpyxl script that mutates `.xlsx` files inside the cloned Brain repo. Default for Pro+ Anthropic plans; verify enabled when configuring each Routine.
+- **GitHub** — primary connector. Clones the Ledger into the Routine's sandbox at fire time; signed-commits and pushes back at end. Also reads commit/PR history of firm code repos for R1's output capture. **Universal requirement.**
+- **Code execution (Python + openpyxl)** — runs the openpyxl script that mutates `.xlsx` files inside the cloned Ledger. Default for Pro+ Anthropic plans; verify enabled when configuring each Routine.
 - **Slack** — read tracked channels (R1: `#output`, `#commercial`, `#sales` for tags); post to result channels (`#output-log`, `#brain-health`, `#klarna-test`, etc.). Configure per-Routine which channels.
 - **Email** — for sending per-partner statements (R3 monthly variable, R4 long-tail, R7 Klarna trigger). Anthropic's native email connector or a third-party Gmail/Outlook MCP.
 - **Google Drive / Workspace** — *optional*, read-only. Only used by R1 if your firm tracks Drive folders for documents-as-output. Not used by any Routine that mutates state — Drive is never the source of truth (per ADR-001).
@@ -145,7 +145,7 @@ Each Routine needs a specific set of connectors configured in the Claude Code Ro
 
 In Claude Code Routines (whether via the CLI's `/schedule`, the web at https://claude.ai/code/routines, or the Claude Code desktop app):
 
-1. **GitHub connector** — when prompted, authorise GitHub OAuth for the bot identity. Grant `repo` scope on the Brain repo. The signing key (uploaded at install time to GitHub's GPG keys) is what Claude Code uses to sign commits.
+1. **GitHub connector** — when prompted, authorise GitHub OAuth for the bot identity. Grant `repo` scope on the Ledger. The signing key (uploaded at install time to GitHub's GPG keys) is what Claude Code uses to sign commits.
 2. **Slack connector** — install the [Claude Slack integration](https://slack.com/apps/A0848GFRZ54-claude) in your Slack workspace if not already. The Routine references channels by name; Anthropic handles the OAuth.
 3. **Email connector** — typically Gmail or Outlook OAuth. Some firms use a dedicated transactional-email service (Postmark, SendGrid) via API key — works as a Routine secret.
 4. **Google Workspace connector** — OAuth flow in Claude Desktop / Claude Code; grants read-only Drive access. **Note:** the connector is read-only for Sheets in place per Anthropic's docs; .xlsx state never lives in Drive (ADR-001).
@@ -174,9 +174,9 @@ Routine fires (Anthropic infra)
    └─► git push origin main                                       ← pushes back to GitHub
 ```
 
-The `.xlsx` file lives in your GitHub Brain repo. **GitHub is the canonical store.** Your local copy at `/Users/<you>/<firm-folder>/` is a working clone you keep in sync with `git pull`. The Routine has its own working clone in its cloud sandbox — they never touch each other directly. They round-trip through GitHub.
+The `.xlsx` file lives in your GitHub Ledger. **GitHub is the canonical store.** Your local copy at `/Users/<you>/<firm-folder>/` is a working clone you keep in sync with `git pull`. The Routine has its own working clone in its cloud sandbox — they never touch each other directly. They round-trip through GitHub.
 
-This is **track-symmetric**: privacy-track Routines do the same operation (clone → openpyxl → signed commit → push), just from your always-on machine instead of from Anthropic's cloud. Both cloud and privacy versions of R1 hit the same Brain repo on GitHub.
+This is **track-symmetric**: privacy-track Routines do the same operation (clone → openpyxl → signed commit → push), just from your always-on machine instead of from Anthropic's cloud. Both cloud and privacy versions of R1 hit the same Ledger on GitHub.
 
 **Why this matters for your install:**
 
@@ -193,7 +193,7 @@ This is **track-symmetric**: privacy-track Routines do the same operation (clone
 | A | Native Google Drive connector writes Sheets in place | Connector is read-only for Sheets |
 | B | Google Sheets via remote MCP | Loses openpyxl formulas; vendor lock; hosted-MCP burden |
 | D | Remote Excel MCP server | Adds a hosted server to maintain; functionally equivalent to Pattern C with extra moving parts |
-| **C** | **Routine clones Brain repo, openpyxl + signed commit + push** | **Track-symmetric, native .xlsx preserved, audit trail automatic, no extra infrastructure** |
+| **C** | **Routine clones Ledger, openpyxl + signed commit + push** | **Track-symmetric, native .xlsx preserved, audit trail automatic, no extra infrastructure** |
 
 ---
 
@@ -202,7 +202,7 @@ This is **track-symmetric**: privacy-track Routines do the same operation (clone
 ```mermaid
 flowchart TB
     subgraph Sources["📥 Sources (read)"]
-        GitHub_src[GitHub Brain repo<br/>+ firm code repos]
+        GitHub_src[GitHub Ledger<br/>+ firm code repos]
         Slack[Slack workspace]
         Drive[Google Drive<br/>read-only]
         Bank[Banking APIs<br/>R8 only]
@@ -259,7 +259,7 @@ flowchart TB
 ```mermaid
 flowchart TB
     subgraph Sources_p["📥 Sources (read)"]
-        GitHub_p[GitHub Brain repo<br/>+ firm code repos<br/>via GitHub MCP]
+        GitHub_p[GitHub Ledger<br/>+ firm code repos<br/>via GitHub MCP]
         DChat[4thtech dChat]
         Local[Local filesystem<br/>via Desktop Commander MCP]
         BankP[Banking APIs<br/>R8 only]
@@ -308,7 +308,7 @@ flowchart TB
 - **Substrate**: cron / launchd / Task Scheduler on your always-on machine instead of Anthropic infrastructure.
 - **Model**: local (Qwen 3 14B for daily; Llama 3.3 70B for R3 high-stakes) instead of Claude.
 - **Comms**: 4thtech dMail/dChat replaces Slack/email.
-- **Discovery**: Desktop Commander MCP for local files; GitHub MCP for the Brain repo (still GitHub-hosted).
+- **Discovery**: Desktop Commander MCP for local files; GitHub MCP for the Ledger (still GitHub-hosted).
 - **my-curator MCP**: runs locally on the always-on machine — same machine as the Routines. **No reachability gap.**
 - **Reliability constraint**: only fires while the machine is on. UPS strongly recommended.
 

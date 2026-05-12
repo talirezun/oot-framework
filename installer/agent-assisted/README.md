@@ -54,13 +54,13 @@ If you're philosophically opposed to handing an agent shell access to your machi
 The install plan tells the agent how to:
 
 1. **Verify pre-requisites** — git, curl, Python 3.13+, an Anthropic account, a GitHub account, a Slack workspace.
-2. **Create the firm Brain repo** on GitHub — private by default; configures branch protection (force-push off, deletion off, signed commits required); copies the framework's `templates/excel/*.xlsx` to `firm/excel/*.xlsx` in the new repo; commits the initial state.
+2. **Create the firm Ledger** on GitHub — private by default; configures branch protection (force-push off, deletion off, signed commits required); copies the framework's `templates/excel/*.xlsx` to `firm/excel/*.xlsx` in the new repo; commits the initial state.
 3. **Generate signing keys** — GPG key for the bot identity that will run Routines (`oot-bot` by default); upload to GitHub; configure `git config commit.gpgsign true`.
 4. **Install the Curator desktop app** — downloads the latest release; runs the post-install verification.
 5. **Wire up MCPs in Claude Desktop** — edits `claude_desktop_config.json` to add the my-curator MCP; restarts Claude Desktop; runs the self-test (`use my-curator. list_domains.`) and confirms the green checkmark.
 6. **Create the first Curator domain** (`firm`) and ingests a starter set of documents you choose.
 7. **Configure the 4 Day-1 Routines** (R5, R6, R1, R2) via the Claude Code `/schedule` interface, attaching the right Skill Packs and connectors per `routines/cloud/<R>.md`.
-8. **(Optional) Configure the Klarna gate** — branch-protection-required `oot/klarna-test` status check; `.github/workflows/klarna-gate.yml` ships in the new Brain repo; auto-labeller wired up.
+8. **(Optional) Configure the Klarna gate** — branch-protection-required `oot/klarna-test` status check; `.github/workflows/klarna-gate.yml` ships in the new Ledger; auto-labeller wired up.
 9. **Run a smoke test** — manually fires R5 and verifies a brain-health snapshot lands as a signed commit on `main`.
 10. **Write the install summary** at `~/.oot/install-summary.md` listing every action taken, every decision deferred, and every open follow-up.
 

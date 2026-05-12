@@ -608,12 +608,33 @@ def render_detection_report(found: dict[str, Any]) -> None:
 
 # ----- state file -----------------------------------------------------------
 
+_STATE_KEY_RENAMES = {
+    # v1.0.0 → v1.0.1 rename: "Brain repo" → "Ledger" in user-facing terms.
+    # Internal state keys keep backward compat — old keys are silently
+    # promoted to the new keys at load time so anyone with mid-install state
+    # from before the rename doesn't lose progress.
+    "brain_repo_url":    "ledger_repo_url",
+    "brain_repo_owner":  "ledger_repo_owner",
+    "brain_repo_name":   "ledger_repo_name",
+    "brain_repo_email":  "ledger_repo_email",
+}
+
+
+def _migrate_state_keys(state: dict[str, Any]) -> dict[str, Any]:
+    """Backward-compat: promote pre-rename state keys to current names."""
+    for old, new in _STATE_KEY_RENAMES.items():
+        if old in state and new not in state:
+            state[new] = state.pop(old)
+    return state
+
+
 def load_state() -> dict[str, Any]:
     if not STATE_FILE.exists() or yaml is None:
         return {}
     try:
         with STATE_FILE.open() as f:
-            return yaml.safe_load(f) or {}
+            raw = yaml.safe_load(f) or {}
+        return _migrate_state_keys(raw)
     except Exception as e:
         warn(f"Could not parse state file at {STATE_FILE}: {e}. Starting fresh.")
         return {}
@@ -692,7 +713,7 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
     explainer(
         "What this step does and why",
         "We need four small command-line tools on your machine before anything else:\n\n"
-        "  git    — version control. Tracks every change to your Brain repo.\n"
+        "  git    — version control. Tracks every change to your Ledger.\n"
         "  python ≥3.11 — runs this wizard + the framework's Excel-writing scripts.\n"
         "  curl   — downloads things (the framework, Curator, etc.).\n"
         "  gpg    — generates and uses the signing key that makes commits verifiable.\n\n"
@@ -778,7 +799,7 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
     explainer(
         "What this step does and why",
         "Two folders matter to ØØT:\n\n"
-        "  1. Firm folder (the Brain repo)  — a local git clone of your firm's\n"
+        "  1. Firm folder (the Ledger)  — a local git clone of your firm's\n"
         "     operational data (Excel files, output logs, audit logs). This is what\n"
         "     Routines read and write. Default: ~/<firm-slug>/\n\n"
         "  2. Curator vault  — where The Curator app stores the knowledge-graph\n"
@@ -868,7 +889,7 @@ def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]
         "We ask 5 questions about your firm. Your answers shape what gets installed\n"
         "by default at Step 5 (which Skills, which Routines, what plan-tier guidance\n"
         "we give you):\n\n"
-        "  - Firm name + partner count + jurisdictions  — for the Brain README and\n"
+        "  - Firm name + partner count + jurisdictions  — for the Ledger README and\n"
         "    later compensation/onboarding flows.\n"
         "  - EU AI Act exposure  — if yes, we add S7 (governance) + R6 (audit trail)\n"
         "    to the recommended defaults.\n"
@@ -950,7 +971,7 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
         while True:
             foundation_choices: list[tuple[str, str, bool]] = [
                 ("github_brain_repo",
-                    "GitHub Brain repo (your firm's operational data — the heart of the framework)",
+                    "GitHub Ledger (your firm's operational data — the heart of the framework)",
                     _pre("github_brain_repo", True, prior_foundation)),
                 ("signing_key",
                     "GPG signing key for signed commits "
@@ -1211,7 +1232,7 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
         warn("Pro plan caps Routines at 5/day. With your firm size + Klarna gate, "
              "you'll exceed that. Strongly recommend Max plan.")
     mark_step_done(state, "step_07_anthropic_check")
-    info("\nNext: Step 8 will start creating real things (Brain repo on disk + on GitHub).")
+    info("\nNext: Step 8 will start creating real things (Ledger on disk + on GitHub).")
     info("After Step 8 launches, going back gets harder — it would mean undoing side effects.")
     info("This is your last clean checkpoint to revise earlier answers.\n")
     ask_navigation("Anthropic check (last clean checkpoint before side-effects begin)")
@@ -1220,7 +1241,7 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
 def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_08_brain_repo"):
         return
-    header("Step 8 / 14 — Create the Brain GitHub repo", level=2)
+    header("Step 8 / 14 — Create the Ledger GitHub repo", level=2)
 
     locations = state["locations"]
     profile = state["firm_profile"]
@@ -1265,10 +1286,10 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
         "email you control — e.g. the one tied to your GitHub account. You can use a\n"
         "GitHub noreply address (the privacy-friendly one in Settings → Emails).",
     )
-    prior_email = state.get("brain_repo_email", "")
+    prior_email = state.get("ledger_repo_email", "")
     email = ask_text("Email for commit authorship in this repo", default=prior_email or "")
     name = ask_text("Name for commit authorship", default=profile.get("name", ""))
-    state["brain_repo_email"] = email
+    state["ledger_repo_email"] = email
     if email and not dry_run:
         run(["git", "config", "--local", "user.email", email], dry_run=False, check=False)
         run(["git", "config", "--local", "user.name", name], dry_run=False, check=False)
@@ -1290,7 +1311,7 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
     readme = firm_folder / "README.md"
     if not readme.exists():
         readme_text = (
-            f"# {profile['name']} — operational Brain repo\n\n"
+            f"# {profile['name']} — operational Ledger\n\n"
             f"ØØT framework cloud-track install. Holds the firm's `.xlsx` "
             f"operational state (`firm/excel/`) and Routine-written markdown "
             f"(`firm/output-logs/`, `firm/audit-logs/`, etc.). Mutated by "
@@ -1311,7 +1332,7 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
         run(["git", "add", "."], check=False)
         # If nothing to commit, this is a no-op (existing repo).
         run(["git", "commit", "-m",
-             "scaffold: initial Brain folder + Excel templates from framework v1.0.0"],
+             "scaffold: initial Ledger folder + Excel templates from framework v1.0.0"],
             check=False)
 
     # --- Substep 4: create the GitHub repo + push -------------------------
@@ -1333,7 +1354,7 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             rc, out = run(
                 ["gh", "repo", "create", full_repo,
                  f"--{visibility}",
-                 "--description", f"ØØT Brain repo for {profile['name']}",
+                 "--description", f"ØØT Ledger for {profile['name']}",
                  "--source", str(firm_folder),
                  "--remote", "origin",
                  "--push"],
@@ -1341,9 +1362,9 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             )
             if rc == 0:
                 ok(f"Repo created: https://github.com/{full_repo}")
-                state["brain_repo_url"] = f"https://github.com/{full_repo}.git"
-                state["brain_repo_owner"] = login
-                state["brain_repo_name"] = repo_name
+                state["ledger_repo_url"] = f"https://github.com/{full_repo}.git"
+                state["ledger_repo_owner"] = login
+                state["ledger_repo_name"] = repo_name
                 repo_created_via_gh = True
             else:
                 warn("`gh repo create` failed. Output:")
@@ -1365,7 +1386,7 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             "\n  Manual GitHub repo creation:\n"
             f"    1. Open https://github.com/new in your browser.\n"
             f"    2. Repository name:        {repo_name}\n"
-            f"    3. Description:            ØØT Brain repo for {profile['name']}\n"
+            f"    3. Description:            ØØT Ledger for {profile['name']}\n"
             f"    4. Visibility:             {visibility.capitalize()}\n"
             f"    5. Initialize:             leave ALL THREE checkboxes UNCHECKED\n"
             f"                               (no README, no .gitignore, no licence —\n"
@@ -1381,7 +1402,7 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
         )
         if not repo_url.endswith(".git"):
             repo_url = repo_url.rstrip("/") + ".git"
-        state["brain_repo_url"] = repo_url
+        state["ledger_repo_url"] = repo_url
         # Add remote + push
         if not dry_run:
             os.chdir(firm_folder)
@@ -1403,13 +1424,13 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
         "What this step does and why",
         "A GPG signing key is what lets GitHub mark a commit 'Verified' (green badge).\n"
         "Once we configure git to sign every commit, every Routine-written change to\n"
-        "your Brain repo gets a cryptographic stamp tying it to this key. With branch\n"
+        "your Ledger gets a cryptographic stamp tying it to this key. With branch\n"
         "protection in place (Step 10) that gives you a tamper-evident audit trail —\n"
         "the core of the framework's compliance story (ADR-001 / EU AI Act §12).\n\n"
         "We'll: (1) generate a 4096-bit RSA key in your gpg keychain, (2) export the\n"
         "public half, (3) upload it to GitHub (automatically via `gh gpg-key add` if\n"
         "your gh CLI is logged in, otherwise via the web UI), (4) tell git in your\n"
-        "Brain repo to sign with this key, (5) make a test signed commit and push it.\n\n"
+        "Ledger to sign with this key, (5) make a test signed commit and push it.\n\n"
         "The key has no passphrase (so Routines can sign non-interactively). This is\n"
         "fine for a bot identity; a human signing key would use a passphrase + pinentry.",
     )
@@ -1443,7 +1464,7 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
     profile = state["firm_profile"]
     locations = state["locations"]
     firm_folder = Path(locations["firm_folder"])
-    email = state.get("brain_repo_email", "")
+    email = state.get("ledger_repo_email", "")
     name = profile.get("name", "Firm Bot")
 
     info(
@@ -1542,7 +1563,7 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
         if ask_confirm("Push the verification commit?", default=True):
             run(["git", "push", "origin", "main"], check=False)
             info(
-                f"\n→ Open {state.get('brain_repo_url', '<repo>')}/commits/main in your browser.\n"
+                f"\n→ Open {state.get('ledger_repo_url', '<repo>')}/commits/main in your browser.\n"
                 f"  The latest commit should have a green Verified badge.\n"
                 f"  If not: see docs/00-quickstart-cloud.md 'Step 6' troubleshooting."
             )
@@ -1560,9 +1581,9 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
         mark_step_done(state, "step_10_branch_protection")
         return
     plan_tier = state["firm_profile"].get("github_plan_tier", "free")
-    repo_url = state.get("brain_repo_url", "")
-    owner = state.get("brain_repo_owner")
-    repo_name = state.get("brain_repo_name")
+    repo_url = state.get("ledger_repo_url", "")
+    owner = state.get("ledger_repo_owner")
+    repo_name = state.get("ledger_repo_name")
 
     explainer(
         "What this step does and why",
@@ -1658,7 +1679,7 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
         info(
             "Curator skipped per your Step 5 selection.\n\n"
             "What this means:\n"
-            "  - The Brain repo, signing keys, and most of the framework still work.\n"
+            "  - The Ledger, signing keys, and most of the framework still work.\n"
             "  - R5 Brain Health Check will NOT have a Brain to scan until you install Curator.\n"
             "  - The my-curator MCP in Claude Desktop will fail until the Curator app is running.\n\n"
             "When you're ready to install:\n"
@@ -1691,7 +1712,7 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
             "In the Curator app (open it now if it's not running):\n"
             "  1. Click 'Domains' in the left sidebar → 'Create domain'.\n"
             f"  2. Name:        {locations['curator_domain']}\n"
-            f"  3. Description: {state['firm_profile']['name']} — operational Brain\n"
+            f"  3. Description: {state['firm_profile']['name']} — operational Ledger\n"
             "  4. Click Create.\n\n"
             "Then in Claude Desktop, open a new chat and type:\n"
             "  > Use my-curator. List domains.\n"
@@ -1785,7 +1806,7 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
     explainer(
         "What this step does and why",
         "Routines are Anthropic's hosted scheduled agents — they run on Anthropic's\n"
-        "cloud (not your laptop) and commit signed changes back to your Brain repo.\n"
+        "cloud (not your laptop) and commit signed changes back to your Ledger.\n"
         "Day-1 Routines we recommend:\n\n"
         "  R5  Brain Health Check  — Sundays 09:00; writes firm/brain-health/<YYYY-WW>.md\n"
         "  R6  EU AI Act Audit Trail — daily 23:00; writes firm/audit-logs/<YYYY-MM-DD>.md\n"
@@ -1794,7 +1815,7 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
         "headless `claude routines create` command. You'll create each Routine\n"
         "interactively via Claude Code's `/schedule` command or the web dashboard at\n"
         "https://claude.ai/code/routines. After each, we'll verify the Routine\n"
-        "actually worked by checking your Brain repo for the file it should commit.",
+        "actually worked by checking your Ledger for the file it should commit.",
     )
 
     if not day1_chosen:
@@ -1810,8 +1831,8 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
         + (f"\nDeferred (will set up later when prerequisites are met): {', '.join(deferred)}." if deferred else "")
     )
 
-    owner = state.get("brain_repo_owner")
-    repo_name = state.get("brain_repo_name")
+    owner = state.get("ledger_repo_owner")
+    repo_name = state.get("ledger_repo_name")
     can_verify_via_gh = gh_available_and_authed() and owner and repo_name
 
     for r in day1_chosen:
@@ -1819,11 +1840,11 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
         info(f"\n--- {r} ({name}) — setup ---")
         info(f"  Routine prompt body:  routines/cloud/{r}.md  ({REPO_ROOT / 'routines' / 'cloud' / (r + '.md')})")
         info(f"  Schedule:             {sched}")
-        info(f"  GitHub connector:     {state.get('brain_repo_url', '<repo>')} (with signing key from Step 9)")
+        info(f"  GitHub connector:     {state.get('ledger_repo_url', '<repo>')} (with signing key from Step 9)")
         info("\n  In Claude Code (CLI or desktop app):")
         info("    /schedule  →  New Routine  →  upload the prompt body file above")
         info("    Attach the my-curator MCP. Configure the GitHub connector with your")
-        info("    Brain repo URL and the signing key from Step 9. Save.")
+        info("    Ledger URL and the signing key from Step 9. Save.")
         info("\n  Web alternative: https://claude.ai/code/routines  →  'New Routine'")
         info("\n  Once saved: click 'Run now' (or `/run-now` in the CLI) to do a test fire.")
 
@@ -1834,7 +1855,7 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
 
         # Programmatic verification — check for the file the Routine should have committed.
         if can_verify_via_gh and watch_dir:
-            info(f"\n  Verifying {r} by checking {watch_dir}/ in your Brain repo...")
+            info(f"\n  Verifying {r} by checking {watch_dir}/ in your Ledger...")
             rc, out = run(
                 ["gh", "api", f"repos/{owner}/{repo_name}/contents/{watch_dir}",
                  "--jq", ".[] | .name"],
@@ -1848,7 +1869,7 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
                 else:
                     warn(f"  {watch_dir}/ exists but has no Routine-written files yet.")
                     info(f"     The Routine may still be running. Check logs at: https://claude.ai/code/routines")
-                    info(f"     Or verify manually: {state.get('brain_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir}")
+                    info(f"     Or verify manually: {state.get('ledger_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir}")
             else:
                 warn(f"  Could not read {watch_dir}/ via gh API (it may not exist yet, or the Routine errored).")
                 info(f"     Inspect logs: https://claude.ai/code/routines")
@@ -1857,7 +1878,7 @@ def step_12_routines(state: dict[str, Any], dry_run: bool) -> None:
             info("     Verify by opening a test PR with an AI-replaces-human label and watching for the oot/klarna-test status check.")
         else:
             info("  (Programmatic verification needs the `gh` CLI authenticated. Skip — manual verification:")
-            info(f"     Visit {state.get('brain_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir or 'firm'}")
+            info(f"     Visit {state.get('ledger_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir or 'firm'}")
             info("     and look for the file the Routine should have written.)")
 
     mark_step_done(state, "step_12_routines")
@@ -1898,7 +1919,7 @@ def step_13_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
         )]
         run(cmd, capture=False, check=False)
 
-    info("\n[3/3] Brain folder structure:")
+    info("\n[3/3] Ledger folder structure:")
     for sub in ["excel", "output-logs", "audit-logs", "business-reviews",
                 "klarna-tests", "compensation", "brain-health", "partners"]:
         path = firm_folder / "firm" / sub
@@ -1938,7 +1959,7 @@ def step_14_summary(state: dict[str, Any], dry_run: bool) -> None:
         f"- Recommended: {', '.join(modules.get('recommended', [])) or '(none)'}\n"
         f"- Deferred: {', '.join(modules.get('deferred', [])) or '(none)'}\n"
         f"\n## GitHub repo\n\n"
-        f"{state.get('brain_repo_url', '<not configured>')}\n"
+        f"{state.get('ledger_repo_url', '<not configured>')}\n"
         f"\n## Signing key\n\n"
         f"GPG key ID: `{state.get('signing_key_id', '<not generated>')}`\n"
     )
@@ -2003,7 +2024,7 @@ def main() -> int:
         ("step_05_module_selection", "Module selection",      step_05_module_selection),
         ("step_06_github_plan_tier", "GitHub plan tier",      step_06_github_plan_tier),
         ("step_07_anthropic_check",  "Anthropic check",       step_07_anthropic_check),
-        ("step_08_brain_repo",       "Brain repo",            step_08_brain_repo),
+        ("step_08_brain_repo",       "Ledger",            step_08_brain_repo),
         ("step_09_signing_key",      "Signing key",           step_09_signing_key),
         ("step_10_branch_protection","Branch protection",     step_10_branch_protection),
         ("step_11_curator",          "Curator",               step_11_curator),

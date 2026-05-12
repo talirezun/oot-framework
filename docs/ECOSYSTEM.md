@@ -132,10 +132,10 @@
 
 ### GitHub
 - **What:** version control, issue tracking, PR review, CI.
-- **Why ØØT uses it:** the Brain sync substrate; the protected audit-log branch lives here; the `oot/klarna-test` status check runs here.
+- **Why ØØT uses it:** the Ledger sync substrate; the protected audit-log branch lives here; the `oot/klarna-test` status check runs here.
 - **Site:** [github.com](https://github.com/)
 - **CLI:** [cli.github.com](https://cli.github.com/)
-- **When you'll meet it:** Saturday morning of Weekend One. Create org; create Brain repo; configure 5 setup pre-requisites per Skill Pack S4 §4.0.
+- **When you'll meet it:** Saturday morning of Weekend One. Create org; create Ledger; configure 5 setup pre-requisites per Skill Pack S4 §4.0.
 - **Cost:** free for public repos; Team plan ~€4/user/month for private repos.
 
 ### Yubikey

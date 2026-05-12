@@ -40,7 +40,7 @@ Tick boxes as you complete each step. Commit the completed checklist to `firm/pa
 - [ ] **21. Read governance/DECISION-RIGHTS.md** (~10 min). The three-tier dispute path.
 - [ ] **22. Read governance/SECRETS-POLICY.md** (~15 min). Bitwarden + Trezor + Yubikey.
 - [ ] **23. Read the relevant Skill Packs.** Whichever Skill Packs the partner's role requires (typically S1 my-curator + S2 context-engineering + S3 compensation-attribution as universal; plus S4 if engineering, S11 if sales, etc.).
-- [ ] **24. Attend first Friday Business Review.** Listen. Don't speak much. Watch the structure. Read the Brain summary after.
+- [ ] **24. Attend first Friday Business Review.** Listen. Don't speak much. Watch the structure. Read the Ledger summary after.
 - [ ] **25. Begin work on the first Output Spec.** R1 will capture the first commits/contracts/etc. that evening.
 
 ## 30-day check-in (founder + partner, 30 min)

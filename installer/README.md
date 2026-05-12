@@ -49,7 +49,7 @@ For founders who prefer not to use a coding agent. **The bootstrap above is the 
 ~/.oot/venv/bin/python ~/.oot/oot-framework/installer/wizard.py --resume
 ```
 
-Interactive **14-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Brain repo creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
+Interactive **14-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Ledger creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
 
 Programmatic where safe (folder creation, git operations, GPG key generation, file edits, smoke test); web-UI walkthrough where the user must approve a third-party action (GitHub repo creation, branch protection rule, GPG public-key upload, MCP installation in Claude Desktop).
 
@@ -84,7 +84,7 @@ The wizard's full spec is in [`BUILD-INSTRUCTIONS.md`](../BUILD-INSTRUCTIONS.md)
 4. Pre-requisite check (`git`, `bw`, `gh`, `curl`, `jq`, plus track-specific).
 5. Hardware (privacy track only) — confirm always-on machine + UPS + FDE.
 6. Secrets vault — Bitwarden / 1Password org + canonical collections.
-7. GitHub setup — org + Brain repo + 5 repo-level setup pre-requisites.
+7. GitHub setup — org + Ledger + 5 repo-level setup pre-requisites.
 8. Track-specific tools.
 9. The Curator install + first domain.
 10. Routine configuration (R5, R6, R1, R2).

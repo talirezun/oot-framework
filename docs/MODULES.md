@@ -13,7 +13,7 @@
 A solo founder on cloud track can run a usable ØØT instance with **five modules**. Everything else is additive.
 
 1. **Anthropic account** (Pro plan minimum; Max recommended once you have 3+ partners or the Klarna gate is firing). Powers Claude Desktop, Claude Code, and Claude Code Routines.
-2. **GitHub Brain repo** — your firm's private repo. Holds the markdown wiki + the `.xlsx` operational state files (`firm/excel/X1...X9.xlsx`). This is your firm's most valuable IP by month six.
+2. **GitHub Ledger** — your firm's private repo. Holds the markdown wiki + the `.xlsx` operational state files (`firm/excel/X1...X9.xlsx`). This is your firm's most valuable IP by month six.
 3. **Curator desktop app + my-curator MCP** — the Brain interface. Skill Pack S1 is its canonical SKILL.md. Without this, no other Skill Pack works at full strength.
 4. **Routine R5 (Brain Health Check)** — runs Sunday 09:00; verifies your Brain is intact week-on-week. R5 has no dependencies and is the smoke-test that confirms everything else is wired correctly.
 5. **A spreadsheet app** to view the `.xlsx` files. User choice: Microsoft Excel, **LibreOffice (free, open-source)**, Apple Numbers (built into macOS), Excel for Web, WPS, OnlyOffice. The framework writes native `.xlsx` and is app-agnostic.
@@ -127,7 +127,7 @@ graph TD
 | Module | What it is | Required for |
 |---|---|---|
 | Anthropic account (Pro / Max) | Powers Claude Desktop, Claude Code, Claude Code Routines | Everything in cloud track |
-| GitHub Brain repo | Holds markdown wiki + `firm/excel/*.xlsx` state | Everything (per ADR-001) |
+| GitHub Ledger | Holds markdown wiki + `firm/excel/*.xlsx` state | Everything (per ADR-001) |
 | Claude Desktop | Daily-driver UI | Day-to-day partner work |
 | Claude Code | CLI for engineering + Routines runtime | All Routines (cloud) + S4 |
 | Curator desktop app | Brain ingest engine | The Brain growing automatically |
@@ -172,7 +172,7 @@ See [`routines/README.md`](../routines/README.md) for the canonical install orde
 
 ### Excel templates (X1–X9)
 
-All `.xlsx` files live in your Brain repo at `firm/excel/`. Mutated by Routines per ADR-001.
+All `.xlsx` files live in your Ledger at `firm/excel/`. Mutated by Routines per ADR-001.
 
 | # | File | Loaded by | Required? |
 |---|---|---|---|

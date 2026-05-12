@@ -23,7 +23,7 @@ This is a **template**. The founder customises per partner — a senior engineer
 
 ### Day 5 (Friday)
 
-- **Attend the Friday BR.** Listen. Don't speak much. Read the Brain summary after the meeting.
+- **Attend the Friday BR.** Listen. Don't speak much. Read the Ledger summary after the meeting.
 - **End-of-week reflection** committed to the partner's `private/` Brain folder. What surprised them. What was hard. What was easier than expected.
 
 ---

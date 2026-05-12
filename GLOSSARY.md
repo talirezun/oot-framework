@@ -44,9 +44,13 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 ## Tech layer
 
-**The Brain (Collecting Brain).** The firm's queryable knowledge graph — every conversation, decision, contract, deal, code review, customer interaction, research session captured in markdown with YAML frontmatter and wikilinks. The Curator is the canonical reference implementation.
+**The Brain (Collecting Brain) / Second Brain.** The firm's queryable knowledge graph — every conversation, decision, contract, deal, code review, customer interaction, research session captured in markdown with YAML frontmatter and wikilinks. Stored locally by the Curator app; can be synced two-way to a private GitHub repo via the Curator's built-in sync. **Distinct from the Ledger** (see below), which holds operational state. Some framework documents use "Second Brain" interchangeably — this is the standard PKM term (Tiago Forte) for the same thing. The Curator is the canonical reference implementation.
 
-**The Curator.** The reference Brain implementation. Open source. Includes the MyCuratorMCP server (17 tools), the Curator desktop app (knowledge ingest), and the canonical SKILL.md.
+**Ledger.** The firm's GitHub repository holding *operational* state — Excel files (X1–X9), Routine-written markdown (`firm/output-logs/`, `firm/audit-logs/`, etc.), signed-commit history. Mutated by Routines via openpyxl + signed commits per ADR-001. **Distinct from the Brain / Second Brain**, which is the Curator's semantic knowledge graph. Also distinct from the Cotrugli Ledger (Gen-3 accounting layer — see below). The wizard creates this as `<firm-slug>-ledger` (defaulted from `<firm-slug>-brain` in pre-v1.0.1 installs — both names are valid).
+
+**Second Brain repo.** The private GitHub repo to which a user syncs their Curator vault (all domains together) via the Curator's built-in sync. Distinct from the Ledger repo. Cloud Routines read this repo (scoped to `wiki/<firm-curator-domain>/`) to access company-context knowledge that cloud-hosted compute can't reach via the local my-curator MCP. The wizard creates / detects this as `<firm-slug>-secondbrain`.
+
+**The Curator.** The reference Brain implementation. Open source. Includes the MyCuratorMCP server (17 tools), the Curator desktop app (knowledge ingest + two-way GitHub sync), and the canonical SKILL.md. Repo: `https://github.com/talirezun/the-curator`.
 
 **Skill / Skill Pack.** A markdown file (or folder of files) following the SKILL.md format from Anthropic Agent Skills. Encodes operational discipline for a domain. Loaded into Claude Desktop, Claude Code, Cursor, LM Studio, or any MCP-compatible client. ØØT ships 12 packs in v1.0.
 
@@ -56,9 +60,9 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 **CLAUDE.md.** The Claude Code-specific orientation file. Same purpose as AGENTS.md but Claude Code reads it preferentially. ØØT ships a `CLAUDE.md` at the root.
 
-**Routine.** A scheduled prompt that runs on a trigger (time, GitHub event, API call). Cloud track = [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code). Privacy track = OS-native scheduling hitting headless LM Studio. ØØT ships 8 Routines in v1.0. Operational `.xlsx` state lives in the firm's Brain repo and is mutated by Routines via openpyxl + signed commits per ADR-001.
+**Routine.** A scheduled prompt that runs on a trigger (time, GitHub event, API call). Cloud track = [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code). Privacy track = OS-native scheduling hitting headless LM Studio. ØØT ships 8 Routines in v1.0. Operational `.xlsx` state lives in the firm's Ledger repo and is mutated by Routines via openpyxl + signed commits per ADR-001. Cloud Routines that need company context (R5, R2, R8) additionally read the Second Brain repo (scoped to the firm's Curator domain).
 
-**Cloud track.** The canonical, fastest path. Claude Desktop, Claude Code, Slack, GitHub (Brain repo holds markdown + `.xlsx` state), the Curator, MyCuratorMCP, Claude Code Routines. Anthropic infrastructure where applicable. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
+**Cloud track.** The canonical, fastest path. Claude Desktop, Claude Code, Slack, GitHub (Ledger holds markdown + `.xlsx` state; Second Brain repo holds the Curator-synced semantic graph), the Curator, MyCuratorMCP, Claude Code Routines. Anthropic infrastructure where applicable. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
 
 **Privacy track.** The full-Gen-1-parity sovereignty path. LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP, Excel MCP, 4thtech for on-chain communication, PollinationX for decentralised storage, GitHub MCP, OS-native scheduling.
 
@@ -82,7 +86,7 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 **AI Champion.** A partner who has demonstrably increased their throughput and quality via AI tooling, then mentors others. *Earned, not appointed.* Tecknoworks/Caplaz case studies show artificial champions backfire.
 
-**Cotrugli Ledger.** The Generation 3 governance backbone. Triple-entry-style accounting via PAC-RO receipts, with Cotrugli Score / Vanguard Score reputation, IAAF agent autonomy levels. Theoretical / research-stage in v1.0. Co-authored by Dražen Kapusta.
+**Cotrugli Ledger.** The Generation 3 governance backbone — *distinct from the operational Ledger* (see Ledger above). Triple-entry-style accounting via PAC-RO receipts, with Cotrugli Score / Vanguard Score reputation, IAAF agent autonomy levels. Theoretical / research-stage in v1.0. Co-authored by Dražen Kapusta.
 
 **PAC-RO.** Policy-anchored, Co-signed Receipt Object — the unit of accounting in the Cotrugli Ledger. Composed of Facts, Evidence, Policy, and Co-signature. Generation 3.
 

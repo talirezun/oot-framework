@@ -4,7 +4,7 @@ The eight ØØT scheduled Routines, in two flavours: **cloud** ([Claude Code Rou
 
 The substrates differ; **the prompts are functionally identical** so a firm can switch tracks without rewriting Routine logic.
 
-**Excel state lives in the Brain repo (ADR-001).** All `.xlsx` operational state lives in the firm's Brain GitHub repo; Routines mutate it via openpyxl in code execution and signed-commit + push. Track-symmetric. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../docs/internal/ADR-001-cloud-routine-excel-writeback.md).
+**Excel state lives in the Ledger (ADR-001).** All `.xlsx` operational state lives in the firm's Ledger GitHub repo; Routines mutate it via openpyxl in code execution and signed-commit + push. Track-symmetric. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
 ---
 
@@ -42,7 +42,7 @@ The four Day-1 Routines (R1, R2, R5, R6) are sufficient for the framework's basi
 
 ## Cloud track install (Claude Code Routines)
 
-**Where Routines run:** on Anthropic's cloud infrastructure — not on your local machine. Your laptop can be closed; the Routines fire on schedule against your firm's Brain repo on GitHub. You manage them from any of three interfaces (they all configure the same cloud-hosted feature):
+**Where Routines run:** on Anthropic's cloud infrastructure — not on your local machine. Your laptop can be closed; the Routines fire on schedule against your firm's Ledger on GitHub. You manage them from any of three interfaces (they all configure the same cloud-hosted feature):
 
 - **Claude Code CLI:** `/schedule` command in any Claude Code session
 - **Web dashboard:** [claude.ai/code/routines](https://claude.ai/code/routines)
@@ -55,7 +55,7 @@ For each Routine to install:
 3. Configure trigger per the routine's frontmatter.
 4. Upload the prompt body from `routines/cloud/<R>.md`.
 5. Attach the listed Skill Packs.
-6. Configure connectors and the Brain repo per the routine's `mcp_servers` frontmatter. Routines that mutate Excel need: GitHub connector with the Brain repo cloneable + pushable, signing key configured (GPG or SSH), and **code execution enabled** (default for Pro+).
+6. Configure connectors and the Ledger per the routine's `mcp_servers` frontmatter. Routines that mutate Excel need: GitHub connector with the Ledger cloneable + pushable, signing key configured (GPG or SSH), and **code execution enabled** (default for Pro+).
 7. Manual test fire.
 8. Verify expected outputs (Brain page lands, `firm/excel/<file>.xlsx` row appended via signed commit on `main`, Slack post visible).
 

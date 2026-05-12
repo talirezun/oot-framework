@@ -39,7 +39,7 @@ Step 1: Bitwarden organisation setup.
   - Create canonical collections per governance/SECRETS-POLICY.md:
     founders, all-partners, specialists, advisors, shared-services.
 
-Step 2: GitHub organisation + Brain repo.
+Step 2: GitHub organisation + Ledger.
   - Create org at https://github.com/
   - Create repo (private or public).
   - Configure 5 repo-level setup pre-requisites per skills/code-qa/SKILL.md §4.0:
@@ -48,7 +48,7 @@ Step 2: GitHub organisation + Brain repo.
     c. Required signed commits on main.
     d. Required reviewer ≥1 for firm/audit-logs/* paths.
     e. Auto-labeller (already shipped in .github/labeler.yml of this repo —
-       copy to your firm Brain repo if applicable).
+       copy to your firm Ledger if applicable).
 
 Step 3: Curator install.
   - Follow docs/01-installing-the-curator.md.

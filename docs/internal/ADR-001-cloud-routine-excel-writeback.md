@@ -1,4 +1,4 @@
-# ADR-001 — Cloud Routines mutate Excel files in the Brain repo via openpyxl and signed commits
+# ADR-001 — Cloud Routines mutate Excel files in the Ledger via openpyxl and signed commits
 
 **Status:** Accepted
 **Date:** 2026-05-10
@@ -15,7 +15,7 @@ The cloud track was ambiguous. v1.0 routines listed `mcp_servers: [google-drive]
 
 - **Pattern A** — native Google Drive connector writes to a Google Sheet in place.
 - **Pattern B** — Google Sheets via a remote-HTTP MCP that the firm hosts.
-- **Pattern C** — Routine clones the Brain GitHub repo, opens the `.xlsx` with openpyxl in code execution, mutates in place, signed-commits, pushes.
+- **Pattern C** — Routine clones the Ledger GitHub repo, opens the `.xlsx` with openpyxl in code execution, mutates in place, signed-commits, pushes.
 - **Pattern D** — Excel MCP exposed remote-HTTP writing to a hosted `.xlsx`.
 
 The decision needed an authoritative answer before less-technical founders are told "your routines will write to your Excel ledger."
@@ -32,8 +32,8 @@ The decision needed an authoritative answer before less-technical founders are t
 
 **Adopt Pattern C as canonical for both tracks.**
 
-- **All `.xlsx` operational state lives in the firm's Brain GitHub repo.** During a fresh install the framework's `templates/excel/*.xlsx` files are *copied* (not symlinked, not referenced) into the firm Brain repo at `firm/excel/<file>.xlsx` (or whatever path the firm chooses). The framework repo's templates remain pristine generated artefacts; the firm's copies become stateful as Routines mutate them.
-- **Cloud Routines mutate Excel files via Claude Code's code-execution capability**, using openpyxl, against a fresh clone of the Brain repo for each run. Each mutation is committed with a signed commit (`R1: append <N> rows for <date>`, etc.) and pushed to the protected `main` branch.
+- **All `.xlsx` operational state lives in the firm's Ledger GitHub repo.** During a fresh install the framework's `templates/excel/*.xlsx` files are *copied* (not symlinked, not referenced) into the firm Ledger at `firm/excel/<file>.xlsx` (or whatever path the firm chooses). The framework repo's templates remain pristine generated artefacts; the firm's copies become stateful as Routines mutate them.
+- **Cloud Routines mutate Excel files via Claude Code's code-execution capability**, using openpyxl, against a fresh clone of the Ledger for each run. Each mutation is committed with a signed commit (`R1: append <N> rows for <date>`, etc.) and pushed to the protected `main` branch.
 - **Privacy Routines do the same operation locally** via openpyxl against a local clone — no Excel MCP needed. (The Excel MCP becomes an *optional* tool for ad-hoc human-in-the-loop work, not a Routine dependency.)
 - **The native Google Workspace connector is used for reads only** — pulling Drive documents that R1 should classify as outputs, for example.
 - **Spreadsheet viewers are user choice.** Microsoft Excel, LibreOffice (free, open-source), Apple Numbers, Excel for Web, Google Sheets via "Open with" — all open `.xlsx` natively or via auto-conversion. The framework does not require any specific paid app.
@@ -52,7 +52,7 @@ The decision needed an authoritative answer before less-technical founders are t
 
 ### Negative / cost
 
-1. **Founders who want the state in a hosted Sheet for live multi-user collaboration are not served by this pattern.** They can adopt a one-way export (Routine writes to Brain repo, separate sync job pushes a flattened CSV to a Sheet for collaborative pivoting) — but the canonical store remains `.xlsx` in git.
+1. **Founders who want the state in a hosted Sheet for live multi-user collaboration are not served by this pattern.** They can adopt a one-way export (Routine writes to Ledger, separate sync job pushes a flattened CSV to a Sheet for collaborative pivoting) — but the canonical store remains `.xlsx` in git.
 2. **Routines need GitHub write access with signing.** The bot account or per-Routine identity needs a GPG/SSH signing key uploaded to GitHub. This is a one-time setup, but it is one-time setup the manual-track docs must cover.
 3. **R6 must be aware of Routine commits.** The `firm/audit-logs/*` reviewer-required rule must allow R-prefixed commits from the bot identity to land without human review (per skills/code-qa/SKILL.md §4.0 the existing `[skip review]` exemption mechanism covers this; it is now load-bearing).
 
@@ -77,7 +77,7 @@ Recommendation:
 **Rejected.** Workable, but the firm now hosts an MCP server (operational load) and the source of truth is Google Sheets (vendor lock, no native `.xlsx` formulas, no LibreOffice/Numbers fallback, conflicts with the framework's "everything-in-markdown-and-git" philosophy). Pattern C achieves the same goal with one less moving part and better philosophical alignment.
 
 ### Pattern D — remote-HTTP `haris-musa/excel-mcp-server`
-**Rejected.** The Excel MCP supports streamable-HTTP transport, so it could be deployed remotely. But the `.xlsx` file still has to live on the MCP server's filesystem, which means the firm hosts a small VM with the Brain repo cloned and pulled around routine runs — equivalent to Pattern C with extra moving parts. Pattern C accomplishes the same outcome by giving the writer (the Routine itself) the file, not by hosting a separate writer.
+**Rejected.** The Excel MCP supports streamable-HTTP transport, so it could be deployed remotely. But the `.xlsx` file still has to live on the MCP server's filesystem, which means the firm hosts a small VM with the Ledger cloned and pulled around routine runs — equivalent to Pattern C with extra moving parts. Pattern C accomplishes the same outcome by giving the writer (the Routine itself) the file, not by hosting a separate writer.
 
 ## What this changes in the codebase
 

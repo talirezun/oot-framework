@@ -96,7 +96,7 @@ Has the partner ticked the agree box, the dispute box, or neither?
 | Neither, ≥5 business days | Partner unresponsive | Founder makes a call: pay anyway with a documented note, or hold + escalate |
 | Neither, <5 business days | Partner has time | Wait |
 
-> ⚠️ **Slack reactions are NOT canonical.** Per the framework's design, only the Brain checkbox counts. This makes the audit trail self-contained in the Brain.
+> ⚠️ **Slack reactions are NOT canonical.** Per the framework's design, only the Ledger checkbox counts. This makes the audit trail self-contained in the Ledger.
 
 ---
 

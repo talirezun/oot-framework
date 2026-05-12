@@ -30,7 +30,7 @@ The current release. What ships in this repository.
 
 **Tech layer (Gen 1):**
 
-- Cloud track: Claude Desktop, Claude Code, Slack, GitHub (Brain repo holds markdown + `.xlsx` state per ADR-001), Curator + MyCuratorMCP, Claude Code Routines. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
+- Cloud track: Claude Desktop, Claude Code, Slack, GitHub (Ledger holds markdown + `.xlsx` state per ADR-001; Second Brain repo holds the Curator-synced semantic graph), Curator + MyCuratorMCP, Claude Code Routines. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
 - Privacy track at full Gen 1 parity: LM Studio + local Qwen/Llama/DeepSeek, Desktop Commander MCP, Excel MCP (`haris-musa/excel-mcp-server`), 4thtech (dMail, dChat, file transfer), PollinationX (decentralised storage), GitHub MCP, OS-native scheduling.
 - Secrets architecture: Bitwarden (passwords/tokens) + Trezor (crypto signing) + Yubikey (org-level admin).
 
@@ -65,7 +65,7 @@ The current release. What ships in this repository.
 - Internal Unit Fund. Requires 6–9 months of pilot data per the YOLO model and material legal scoping. Gen 2.
 - Curator local-LLM ingest. Cloud-LLM only in Gen 1 (Gemini Flash Lite or Anthropic, pay-as-you-go).
 - Triple-entry-style audit logs. Plain markdown audit trails per EU AI Act Article 12 are sufficient in Gen 1.
-- Cotrugli Ledger anchoring. Theoretical / research-stage; Gen 3.
+- Cotrugli Ledger anchoring (the Gen-3 accounting/governance backbone — *distinct from the operational Ledger introduced in v1.0*). Theoretical / research-stage; Gen 3.
 - Autonomous agent business units. Reference: Kelly / OpenClaw pattern. Gen 3.
 
 ### Audience for Gen 1
@@ -156,7 +156,7 @@ These hold across all three generations.
 
 **Partner agency does not decrease over generations.** Partners in Gen 1 can decline crypto pay; partners in Gen 2 can decline Unit Fund participation; partners in Gen 3 can decline working alongside autonomous agent units. The framework's defaults shift over generations; the partner's right to opt out does not.
 
-**The Brain remains the source of truth.** Gen 2's smart contracts read entitlement data from the Brain. Gen 3's autonomous units write their decisions to the Brain. The Brain compounds across generations; nothing in v2 or v3 invalidates the v1 Brain.
+**Both the Ledger and the Second Brain remain the source of truth across generations.** Gen 2's smart contracts read entitlement data from the Ledger (Excel files like `partner-output-ledger.xlsx`). Gen 3's autonomous units write their signed decisions to the Ledger (`firm/audit-logs/`). The Second Brain (the Curator semantic graph) likewise compounds — every conversation, decision, contract, and research note authored in v1 remains queryable through every successor generation. Nothing in v2 or v3 invalidates either the v1 Ledger or the v1 Second Brain.
 
 **The framework is forward-compatible.** Gen 1 adopters never need to discard work to upgrade. Reward-species declarations port forward; output ledgers port forward; Skill Packs port forward; Excel templates upgrade with new sheets, not new files. Forward compatibility is a design constraint, not an afterthought.
 

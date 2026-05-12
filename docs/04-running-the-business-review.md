@@ -2,7 +2,7 @@
 
 **Audience:** Founder + partners. Anyone who'll attend or facilitate the BR.
 **Time:** 30 minutes (the meeting itself). On time. Non-negotiable in length.
-**You will end with:** a Brain page committed within 30 min of meeting end with all decisions logged.
+**You will end with:** a Ledger page committed within 30 min of meeting end with all decisions logged.
 
 > 📖 **References:** Skill Pack [`skills/reporting-business-review/SKILL.md`](../skills/reporting-business-review/SKILL.md), Routine [`routines/cloud/R2.md`](../routines/cloud/R2.md), template [`templates/brain/business-review.md`](../templates/brain/business-review.md). The walkthrough version with screenshots is at [`docs/walkthroughs/W4-running-the-friday-business-review.md`](walkthroughs/W4-running-the-friday-business-review.md).
 
@@ -23,7 +23,7 @@ The 30-min structure is non-negotiable:
 |---|---|---|
 | **Outputs** | 10 min | Top 5 from X3 column B. Brief congrats; sharp questions only on outliers. |
 | **Blockers** | 5 min | Each open blocker: owner, ETA, what help is needed. |
-| **Decisions** | 10 min | Work through Decisions_Due. Each decision = a Brain page. |
+| **Decisions** | 10 min | Work through Decisions_Due. Each decision = a Ledger page. |
 | **Klarna status** | 3 min | Open tests; tests resolved this week; new triggers. |
 | **KPI snapshot** | 2 min | One look at the dashboard. Comment if something moved materially. |
 
@@ -97,7 +97,7 @@ The facilitator closes on time. Always.
 
 ## Post-meeting (within 30 min of close)
 
-The scribe (or facilitator) finalises the Brain page:
+The scribe (or facilitator) finalises the Ledger page:
 
 1. Open `firm/business-reviews/<today>-pre.md`.
 2. Append post-meeting content per [`templates/brain/business-review.md`](../templates/brain/business-review.md):
@@ -132,7 +132,7 @@ The facilitator stops the meeting if it runs long, rather than rushing through. 
 
 1. **Skipping the Klarna status block.** Standing item. Never skip.
 2. **Founder dominating decisions.** Founder is one voice on each decision per the RACI. The scribe records all consulted partners' input.
-3. **Decisions logged in chat instead of Brain.** Every BR decision = a Brain page. Created during the meeting, not after.
+3. **Decisions logged in chat instead of Brain.** Every BR decision = a Ledger page. Created during the meeting, not after.
 4. **Same facilitator for >4 weeks.** Rotation is deliberate. The meeting belongs to the partnership.
 5. **Action items without owners + deadlines.** Both are required. *"We'll figure it out"* is not an action item.
 

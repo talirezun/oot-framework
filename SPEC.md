@@ -153,7 +153,7 @@ Detailed schemas, formulas, and Routine integration points are in `templates/exc
 
 ## Layer 5 — Routines (the cloud automation jobs)
 
-Eight scheduled Routines pre-shipped as templates. Cloud track = Claude Code Routines. Privacy track = OS-native scheduling (cron / launchd / Task Scheduler) hitting headless LM Studio. Both use the same Skill Packs and the same prompts; only the execution substrate differs. Operational `.xlsx` state lives in the firm's Brain repo and is mutated by Routines via openpyxl + signed commits per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](docs/internal/ADR-001-cloud-routine-excel-writeback.md).
+Eight scheduled Routines pre-shipped as templates. Cloud track = Claude Code Routines. Privacy track = OS-native scheduling (cron / launchd / Task Scheduler) hitting headless LM Studio. Both use the same Skill Packs and the same prompts; only the execution substrate differs. Operational `.xlsx` state lives in the firm's Ledger and is mutated by Routines via openpyxl + signed commits per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
 | # | Routine | Trigger | Output |
 |---|---|---|---|

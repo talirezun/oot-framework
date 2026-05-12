@@ -26,7 +26,7 @@ The 30-step checklist at [`templates/partner-onboarding/checklist.md`](../templa
 
 - Counsel sign-off on Partner Charter for the partner's jurisdiction (per [`docs/06-when-to-call-a-lawyer.md`](06-when-to-call-a-lawyer.md)).
 - Bitwarden organisation set up (per `governance/SECRETS-POLICY.md`).
-- GitHub organisation + Brain repo with the 5 setup pre-requisites configured (per Skill Pack S4 §4.0).
+- GitHub organisation + Ledger with the 5 setup pre-requisites configured (per Skill Pack S4 §4.0).
 - Slack workspace (cloud) or 4thtech firm domain + dChat workspace (privacy).
 - The provisioning script at `templates/partner-onboarding/provisioning-script.sh` works — test it with a throwaway `partner_id` like `test-onboard-2026-05-01`.
 
@@ -64,7 +64,7 @@ If the partner cannot articulate the Klarna Test framing back to you in their ow
 6. Save the workbook.
 7. **Generate signed PDF** (founder + partner sign). Store at `firm/partners/<id>/legal/reward-species-<DATE>.pdf`.
 8. **Compile Brain summary** at `firm/partners/<id>/reward-species-declaration.md` per [`templates/brain/reward-species-declaration-summary.md`](../templates/brain/reward-species-declaration-summary.md).
-9. Both parties sign the Brain page (signed git commit).
+9. Both parties sign the Ledger page (signed git commit).
 
 ### 1:00 — 1:10 — Two Worlds of Code self-id
 
@@ -113,7 +113,7 @@ Each step pauses for confirmation; the partner watches their email/dMail for the
 Per the script's step 7, the partner:
 1. Installs the Curator desktop app.
 2. Configures cloud-LLM ingest with the firm's API key (founder provides via Bitwarden Send — one-time link).
-3. Adds the firm Brain repo as the Curator's sync target.
+3. Adds the firm Ledger as the Curator's sync target.
 4. Runs `scan_wiki_health` — should return clean (their freshly-created stub has no issues).
 5. Opens `firm/partners/<id>/profile.md` and adds one personal note.
 6. Commits, pushes.
@@ -135,7 +135,7 @@ The partner alone:
 1. **Read** the foundation kit (`SPEC.md`, `GENERATIONS.md`, all four governance docs, the Skill Packs relevant to their role). 6-8 hours across the week.
 2. **Begin work** on the first Output Spec drafted in the session. R1 captures the first commits/contracts/etc. that evening.
 3. **Daily check-in** with founder (15 min) for the first 5 days. Friction points surfaced; not problems, just field reports.
-4. **Attend the first Friday Business Review.** Listen. Don't speak much. Read the Brain summary after.
+4. **Attend the first Friday Business Review.** Listen. Don't speak much. Read the Ledger summary after.
 
 ---
 

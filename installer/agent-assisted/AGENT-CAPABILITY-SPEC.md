@@ -12,7 +12,7 @@ If your agent fails one of the required items, you can still run the install pla
 
 ### R1 — File reads and writes on the user's machine
 
-The agent must be able to read arbitrary files in the working directory and write/edit files (typically via Read/Write/Edit-style tools). Without this it cannot edit `claude_desktop_config.json`, copy `.xlsx` templates into the firm's Brain repo, or scaffold the `firm/` namespace.
+The agent must be able to read arbitrary files in the working directory and write/edit files (typically via Read/Write/Edit-style tools). Without this it cannot edit `claude_desktop_config.json`, copy `.xlsx` templates into the firm's Ledger, or scaffold the `firm/` namespace.
 
 ### R2 — Shell command execution
 

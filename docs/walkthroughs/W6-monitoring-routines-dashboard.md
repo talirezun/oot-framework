@@ -91,7 +91,7 @@ tail -f ~/oot-framework/logs/r1.log
 2026-04-15 18:00:15 — found 2 #output tags
 2026-04-15 18:00:17 — appending 16 rows to X1 Output_Log via excel-mcp
 2026-04-15 18:00:23 — writing daily summary to firm/output-logs/2026-04-15.md
-2026-04-15 18:00:26 — committing signed commit to Brain repo
+2026-04-15 18:00:26 — committing signed commit to Ledger
 2026-04-15 18:00:29 — posted summary to 4thtech dChat #output-log
 2026-04-15 18:00:30 — done. duration: 32s.
 ```
@@ -140,7 +140,7 @@ tail -f ~/oot-framework/logs/r1.log
 - Backfill via the same pattern: `llmster --backfill <date> --skill governance-compliance ...`.
 - The R6 prompt's discipline: an empty day is a *noted "no agent activity"* entry, not a missing day. R6 produces this automatically when no decisions were logged.
 
-**This failure is more serious than R1** because the audit trail is the EU AI Act compliance evidence. Document the gap in the Brain immediately.
+**This failure is more serious than R1** because the audit trail is the EU AI Act compliance evidence. Document the gap in the Ledger immediately.
 
 ### Failure 3: R7 didn't catch a PR label
 
@@ -162,8 +162,8 @@ tail -f ~/oot-framework/logs/r1.log
 - Check `~/oot-framework/logs/r3.log` for the send failure line.
 
 **Recovery:**
-- Resend manually with a copy-paste from the Brain statement page.
-- Document in the Brain that the partner received the statement late (so the 5-business-day acknowledgement window resets from the resend date).
+- Resend manually with a copy-paste from the Ledger statement page.
+- Document in the Ledger that the partner received the statement late (so the 5-business-day acknowledgement window resets from the resend date).
 
 ---
 

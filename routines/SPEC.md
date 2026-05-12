@@ -6,9 +6,9 @@ Claude Code generates 16 markdown files (8 in `routines/cloud/`, 8 in `routines/
 
 ---
 
-## Operational state lives in the Brain repo (ADR-001)
+## Operational state lives in the Ledger (ADR-001)
 
-All `.xlsx` operational state — partner-output-ledger, reward-species-declaration, business-review, klarna-test, agent-skill-roi, eu-ai-act-mapping, treasury-runway, oot-readiness, perception-gap-survey — lives in the **firm's Brain GitHub repo**. Routines mutate these files via **openpyxl in Claude Code's code-execution capability**, then **signed-commit and push** the mutation to the protected `main` branch. No Google Sheets, no native Drive write-in-place, no remote Excel MCP. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../docs/internal/ADR-001-cloud-routine-excel-writeback.md) for the full decision rationale and alternatives considered.
+All `.xlsx` operational state — partner-output-ledger, reward-species-declaration, business-review, klarna-test, agent-skill-roi, eu-ai-act-mapping, treasury-runway, oot-readiness, perception-gap-survey — lives in the **firm's Ledger GitHub repo**. Routines mutate these files via **openpyxl in Claude Code's code-execution capability**, then **signed-commit and push** the mutation to the protected `main` branch. No Google Sheets, no native Drive write-in-place, no remote Excel MCP. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../docs/internal/ADR-001-cloud-routine-excel-writeback.md) for the full decision rationale and alternatives considered.
 
 Track symmetry: cloud and privacy Routines perform the same operation. Privacy Routines run against a local clone; cloud Routines run against a fresh clone created on Anthropic's infrastructure for each Routine run.
 
@@ -43,7 +43,7 @@ Steady-state daily-routine cost on the v1.0 schedule: R1 daily + R6 daily + R2/R
 
 **Code-execution requirement.** Routines that mutate `.xlsx` files require code execution to be enabled in their Claude Code Routine config. This is the default for Pro+ accounts.
 
-**Brain-repo access.** Routines that read or write `.xlsx` files require the Brain repo to be cloneable + pushable from the Routine. Configure a deploy key or PAT scoped to the Brain repo, with signing (GPG or SSH) configured per [`governance/SECRETS-POLICY.md`](../governance/SECRETS-POLICY.md). Only the firm's bot identity (e.g. `oot-bot`) commits via Routines; the bot identity is exempted from the `firm/audit-logs/*` reviewer rule per the existing `[skip review]` mechanism (see `skills/code-qa/SKILL.md` §4.0).
+**Brain-repo access.** Routines that read or write `.xlsx` files require the Ledger to be cloneable + pushable from the Routine. Configure a deploy key or PAT scoped to the Ledger, with signing (GPG or SSH) configured per [`governance/SECRETS-POLICY.md`](../governance/SECRETS-POLICY.md). Only the firm's bot identity (e.g. `oot-bot`) commits via Routines; the bot identity is exempted from the `firm/audit-logs/*` reviewer rule per the existing `[skip review]` mechanism (see `skills/code-qa/SKILL.md` §4.0).
 
 **Expected output.** Where the Routine writes — Brain pages, Excel files (mutated in-repo + signed commit), Slack/dChat posts, audit logs.
 
@@ -62,8 +62,8 @@ Steady-state daily-routine cost on the v1.0 schedule: R1 daily + R6 daily + R2/R
 **Allowed Skills:** S3 (Compensation & Attribution), S1 (My Curator).
 
 **MCP servers and tools:**
-- Cloud: GitHub connector (Brain-repo clone + signed commit + push). Slack connector (read tracked channels + post `#output-log` and `#ops`). Google Workspace connector (**read-only**, for `{{TRACKED_FOLDERS}}` document discovery). Code execution required (openpyxl writes to X1 in the cloned Brain repo).
-- Privacy: same operation locally. GitHub MCP for the commit/push. Local filesystem for the Brain-repo clone. 4thtech CLI/SDK for dChat thread reads (replaces Slack). No Excel MCP needed — openpyxl is a Python library, used directly by `llmster`.
+- Cloud: GitHub connector (Brain-repo clone + signed commit + push). Slack connector (read tracked channels + post `#output-log` and `#ops`). Google Workspace connector (**read-only**, for `{{TRACKED_FOLDERS}}` document discovery). Code execution required (openpyxl writes to X1 in the cloned Ledger).
+- Privacy: same operation locally. GitHub MCP for the commit/push. Local filesystem for the Ledger clone. 4thtech CLI/SDK for dChat thread reads (replaces Slack). No Excel MCP needed — openpyxl is a Python library, used directly by `llmster`.
 
 **Prompt body:**
 
@@ -81,7 +81,7 @@ For each output:
 - Generate a log_id following the format OL-YYYYMMDD-NNN.
 - Determine the partner_id from the author/owner (consult the partners Brain page if uncertain; if multiple authors, create one row per partner with a fractional output_value note).
 - Classify output_type per the X1 schema.
-- Reference the output_spec_ref from the Brain if one exists; flag for human review if not.
+- Reference the output_spec_ref from the Ledger if one exists; flag for human review if not.
 - Estimate value_tier (S/M/L/XS) based on the output_spec value envelope; default to L if no spec exists.
 - Estimate ai_authored_pct from commit trailers and change patterns (best-effort; partner can correct).
 - Set `rework_within_30d` to "No" by default. This field is **updated retroactively by R1 on every subsequent run within the next 30 days** using the following deterministic detection rule:
@@ -92,7 +92,7 @@ For each output:
 
 **Implementation (the canonical Pattern C operation per ADR-001):**
 
-1. Clone the firm's Brain repo to a working directory: `git clone <BRAIN_REPO_URL> /tmp/brain && cd /tmp/brain && git pull`.
+1. Clone the firm's Ledger to a working directory: `git clone <LEDGER_REPO_URL> /tmp/brain && cd /tmp/brain && git pull`.
 2. Open `firm/excel/partner-output-ledger.xlsx` (X1) with openpyxl in code execution.
 3. Find the next empty row in Output_Log using **column A (log_id) as the determinant**, NOT `ws.max_row`. The value_envelope_table embedded at O1:P5 makes `max_row` report 5 even when sample data only fills rows 2-4 — using `max_row + 1` would leave a permanent ghost gap. Pseudocode:
    ```python
@@ -119,7 +119,7 @@ Failure handling: if any source is unreachable, log the failure to the daily sum
 ```
 
 **Expected outputs:**
-- Rows appended to `firm/excel/partner-output-ledger.xlsx` in the Brain repo.
+- Rows appended to `firm/excel/partner-output-ledger.xlsx` in the Ledger.
 - Brain page at `firm/output-logs/YYYY-MM-DD.md`.
 - One signed commit on `main` carrying both changes.
 - Slack/dChat summary post.
@@ -140,7 +140,7 @@ Failure handling: if any source is unreachable, log the failure to the daily sum
 
 **Allowed Skills:** S5 (Reporting & Business Review), S1 (My Curator).
 
-**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector. Code execution required (openpyxl reads X1, X4, X6 and writes X3 in the cloned Brain repo).
+**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector. Code execution required (openpyxl reads X1, X4, X6 and writes X3 in the cloned Ledger).
 
 **Prompt body:**
 
@@ -151,20 +151,20 @@ Your task: populate business-review.xlsx (X3) Weekly_Review sheet for the week s
 
 1. Read partner-output-ledger.xlsx Output_Log for the past 7 days. Identify the top 5 outputs by value_envelope. For each: who shipped it, what tier, brief description from the output_spec_ref. Write to column B (notable_outputs) as a markdown bullet list.
 
-2. Query the Brain for blocker tags raised in the past 7 days that remain open. Write to column C (blockers).
+2. Query the Ledger (firm/output-logs/) for blocker tags raised in the past 7 days that remain open. Write to column C (blockers).
 
 3. Read klarna-test.xlsx Decision_Log for any tests in {{state IN ("scoring", "remediation", "monitoring")}} state. Write to column D (klarna_test_status).
 
 4. Read agent-skill-roi.xlsx for week-over-week deltas on KPIs (customer_count, treasury_runway_months, ai_skill_roi). Write to column E (kpi_movements).
 
-5. Identify decisions due — items in the Brain tagged decision-pending. Write to column F (decisions_due).
+5. Identify decisions due — items in the Ledger tagged decision-pending. Write to column F (decisions_due).
 
 Post a draft summary to Slack #business-review (or dChat equivalent) by 09:00:
 "BR agenda for {{TODAY}} 14:00 ready. Highlights: {{TOP_3_FROM_NOTABLE}}. Klarna in flight: {{COUNT}}. Decisions due: {{COUNT}}."
 
-After the BR meeting (signaled by manual trigger or by the Decisions_Log getting populated), commit the final summary as a Brain page at firm/business-reviews/YYYY-MM-DD.md.
+After the BR meeting (signaled by manual trigger or by the Decisions_Log getting populated), commit the final summary as a Ledger page at firm/business-reviews/YYYY-MM-DD.md.
 
-**Implementation:** clone the Brain repo, read X1 / X4 / X6 via openpyxl, write the new row(s) to X3's Weekly_Review sheet via openpyxl, write the Brain summary markdown, signed-commit both changes, push to `main`. Same Pattern C as R1 (ADR-001).
+**Implementation:** clone the Ledger, read X1 / X4 / X6 via openpyxl, write the new row(s) to X3's Weekly_Review sheet via openpyxl, write the Ledger summary markdown, signed-commit both changes, push to `main`. Same Pattern C as R1 (ADR-001).
 
 Failure handling: if any data source is unreachable, populate from what's available and clearly mark the gap in column G (meeting_notes) for the BR participants to address.
 ```
@@ -187,7 +187,7 @@ Failure handling: if any data source is unreachable, populate from what's availa
 
 **Allowed Skills:** S3 (Compensation & Attribution).
 
-**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector for `#compensation` posts. Email / dMail for per-partner statement delivery. Code execution required (openpyxl reads X1, X2 and writes X1's Monthly_Variable sheet in the cloned Brain repo). Polling job to detect partner acknowledgement runs daily as a separate Routine fire (see step 8 below).
+**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector for `#compensation` posts. Email / dMail for per-partner statement delivery. Code execution required (openpyxl reads X1, X2 and writes X1's Monthly_Variable sheet in the cloned Ledger). Polling job to detect partner acknowledgement runs daily as a separate Routine fire (see step 8 below).
 
 **Recommended model:** Cloud — Claude Opus (compensation accuracy is high-stakes). Privacy — largest local model available.
 
@@ -217,7 +217,7 @@ Your task: lock the previous month's Output_Log and produce per-partner variable
    _Sign by editing this page and ticking the appropriate box, then commit._
    ```
 
-6. Send the statement to each partner via email (cloud) or 4thtech dMail (privacy track). Subject: "Variable pay statement for {{LAST_MONTH}} — review by {{REVIEW_DEADLINE}}". Body links to the Brain statement page.
+6. Send the statement to each partner via email (cloud) or 4thtech dMail (privacy track). Subject: "Variable pay statement for {{LAST_MONTH}} — review by {{REVIEW_DEADLINE}}". Body links to the Ledger statement page.
 
 7. Post to Slack/dChat #compensation: "Monthly variable drafts for {{LAST_MONTH}} are ready. {{COUNT}} partners. Total: {{TOTAL_EUR}}. Review window: 5 business days. Founder approval required before payment."
 
@@ -231,14 +231,14 @@ Your task: lock the previous month's Output_Log and produce per-partner variable
    | Neither ticked, ≥5 business days since send | `partner_unresponsive` (escalate to founder; never auto-approve) |
    | Neither ticked, <5 business days since send | `draft` (no change) |
 
-   Slack reactions are **not** the canonical signal; only the Brain checkbox counts. This makes the audit trail self-contained in the Brain (auditable from the firm's git history alone, no third-party messaging dependency).
+   Slack reactions are **not** the canonical signal; only the Ledger checkbox counts. This makes the audit trail self-contained in the Ledger (auditable from the firm's git history alone, no third-party messaging dependency).
 
 9. After all partner reviews complete OR after 5 business days (whichever first), compile a founder-approval packet at firm/compensation/YYYY-MM/founder-approval.md. Founder approves; sign_off_status moves to 'founder_approved'. Payment processing then proceeds (manual in Gen 1; automated stablecoin in Gen 2).
 
 Failure handling: if any partner does not respond within the 5-day window, escalate to founder for review. Never auto-approve a contested calculation.
 ```
 
-**Implementation:** clone Brain repo; read X1 Output_Log (filtered to last_month) and X2 reward-species via openpyxl; write the Monthly_Variable rows + per-partner statement markdown files; signed-commit; push. Same Pattern C as R1 (ADR-001). For the daily acknowledgement polling step, the polling Routine (or a single Routine that handles steps 1-7 on day 1 and step 8 daily through day +5) re-clones the Brain repo, reads each partner's statement page for the checkbox state, updates X1 Monthly_Variable's `sign_off_status` column, signed-commits + pushes. Each polling pass is a separate Routine run; budget for 5–7 R3-polling fires per month in the Anthropic plan calculation.
+**Implementation:** clone Ledger; read X1 Output_Log (filtered to last_month) and X2 reward-species via openpyxl; write the Monthly_Variable rows + per-partner statement markdown files; signed-commit; push. Same Pattern C as R1 (ADR-001). For the daily acknowledgement polling step, the polling Routine (or a single Routine that handles steps 1-7 on day 1 and step 8 daily through day +5) re-clones the Ledger, reads each partner's statement page for the checkbox state, updates X1 Monthly_Variable's `sign_off_status` column, signed-commits + pushes. Each polling pass is a separate Routine run; budget for 5–7 R3-polling fires per month in the Anthropic plan calculation.
 
 **Expected outputs:**
 - `firm/excel/partner-output-ledger.xlsx` Monthly_Variable sheet populated.
@@ -270,7 +270,7 @@ Your task: for every output that has an entry in any partner's reward-species-de
 
 1. Read all reward-species-declaration files (or sheets) for the firm. Extract every Long_Tail_Schedule row where end_date is empty OR > {{LAST_QUARTER_END}}, AND start_date <= {{LAST_QUARTER_END}}.
 
-2. For each such (partner, output) pair, query the Brain or financial system for the realised outcome attributable to the output during {{LAST_QUARTER}}: revenue generated, cost saved, customer impact metric — the metric committed to in the Output Spec.
+2. For each such (partner, output) pair, query the Ledger or financial system for the realised outcome attributable to the output during {{LAST_QUARTER}}: revenue generated, cost saved, customer impact metric — the metric committed to in the Output Spec.
 
 3. Compute the partner's long-tail payment for the quarter as: outcome_attributable × partner_share_pct.
 
@@ -285,7 +285,7 @@ Your task: for every output that has an entry in any partner's reward-species-de
 Failure handling: if outcome attribution data is missing for an output, flag for founder + affected partner review; do not pay until resolved.
 ```
 
-**Implementation:** clone Brain repo; read X2 across all partner sheets via openpyxl; compute and write settlement; write per-partner long-tail statement markdown; signed-commit; push. Pattern C as R1.
+**Implementation:** clone Ledger; read X2 across all partner sheets via openpyxl; compute and write settlement; write per-partner long-tail statement markdown; signed-commit; push. Pattern C as R1.
 
 **Expected outputs:** Per-partner long-tail statements; updated Long_Tail_Schedule sheets; founder-approval packet; signed commit on `main`.
 
@@ -381,7 +381,7 @@ Your task:
 5. Block PR merge by posting a **failing GitHub status check** named `oot/klarna-test` against the PR's head SHA. The status check is implemented by the GitHub Actions workflow at `.github/workflows/klarna-gate.yml` (shipped in Phase 8). The workflow re-runs on every push to the PR and reads the `klarna-test.xlsx` Klarna_Score sheet for the matching `test_id`; it sets the check to **passing** only when **all three** conditions hold simultaneously: `total_score >= 14` AND `scorer_signoff = Yes` AND `non_beneficiary_signoff = Yes`. The firm must have configured branch protection on the merge target to require the `oot/klarna-test` status check; without that protection, the gate is advisory rather than enforcing. Both setup steps (the workflow file and the branch-protection rule) are documented in the Code & QA SKILL.md (S4) and shipped by the cloud installer in Phase 9.
 6. Post to Slack/dChat #klarna-test: "{{TEST_ID}}: PR #{{PR_NUMBER}} ({{TITLE}}) requires Klarna Test scoring before merge. Affected partner(s): {{LIST}}. Non-beneficiary reviewer: {{ASSIGNED}}. Scoring window: 5 business days. Reference: governance/KLARNA-TEST.md."
 7. Email/dMail the founder + affected partner(s) + non-beneficiary reviewer with the same content.
-8. Open a Brain page at firm/klarna-tests/{{test_id}}.md with the full context.
+8. Open a Ledger page at firm/klarna-tests/{{test_id}}.md with the full context.
 9. Monitor the Klarna_Score sheet for the test_id; on completion, update Decision_Log row status to 'proceeded' (>=14) or 'held' (<14). On 'proceeded', remove the merge block. On 'held', leave the merge blocked and post the remediation list to #klarna-test.
 10. Schedule the 90-day review (Q9 of the rubric) — write the date to Decision_Log column K, set a calendar reminder (cloud track) or cron entry (privacy track).
 
@@ -420,7 +420,7 @@ Your task:
 Failure handling: if any banking API is unreachable, flag in alert; never silently skip an account.
 ```
 
-**Implementation:** clone Brain repo; openpyxl appends snapshot row to `firm/excel/treasury-runway.xlsx`; signed-commit; push. Pattern C as R1.
+**Implementation:** clone Ledger; openpyxl appends snapshot row to `firm/excel/treasury-runway.xlsx`; signed-commit; push. Pattern C as R1.
 
 **Expected outputs:** X8 Runway_Calc updated; alert if thresholds breached; signed commit on `main`.
 

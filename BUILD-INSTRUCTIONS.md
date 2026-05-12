@@ -333,7 +333,7 @@ oot-framework/
 4. **Pre-requisite check.** Detect installed tools (`git`, Python, `bw`, `gh`, `curl`, `jq`, plus track-specific: LM Studio, `pollinationx`, `4thtech`). For each missing tool, offer to install (auto-suggest the platform-appropriate command, ask consent before running).
 5. **Hardware (privacy track only).** Confirm always-on machine; pre-flight check for RAM, disk, OS encryption status.
 6. **Secrets vault.** Bitwarden vs. 1Password; bootstrap the org account; create the canonical collections (`founders`, `all-partners`, `specialists`, `advisors`, `shared-services`); install the CLI.
-7. **GitHub setup.** Verify org exists; create the firm Brain repo; configure the 5 repo-level setup pre-requisites from S4 (status check, branch protection, signed commits, audit-log reviewer rule, auto-labeller).
+7. **GitHub setup.** Verify org exists; create the firm Ledger; configure the 5 repo-level setup pre-requisites from S4 (status check, branch protection, signed commits, audit-log reviewer rule, auto-labeller).
 8. **Track-specific tools.** Cloud: Anthropic account confirmation, Google Workspace / Slack connectors. Privacy: LM Studio + model download (Qwen 3 14B default), 4thtech firm domain provisioning, PollinationX storage NFT acquisition (with cost estimate shown), Excel MCP + Desktop Commander + GitHub MCP install.
 9. **The Curator install.** Walk through the desktop app install + MyCuratorMCP wizard. Run the self-test. Create the firm's first Curator domain (`firm`).
 10. **Routine configuration.** Install the 4 Day-1 Routines (R1, R2, R5, R6) — cloud or privacy variant. Defer R3, R4, R7, R8 with clear "we'll come back when you have your first partner".

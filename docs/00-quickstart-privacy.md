@@ -70,7 +70,7 @@ For most privacy-track founders setting up a fresh always-on machine: Configurat
 
 ### 7. GitHub plan-tier — CRITICAL DECISION ⚠️
 
-**Privacy track still uses GitHub for the Brain repo** (Routines push signed commits there for audit trail). Same Finding 16 caveat as cloud:
+**Privacy track still uses GitHub for the Ledger** (Routines push signed commits there for audit trail). Same Finding 16 caveat as cloud:
 
 | Config | Cost | Branch protection enforced? | Suitable for |
 |---|---|---|---|
@@ -145,7 +145,7 @@ For each partner including the founder, ~30-45 min:
 2. **PollinationX storage NFT.** Acquire on the [PollinationX dApp](https://wiki.pollinationx.io/). Sizes: 100GB (small org), 500GB (medium), 1TB+ (regulated). Cost: ~€10-80/month equivalent.
 3. **Per-partner read access** to PollinationX granted: `pollinationx grant-read --nft <storage-nft> --to <partner-wallet>` for each partner.
 4. **GitHub MCP** configured with PAT (stored in Bitwarden under `shared-services`).
-5. **Brain repo** cloned to the always-on machine. **Note:** the GitHub-side setup (create repo, generate signing key, configure branch protection, the clean branch-protection checkbox table) is identical to the cloud track — follow [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) "Weekend One — Sunday morning" Steps 1, 4, 5, 6, 7 against the always-on machine. The only differences: the local clone path is `<FIRM_FOLDER>` on the always-on machine (not your laptop), and the GPG key is generated on the always-on machine.
+5. **Ledger** cloned to the always-on machine. **Note:** the GitHub-side setup (create repo, generate signing key, configure branch protection, the clean branch-protection checkbox table) is identical to the cloud track — follow [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) "Weekend One — Sunday morning" Steps 1, 4, 5, 6, 7 against the always-on machine. The only differences: the local clone path is `<FIRM_FOLDER>` on the always-on machine (not your laptop), and the GPG key is generated on the always-on machine.
 6. **First Curator domain** created. If Configuration A: add a domain to your existing second-brain. If Configuration B: the Curator's vault root IS `<FIRM_FOLDER>`. First five documents ingested.
 
 ---
@@ -169,7 +169,7 @@ Same as cloud track ([`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) Wee
 
 - Comms training: the partner needs to learn dMail and dChat, not Gmail and Slack.
 - Wallet setup: partner already has their own Trezor (issued during pre-week). They create their 4thtech wallet identity if not done already.
-- Storage training: PollinationX for bulk; Brain repo (synced via GitHub MCP) for everything else.
+- Storage training: PollinationX for bulk; Ledger (synced via GitHub MCP) for everything else.
 
 The 30-step onboarding checklist at [`templates/partner-onboarding/checklist.md`](../templates/partner-onboarding/checklist.md) applies identically; the [provisioning script](../templates/partner-onboarding/provisioning-script.sh) auto-detects the privacy track from `firm.yaml`.
 
@@ -195,7 +195,7 @@ You are now operating ØØT Generation 1, privacy track.
 3. **Sharing Trezors between partners.** Don't. One Trezor per partner identity. The seed is the partner's, not the firm's.
 4. **Auto-updating LM Studio or local models without testing.** Model behaviour changes affect Routine outputs. New versions go through a 1-week dry-run before cutover.
 5. **Trying to run R3 (Monthly Variable) on Qwen 3 14B without testing.** R3 is high-stakes. Use Llama 3.3 70B for R3 specifically; the framework's authors learned this the hard way.
-6. **Skipping the GitHub plan-tier decision (Finding 16).** Privacy track still uses GitHub for the Brain repo. Free + private = advisory branch protection only. Plan to upgrade to Team within 90 days of pilot.
+6. **Skipping the GitHub plan-tier decision (Finding 16).** Privacy track still uses GitHub for the Ledger. Free + private = advisory branch protection only. Plan to upgrade to Team within 90 days of pilot.
 7. **Forgetting that the Curator app still uses cloud-LLM ingest in Gen 1.** Gemini Flash Lite or Anthropic API calls happen during ingest. The privacy track's local-LLM ingest is Generation 2. For now, your firm's privacy posture is "operational queries are local; document ingest is cloud-LLM with the API key in your name". Make that explicit in your privacy notice if you ingest customer data.
 
 ---

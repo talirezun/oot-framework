@@ -65,7 +65,7 @@ Every Tier-1 doc that involves a UI tool follows the **three-layer pattern**:
 1. **Before you start.** Decisions to make. Materials to acquire. Reading order.
 2. **Saturday morning — accounts and credentials.** Bitwarden setup. Trezor unboxing and initialisation. Yubikey setup. Anthropic, GitHub, Google Workspace, Slack accounts.
 3. **Saturday afternoon — install the stack.** Claude Desktop, Claude Code, the Curator, Obsidian.
-4. **Sunday morning — scaffold the Brain.** First Curator domains. First ingest. Health check.
+4. **Sunday morning — scaffold the Ledger.** First Curator domains. First ingest. Health check.
 5. **Sunday afternoon — configure first Routines.** R1, R2, R5, R6 setup. (R3, R4, R7, R8 deferred to weekend two.)
 6. **Weekend two preview.** What you'll do.
 7. **Common pitfalls.** Same as in `QUICKSTART.md` plus cloud-track-specific gotchas.
@@ -195,7 +195,7 @@ For each Routine, the exact line of cron/launchd configuration, the prompt file 
 3. Roles: facilitator, scribe, decision-recorder.
 4. The pre-meeting (R2 generates agenda; participants pre-read).
 5. The meeting itself — common patterns and anti-patterns.
-6. Post-meeting — committing the summary to the Brain.
+6. Post-meeting — committing the summary to the Ledger.
 7. When the BR runs long — the agenda is wrong, here's why.
 8. Quarterly rhythm — where the BR fits.
 
@@ -253,7 +253,7 @@ The eleven touchpoints (per `MANIFESTO.md` "What ØØT is not" section):
 6. **Internal Unit Fund.** Securities offering registration; jurisdiction-specific.
 7. **EU AI Act Articles 9, 12, 13, 14** (from 2 August 2026, high-risk obligations).
 8. **GDPR Article 22** (right against solely-automated decisions).
-9. **Data residency** — where the Brain physically lives. EU vs. US implications.
+9. **Data residency** — where the Ledger and Second Brain physically live. EU vs. US implications.
 10. **Italian Law 132/2025** (criminal AI offences; leading indicator of EU enforcement seriousness).
 11. **IP ownership of Brain content** (employer vs. partner work-for-hire; jurisdiction-specific).
 
@@ -383,7 +383,7 @@ The day-by-day operational guides. Each one is a single end-to-end task, screens
 4. **MCP Connectors** — what an MCP is in plain language ("a way for Claude to use external tools"), how to install MyCuratorMCP via the wizard, the green-check vs. red-X states.
 5. **Connectors for Drive / Gmail / Calendar / Slack** (cloud track) — install + first-use confirmation. Privacy track: the equivalent local connectors (Desktop Commander, 4thtech).
 6. **Loading a Skill Pack** — drag-and-drop a SKILL.md into the project; how to verify the model can see it; first invocation pattern.
-7. **The first conversation that produces a Brain page** — walk through asking Claude to help you draft an Output Spec; watch the wikilink discipline live; commit it via the Curator MCP.
+7. **The first conversation that produces a Ledger page** — walk through asking Claude to help you draft an Output Spec; watch the wikilink discipline live; commit it via the Curator MCP.
 8. **Common pitfalls** — MCP server stuck on red X (instructions to fix), Connector authorisation failed, Skill Pack not loading.
 
 **Length:** ~2,500 words + 15–20 screenshots.
@@ -401,7 +401,7 @@ The day-by-day operational guides. Each one is a single end-to-end task, screens
 1. **What the Curator looks like every day** (5 min). The desktop app's main window, the domain selector, the search bar.
 2. **Ingest** — dropping a PDF, a transcript, or a markdown file into the Curator. Watch it parse, see the resulting wiki pages, fix any broken wikilinks immediately.
 3. **Query via Claude Desktop** — using the MCP tools (`get_index`, `search_wiki`, `get_node`). How to phrase queries that produce useful results vs. the queries that don't (concrete before/after examples).
-4. **Write a Brain page** — the SKILL.md-driven write flow. The Curator's "no speculative wikilink" rule visualised: when Claude proposes a wikilink to a slug that doesn't exist, the user sees the warning and either creates the slug or rephrases the link.
+4. **Write a Ledger page** — the SKILL.md-driven write flow. The Curator's "no speculative wikilink" rule visualised: when Claude proposes a wikilink to a slug that doesn't exist, the user sees the warning and either creates the slug or rephrases the link.
 5. **Scan** — running `scan_wiki_health` and `scan_semantic_duplicates` weekly. What the report looks like, what to fix yourself, what to dismiss.
 6. **Fix** — the `fix_wiki_issue` flow for typos and broken links. Concrete worked example with screenshots.
 7. **When the Curator surprises you** — a small troubleshooting section.
@@ -451,7 +451,7 @@ The day-by-day operational guides. Each one is a single end-to-end task, screens
    - Decisions (10 min) — work through Decisions_Due. Each decision recorded by the scribe in `firm/decisions/D-YYYY-NNN.md`.
    - Klarna status (3 min) — open tests, test outcomes since last week.
    - KPI snapshot (2 min) — 30-second look at the agent-skill-roi dashboard and treasury runway.
-4. **The post-meeting commit** — the scribe finalises the Brain page (`firm/business-reviews/YYYY-MM-DD.md`) within 30 minutes of the meeting ending. R2 detects the post-meeting commit and updates the X3 status.
+4. **The post-meeting commit** — the scribe finalises the Ledger page (`firm/business-reviews/YYYY-MM-DD.md`) within 30 minutes of the meeting ending. R2 detects the post-meeting commit and updates the X3 status.
 5. **When the BR runs long** — diagnose: usually one of (a) too many decisions queued, (b) a decision that needs more context than the BR can give, (c) a personnel matter that should have gone to the quarterly check-in. Each has a different fix.
 6. **Common pitfalls** — facilitator skipping the Klarna status (it's the standing agenda item; never skip), founder dominating the discussion (the BR is for the partnership, not the founder), no scribe (always assign one).
 
@@ -487,7 +487,7 @@ The day-by-day operational guides. Each one is a single end-to-end task, screens
 
 **Required sections:**
 
-1. **What you're monitoring** (5 min). Eight Routines run on schedule. Each one writes a Brain page; each one posts to Slack/dChat. Failures should not be silent.
+1. **What you're monitoring** (5 min). Eight Routines run on schedule. Each one writes a Ledger page; each one posts to Slack/dChat. Failures should not be silent.
 2. **Cloud track — the Claude Code Routines dashboard.** Where it is, what to look at: the runs panel, the success/failure markers, the daily token spend.
 3. **Privacy track — the always-on machine + cron logs.** Where the logs live, how to tail them, what a successful run looks like, what a failed run looks like.
 4. **Daily check-in** (60 seconds) — open Slack/dChat `#output-log` and `#brain-health`. Confirm yesterday's R1 ran; this week's R5 ran on Sunday; today's R6 will run at 23:00.

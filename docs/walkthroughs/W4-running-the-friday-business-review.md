@@ -2,7 +2,7 @@
 
 **Audience:** This week's BR facilitator (rotates among partners) plus all attendees.
 **Time:** 30 minutes (the meeting). On time. Always.
-**You will end with:** decisions logged in real time, a Brain page committed within 30 min of meeting end, and the partnership's attention focused for next week.
+**You will end with:** decisions logged in real time, a Ledger page committed within 30 min of meeting end, and the partnership's attention focused for next week.
 
 > 📖 **Concept doc:** [`docs/04-running-the-business-review.md`](../04-running-the-business-review.md). **Skill Pack:** [`skills/reporting-business-review/SKILL.md`](../../skills/reporting-business-review/SKILL.md). **Routine:** [`routines/cloud/R2.md`](../../routines/cloud/R2.md).
 
@@ -18,7 +18,7 @@ The Friday BR replaces all status meetings. 30 minutes. R2 generates the agenda 
 |---|---|---|
 | Outputs | 10 min | Top 5 from X3 column B. Quick acknowledgement; sharp questions only on outliers. |
 | Blockers | 5 min | Each open blocker: owner, ETA, what help is needed. |
-| Decisions | 10 min | Work through Decisions_Due. Each decision = a Brain page. |
+| Decisions | 10 min | Work through Decisions_Due. Each decision = a Ledger page. |
 | Klarna status | 3 min | Open tests; resolved this week; new triggers. |
 | KPI snapshot | 2 min | One look at the dashboard. Material movement only. |
 
@@ -117,7 +117,7 @@ Read column F. Work through each. **Scribe creates `firm/decisions/D-YYYY-NNN.md
 
 Tali (60 seconds): "6 months of attribution data shows working pattern; YOLO model says wait 6-9 months; we're at 6. Risk: counsel returns 2026-05-30. Options: open Q3 anyway with caveat; defer until counsel; defer to Q4."
 
-Senior partners discuss (3-4 minutes). Decision: defer until counsel. Davor (scribe) creates the Brain page in real time:
+Senior partners discuss (3-4 minutes). Decision: defer until counsel. Davor (scribe) creates the Ledger page in real time:
 
 ```yaml
 ---
@@ -206,7 +206,7 @@ Customer count +3 (Acme + 2 Tier-2 expansions).
 
 ### 14:50 — Rename + commit
 
-Rename the Brain page: drop `-pre` → `firm/business-reviews/2026-04-17.md`. Set frontmatter `status: active`.
+Rename the Ledger page: drop `-pre` → `firm/business-reviews/2026-04-17.md`. Set frontmatter `status: active`.
 
 Signed git commit:
 

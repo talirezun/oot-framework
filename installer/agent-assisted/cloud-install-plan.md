@@ -241,7 +241,7 @@ Persist `firm_folder`, `curator_vault`, `curator_config` (A/B), `curator_domain`
 
 🟡 **ASK USER**, one at a time, recording each answer in `firm_profile`:
 
-1. **Firm name.** "What's your firm's full name? (e.g. 'Acme Studio'.) Goes in the Brain repo, the partner charter, the Excel templates."
+1. **Firm name.** "What's your firm's full name? (e.g. 'Acme Studio'.) Goes in the Ledger, the partner charter, the Excel templates."
 2. **Partner count.** "How many partners do you expect in the next 12 months? Solo? 2-5? 5+? Map to: solo / small / medium / large."
 3. **Jurisdictions.** "Where will partners operate? ISO 2-letter country codes, comma-separated (e.g. `SI,HR`)."
 4. **EU AI Act exposure.** "Are any of your firm's AI use cases likely to be 'high-risk Annex III' under the EU AI Act — AI used in employment decisions, essential public services, biometric ID, etc.? (yes / no / not-sure)"
@@ -263,7 +263,7 @@ Show collected profile, ask user to confirm or edit.
 
 Apply this logic to recommend the module set:
 
-- **Always required:** Anthropic + GitHub Brain repo + Curator + my-curator MCP + S1 + R5 + spreadsheet app
+- **Always required:** Anthropic + GitHub Ledger + Curator + my-curator MCP + S1 + R5 + spreadsheet app
 - If `eu_high_risk == yes`: add **R6 + branch protection + signing key + S7 + X7** (Day-1 mandatory for EU)
 - If user is in EU jurisdictions and `eu_high_risk == no`: still recommend R6 + branch protection + signing key
 - If `klarna_gate_choice == now`: add **R7 + Klarna gate workflow + auto-labeller + branch-protection-required `oot/klarna-test` status check + S4 + S6 + X4**
@@ -326,16 +326,16 @@ If `claude` CLI missing:
 
 ---
 
-## Step 5 — Create GitHub Brain repo + initial scaffold
+## Step 5 — Create GitHub Ledger + initial scaffold
 
-**What you're about to do (tell the user):** "I'll create the firm's Brain GitHub repo, scaffold the local folder structure, and copy the framework's Excel templates as the initial state. The repo will be private. About 10 minutes."
+**What you're about to do (tell the user):** "I'll create the firm's Ledger GitHub repo, scaffold the local folder structure, and copy the framework's Excel templates as the initial state. The repo will be private. About 10 minutes."
 
 ### 5.1 — Create the repo on GitHub.com (web UI — primary path)
 
 🟡 **ASK USER:** "Open https://github.com/new in your browser and create the repo. I'll give you exact settings:
 
 - **Repository name:** `<firm-slug>-brain` (e.g. `acme-studio-brain`). Or whatever you'd prefer — but keep it descriptive.
-- **Description:** `ØØT framework Brain repo for <firm name>`
+- **Description:** `ØØT framework Ledger for <firm name>`
 - **Visibility:** **Private** (or Public if you chose Configuration `public` at Step 3)
 - **Initialize this repository with:** ☐ DO NOT add a README, .gitignore, or licence — leave all three checkboxes UNCHECKED. We need an empty repo to push our scaffold into.
 
@@ -343,10 +343,10 @@ Click **Create repository**. Tell me the URL of the new repo (looks like `https:
 
 **(Optional accelerator if user has `gh auth status` working):**
 ```bash
-gh repo create <user>/<repo-name> --private --description "ØØT Brain repo for <firm>" 2>&1
+gh repo create <user>/<repo-name> --private --description "ØØT Ledger for <firm>" 2>&1
 ```
 
-Persist as `BRAIN_REPO_URL`. If user provided HTTPS URL, that's what we'll use for cloning.
+Persist as `LEDGER_REPO_URL`. If user provided HTTPS URL, that's what we'll use for cloning.
 
 ### 5.2 — Create the local firm folder
 
@@ -356,7 +356,7 @@ cd "<FIRM_FOLDER>"
 git init -b main
 git config user.name "<user's name; ask if not in global config>"
 git config user.email "<user's email — see 5.3 below>"
-git remote add origin "<BRAIN_REPO_URL>"
+git remote add origin "<LEDGER_REPO_URL>"
 ```
 
 ### 5.3 — Email matters for signed commits
@@ -391,12 +391,12 @@ cp <FRAMEWORK_REPO>/templates/excel/*.xlsx firm/excel/
 ls firm/excel/   # should show 9 files
 ```
 
-### 5.6 — Write the firm Brain repo README
+### 5.6 — Write the firm Ledger README
 
 Generate a `README.md` at the firm folder root:
 
 ```markdown
-# <firm name> — operational Brain repo
+# <firm name> — operational Ledger
 
 ØØT framework cloud-track install. Holds the firm's `.xlsx` operational state (`firm/excel/`) and Routine-written markdown (`firm/output-logs/`, `firm/audit-logs/`, etc.). Mutated by Routines via openpyxl + signed commits per [ADR-001](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
@@ -412,7 +412,7 @@ git add .
 git commit -m "scaffold: initial Brain folder + Excel templates from framework v1.0.0"
 ```
 
-🟡 **ASK USER:** "I'm about to push the initial scaffold to your new GitHub repo at <BRAIN_REPO_URL>. The first commit is unsigned (we generate the signing key in the next step). Confirm? (yes / no)"
+🟡 **ASK USER:** "I'm about to push the initial scaffold to your new GitHub repo at <LEDGER_REPO_URL>. The first commit is unsigned (we generate the signing key in the next step). Confirm? (yes / no)"
 
 ```bash
 git push -u origin main
@@ -420,9 +420,9 @@ git push -u origin main
 
 ### 5.8 — Verify
 
-🟡 **ASK USER:** "Open <BRAIN_REPO_URL> in your browser. You should see the README + the `firm/` folder with 9 .xlsx files. Confirm?"
+🟡 **ASK USER:** "Open <LEDGER_REPO_URL> in your browser. You should see the README + the `firm/` folder with 9 .xlsx files. Confirm?"
 
-`step_5_brain_repo: done`. Persist `BRAIN_REPO_URL`, `BRAIN_REPO_PATH` in state file.
+`step_5_brain_repo: done`. Persist `LEDGER_REPO_URL`, `BRAIN_REPO_PATH` in state file.
 
 ---
 
@@ -511,7 +511,7 @@ git push origin main
 
 ### 6.5 — Verify on GitHub
 
-🟡 **ASK USER:** "Open `<BRAIN_REPO_URL>/commits/main`. The latest commit (`verify: signing key works on this repo`) should have a green `Verified` badge. Confirm?
+🟡 **ASK USER:** "Open `<LEDGER_REPO_URL>/commits/main`. The latest commit (`verify: signing key works on this repo`) should have a green `Verified` badge. Confirm?
 
 If you see a yellow `Unverified` or no badge: the email on the GPG key doesn't match the email on the commit author. Tell me what email is on the GPG key and what email is on the commit and I'll reconcile."
 
@@ -523,7 +523,7 @@ If you see a yellow `Unverified` or no badge: the email on the GPG key doesn't m
 
 ## Step 7 — Branch protection (web UI)
 
-**What you're about to do (tell the user):** "I'll walk you through configuring branch protection on the Brain repo. This is what enforces 'no unsigned commits, no force-pushes, no branch deletion' — the discipline R6's audit-trail relies on. About 5 minutes."
+**What you're about to do (tell the user):** "I'll walk you through configuring branch protection on the Ledger. This is what enforces 'no unsigned commits, no force-pushes, no branch deletion' — the discipline R6's audit-trail relies on. About 5 minutes."
 
 ### 7.1 — Surface the GitHub-Free caveat (Finding 16)
 
@@ -537,7 +537,7 @@ If user wants to upgrade, walk them to https://github.com/settings/billing/plans
 
 ### 7.2 — Create the branch protection rule (web UI)
 
-🟡 **ASK USER:** "Open `<BRAIN_REPO_URL>/settings/branches` in your browser. Click **Add classic branch protection rule** (or **Add ruleset** in the newer UI — either works for our needs).
+🟡 **ASK USER:** "Open `<LEDGER_REPO_URL>/settings/branches` in your browser. Click **Add classic branch protection rule** (or **Add ruleset** in the newer UI — either works for our needs).
 
 **Branch name pattern:** `main`
 
@@ -738,7 +738,7 @@ For each Routine, follow the per-Routine setup checklist at `routines/cloud/<R>.
 
 R5 first (no dependencies):
 
-🟡 **ASK USER:** "Open Claude Code → run `/schedule`. Or visit https://claude.ai/code/routines. Or use the Claude Code desktop app's 'New Remote Task' feature. Configure R5 per the checklist at `routines/cloud/R5.md`. Use the prompt body from that file. Attach the `my-curator` Skill Pack. Configure the GitHub connector pointing at `<BRAIN_REPO_URL>` (with the bot identity's signing key). Manual fire to test. Verify a signed commit lands on `main` adding `firm/brain-health/<YYYY-WW>.md`. Tell me `done`."
+🟡 **ASK USER:** "Open Claude Code → run `/schedule`. Or visit https://claude.ai/code/routines. Or use the Claude Code desktop app's 'New Remote Task' feature. Configure R5 per the checklist at `routines/cloud/R5.md`. Use the prompt body from that file. Attach the `my-curator` Skill Pack. Configure the GitHub connector pointing at `<LEDGER_REPO_URL>` (with the bot identity's signing key). Manual fire to test. Verify a signed commit lands on `main` adding `firm/brain-health/<YYYY-WW>.md`. Tell me `done`."
 
 Repeat for R6, R1, R2 if user opted in at Step 2.
 
@@ -759,7 +759,7 @@ git commit -S -m "config: Klarna gate workflow + auto-labeller"
 git push origin main
 ```
 
-Update branch protection in the web UI to require `oot/klarna-test` status check (`<BRAIN_REPO_URL>/settings/branches` → edit rule → add required status check).
+Update branch protection in the web UI to require `oot/klarna-test` status check (`<LEDGER_REPO_URL>/settings/branches` → edit rule → add required status check).
 
 Configure R7 per `routines/cloud/R7.md`.
 
@@ -775,8 +775,8 @@ Configure R7 per `routines/cloud/R7.md`.
 cd "<FIRM_FOLDER>"
 source ~/.oot/venv/bin/activate
 
-# 1. Brain repo accessible
-git ls-remote "<BRAIN_REPO_URL>" | head -3
+# 1. Ledger accessible
+git ls-remote "<LEDGER_REPO_URL>" | head -3
 
 # 2. Signed commit working
 git log --show-signature -1 | grep "gpg: Good signature" && echo "✓ signing works"
@@ -834,7 +834,7 @@ git commit -S -m "smoke: Pattern C live test row appended"
 git push origin main && echo "✓ smoke commit pushed"
 ```
 
-🟡 **ASK USER:** "Smoke results: <list each step's outcome>. Open `<BRAIN_REPO_URL>/commits/main` and verify the latest commit has the green Verified badge. Confirm?"
+🟡 **ASK USER:** "Smoke results: <list each step's outcome>. Open `<LEDGER_REPO_URL>/commits/main` and verify the latest commit has the green Verified badge. Confirm?"
 
 🟡 **ASK USER:** "In Claude Desktop, paste:
 

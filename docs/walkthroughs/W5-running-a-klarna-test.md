@@ -2,7 +2,7 @@
 
 **Audience:** Any partner assigned as scorer or non-beneficiary reviewer for a Klarna Test.
 **Time:** 30-60 minutes per test (do it well, not fast).
-**You will end with:** a scored Klarna Test in `klarna-test.xlsx` + a Brain page at `firm/klarna-tests/<test_id>.md`, with a clear PROCEED or HOLD decision.
+**You will end with:** a scored Klarna Test in `klarna-test.xlsx` + a Ledger page at `firm/klarna-tests/<test_id>.md`, with a clear PROCEED or HOLD decision.
 
 > 📖 **Concept doc:** [`docs/05-using-the-klarna-test.md`](../05-using-the-klarna-test.md). **Authoritative reference:** [`governance/KLARNA-TEST.md`](../../governance/KLARNA-TEST.md).
 
@@ -27,7 +27,7 @@ In GitHub: navigate to the PR. Read description fully. Note:
 - What the PR adds (the AI Skill / automation).
 - Linked design docs / ADRs.
 
-### Open the Brain page
+### Open the Ledger page
 
 R7 created `firm/klarna-tests/KT-2026-014.md` automatically. Open it.
 
@@ -72,7 +72,7 @@ For the Acme onboarding email PR: a 6-week pilot ran on 50 real customers; quali
 
 → Score: **1**. (Pilot ran on production traffic but only 6 weeks, not 3 months; and the failure-case gap is substantive.)
 
-In M (evidence_links), enter: `[[firm/klarna-tests/KT-2026-014/pilot-results]]` (the wikilink to the pilot data Brain page).
+In M (evidence_links), enter: `[[firm/klarna-tests/KT-2026-014/pilot-results]]` (the wikilink to the pilot data Ledger page).
 
 ---
 

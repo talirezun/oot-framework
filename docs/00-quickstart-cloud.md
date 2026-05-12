@@ -2,7 +2,7 @@
 
 **Audience:** Founder. Cloud track. Non-technical to moderately-technical.
 **Time:** Two weekends (~16 hours) for the manual path. Path A (agent-assisted) cuts this to ~60-90 minutes.
-**You will end with:** a fully-operational ØØT instance with one partner onboarded, a real GitHub-hosted Brain repo with signed commits, four scheduled Routines running on Anthropic's infrastructure, and an audit trail you can hand to your accountant or counsel.
+**You will end with:** a fully-operational ØØT instance with one partner onboarded, a real GitHub-hosted Ledger with signed commits, four scheduled Routines running on Anthropic's infrastructure, and an audit trail you can hand to your accountant or counsel.
 
 > 📖 **Read first:** [`MANIFESTO.md`](../MANIFESTO.md) (15 min), [`docs/MODULES.md`](MODULES.md) (10 min — what to install and what's optional), [`governance/KLARNA-TEST.md`](../governance/KLARNA-TEST.md) (10 min). The framework's discipline starts with reading.
 
@@ -16,10 +16,10 @@ If you've never opened a JSON file, never used a terminal, and don't know what a
 
 - **Terminal / shell**: an app where you type commands instead of clicking buttons. On macOS it's "Terminal" (Cmd+Space → "Terminal" → Enter). On Windows you'd typically use WSL ("Windows Subsystem for Linux"). You'll use the terminal a few times in this guide; everything else is in your browser or a desktop app.
 - **JSON file**: a text file with a specific structure (curly braces, quotes, commas) that apps use for configuration. You'll edit one — `claude_desktop_config.json` — once, and the Curator app gives you the exact text to paste. If you accidentally delete a comma or a quote and the file breaks, the app will tell you and you can fix it.
-- **GitHub**: a website (github.com) where files live in version-controlled folders called "repositories" or "repos". Your firm's Brain repo will be private and only you (and partners you invite) can see it. Think of it like Dropbox with full history of every change forever.
+- **GitHub**: a website (github.com) where files live in version-controlled folders called "repositories" or "repos". Your firm's Ledger will be private and only you (and partners you invite) can see it. Think of it like Dropbox with full history of every change forever.
 - **Git**: the underlying tool that talks to GitHub. You'll run a few git commands; each one is a single line you copy-paste.
 - **MCP** (Model Context Protocol): a way for Claude to talk to outside tools — your Brain (via my-curator MCP), GitHub, Slack, etc. The Curator app installs one for you; you wire it into Claude Desktop with one config-file edit.
-- **Signed commit**: every change you make to your Brain repo gets a cryptographic signature so anyone can verify it actually came from you (or a partner) and wasn't tampered with. You generate a "signing key" once, upload its public half to GitHub, and from that point every change is signed automatically.
+- **Signed commit**: every change you make to your Ledger gets a cryptographic signature so anyone can verify it actually came from you (or a partner) and wasn't tampered with. You generate a "signing key" once, upload its public half to GitHub, and from that point every change is signed automatically.
 - **Branch protection**: a setting on your GitHub repo that says "no force-pushes, no deletions, only signed commits accepted". This is what makes your audit trail **immutable** — it can't be silently rewritten.
 - **Routine**: a Claude Code task that runs automatically on a schedule (daily 18:00, Friday 08:00, etc.). The framework ships eight; you'll set up four on Day-1.
 
@@ -33,14 +33,14 @@ You don't need to memorise any of this. Just refer back when a term shows up in 
 
 - **Claude Desktop** — your daily driver, the chat interface
 - **Claude Code** — the developer-y version of Claude that runs Routines
-- **GitHub** — your firm's Brain repo holds markdown pages and `.xlsx` operational state
+- **GitHub** — your firm's Ledger holds markdown pages and `.xlsx` operational state
 - **Slack** — comms (or any chat tool you're already using; framework supports Slack natively)
 - **The Curator desktop app** — your knowledge-graph engine
 - **A spreadsheet app** of your choice — Microsoft Excel, **LibreOffice (free, open-source)**, Apple Numbers (built into macOS), Excel for Web. The framework writes native `.xlsx` and is app-agnostic; **you don't need Microsoft 365**.
 
-By the end of weekend one: stack installed, Brain repo created with signed commits and branch protection, first Curator domain populated with five sample documents, four Day-1 Routines (R1, R2, R5, R6) configured on Claude Code Routines.
+By the end of weekend one: stack installed, Ledger created with signed commits and branch protection, first Curator domain populated with five sample documents, four Day-1 Routines (R1, R2, R5, R6) configured on Claude Code Routines.
 
-By the end of weekend two: first partner onboarded, first Friday Business Review held, daily output capture flowing into your Brain repo.
+By the end of weekend two: first partner onboarded, first Friday Business Review held, daily output capture flowing into your Ledger.
 
 If at any step a screenshot doesn't match what you see (Anthropic / GitHub / Slack UIs evolve), trust the UI's labels over the screenshot and let us know via PR.
 
@@ -60,7 +60,7 @@ Are any of your firm's AI use cases likely to be "high-risk Annex III" (employme
 
 ### 3. Where will the firm folder live on your machine?
 
-Your firm's Brain repo gets cloned to a folder on your local machine. Where? Default: `~/<firm-slug>` (e.g. `~/acme-studio` if your firm is "Acme Studio"). Some founders prefer `~/firms/<firm-slug>` if they might run multiple firms, or `~/Documents/<firm-slug>`.
+Your firm's Ledger gets cloned to a folder on your local machine. Where? Default: `~/<firm-slug>` (e.g. `~/acme-studio` if your firm is "Acme Studio"). Some founders prefer `~/firms/<firm-slug>` if they might run multiple firms, or `~/Documents/<firm-slug>`.
 
 Pick a path now; you'll use it in the install steps. **Anywhere you have read+write access works.**
 
@@ -250,15 +250,15 @@ Expected: Claude calls `list_domains` MCP tool and returns a list (might be empt
 
 ---
 
-## Weekend One — Sunday morning (3-4 hours): scaffold the Brain
+## Weekend One — Sunday morning (3-4 hours): scaffold the Ledger
 
 This is the most procedural part of the install. Take your time; nothing here is reversible without effort.
 
-### Step 1 — Create the Brain repo on GitHub.com (web UI)
+### Step 1 — Create the Ledger on GitHub.com (web UI)
 
 1. Open https://github.com/new in your browser.
 2. **Repository name**: `<firm-slug>-brain` (e.g. `acme-studio-brain`).
-3. **Description**: `ØØT framework Brain repo for <firm name>`.
+3. **Description**: `ØØT framework Ledger for <firm name>`.
 4. **Visibility**: **Private** (or Public if you chose `public` in §6 of "decisions").
 5. **Initialize this repository with**: ☐ DO NOT add a README, .gitignore, or licence — leave all three checkboxes UNCHECKED. We need an empty repo so we can push our scaffold without a merge conflict.
 6. Click **Create repository**.
@@ -267,13 +267,13 @@ Note the URL — looks like `https://github.com/<you>/<firm-slug>-brain.git`. Yo
 
 ### Step 2 — Create the local firm folder + initial scaffold
 
-Open Terminal. **Replace** `<FIRM_FOLDER>` and `<BRAIN_REPO_URL>` with your actual values:
+Open Terminal. **Replace** `<FIRM_FOLDER>` and `<LEDGER_REPO_URL>` with your actual values:
 
 ```bash
 mkdir -p <FIRM_FOLDER>
 cd <FIRM_FOLDER>
 git init -b main
-git remote add origin <BRAIN_REPO_URL>
+git remote add origin <LEDGER_REPO_URL>
 
 # Set local git identity. Use a real email for signed commits to be marked Verified by GitHub.
 git config user.name "<Your Name>"
@@ -299,7 +299,7 @@ Write a README at the firm folder root:
 
 ```bash
 cat > README.md <<EOF
-# <firm name> — operational Brain repo
+# <firm name> — operational Ledger
 
 ØØT framework cloud-track install. Holds the firm's \`.xlsx\` operational state (\`firm/excel/\`) and Routine-written markdown (\`firm/output-logs/\`, \`firm/audit-logs/\`, etc.). Mutated by Routines via openpyxl + signed commits per [ADR-001](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
@@ -390,11 +390,11 @@ You should see `gpg: Good signature from "<Your Name> (ØØT Bot)..."` in the ou
 git push origin main
 ```
 
-Open `<BRAIN_REPO_URL>/commits/main` in your browser. The latest commit should have a green **Verified** badge. **If you see Unverified or no badge:** the email on the GPG key doesn't match the email on the commit author. Check both with `git log -1 --pretty=format:"%ae"` (commit email) and `gpg --list-keys --keyid-format LONG <KEY_ID>` (key email). They must match.
+Open `<LEDGER_REPO_URL>/commits/main` in your browser. The latest commit should have a green **Verified** badge. **If you see Unverified or no badge:** the email on the GPG key doesn't match the email on the commit author. Check both with `git log -1 --pretty=format:"%ae"` (commit email) and `gpg --list-keys --keyid-format LONG <KEY_ID>` (key email). They must match.
 
 ### Step 7 — Configure branch protection (web UI)
 
-Go to `<BRAIN_REPO_URL>/settings/branches`. Click **Add classic branch protection rule** (or "Add ruleset" in the newer UI — either works).
+Go to `<LEDGER_REPO_URL>/settings/branches`. Click **Add classic branch protection rule** (or "Add ruleset" in the newer UI — either works).
 
 **Branch name pattern:** `main`
 
@@ -463,7 +463,7 @@ For each Routine, the workflow is:
 3. Configure trigger per the routine's frontmatter (e.g. R5 = Sunday 09:00).
 4. Upload the prompt body from `routines/cloud/<R>.md` (everything inside the `## Prompt body` fenced block).
 5. Attach the Skill Packs listed in the routine's frontmatter.
-6. Configure connectors (GitHub with the Brain repo + signing, Slack, Drive read-only as needed).
+6. Configure connectors (GitHub with the Ledger + signing, Slack, Drive read-only as needed).
 7. **Confirm code execution is enabled** (default for Pro+).
 8. Manual test fire.
 9. Verify expected outputs (Brain page lands as signed commit on `main`; Slack post visible).
@@ -496,10 +496,10 @@ Install order:
 ## Weekend Two — Sunday: first full operational week begins
 
 1. **Daily ledger updates** start (Routine R1). Verify the partner's output appears in `firm/excel/partner-output-ledger.xlsx` Output_Log via signed commits on `main`.
-2. **Friday Business Review** (Routine R2 generates the agenda; meeting is 30 minutes; recorded as a markdown summary committed to the Brain). Use [`docs/walkthroughs/W4-running-the-friday-business-review.md`](walkthroughs/W4-running-the-friday-business-review.md) for the 30-minute structure.
+2. **Friday Business Review** (Routine R2 generates the agenda; meeting is 30 minutes; recorded as a markdown summary committed to the Ledger). Use [`docs/walkthroughs/W4-running-the-friday-business-review.md`](walkthroughs/W4-running-the-friday-business-review.md) for the 30-minute structure.
 3. **First Klarna Test** (when relevant — typically not week one). Walk through [`governance/KLARNA-TEST.md`](../governance/KLARNA-TEST.md) together so the team knows the process before they need it.
 
-By end of weekend two: a running ØØT instance with one partner onboarded, daily output capture writing to your Brain repo as signed commits, weekly review cadence, and the Brain compounding.
+By end of weekend two: a running ØØT instance with one partner onboarded, daily output capture writing to your Ledger as signed commits, weekly review cadence, and the Brain compounding.
 
 ---
 
@@ -508,7 +508,7 @@ By end of weekend two: a running ØØT instance with one partner onboarded, dail
 - The Brain has 10–30 ingested documents, no broken wikilinks, weekly health check running.
 - One partner onboarded with signed Reward Species Declaration, signed Partner Charter, first Output Spec drafted.
 - Daily output capture writing to `firm/excel/partner-output-ledger.xlsx` via signed commits on `main`.
-- Friday Business Review held; agenda was generated by R2; outcomes committed to the Brain.
+- Friday Business Review held; agenda was generated by R2; outcomes committed to the Ledger.
 - (EU founders) `firm/excel/eu-ai-act-mapping.xlsx` started; daily R6 audit trail running with green Verified badges on every commit.
 - Branch protection enforced (or, if on Free private, advisory but you have a plan to upgrade to Team within 90 days).
 

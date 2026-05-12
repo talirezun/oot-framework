@@ -118,7 +118,7 @@ Persist the new last-sync info at `~/.oot/firm-state.yaml`:
 ```yaml
 firm: <firm name>
 firm_folder: <FIRM_FOLDER>
-brain_repo_url: <URL>
+ledger_repo_url: <URL>
 last_sync: <ISO8601 timestamp>
 last_sync_sha: <commit SHA after pull>
 notes: |
@@ -130,7 +130,7 @@ notes: |
 Format the output to the user as a brief morning brief:
 
 ```
-🟢 Brain repo synced (was at <old SHA>, now at <new SHA>).
+🟢 Ledger synced (was at <old SHA>, now at <new SHA>).
 
 What's new since last sync:
   - R1 (daily 18:00): captured <N> outputs across <K> partners

@@ -11,10 +11,10 @@ The provisioning happens during the 90-minute onboarding session. It is the *las
 Before any partner is provisioned, the firm has:
 
 - A Bitwarden organisation (or 1Password Business) with collections per the structure in `governance/SECRETS-POLICY.md`.
-- A GitHub organisation with at least one repo (the firm Brain repo) and the `Owner` access scoped to the founder's Yubikey-protected admin account.
+- A GitHub organisation with at least one repo (the firm Ledger) and the `Owner` access scoped to the founder's Yubikey-protected admin account.
 - A Slack workspace (cloud track) or 4thtech wallet identity for the firm (privacy track).
 - A Google Workspace tenant (cloud track) or PollinationX storage allocation (privacy track).
-- The Curator desktop app installed on the founder's machine and pointed at the firm Brain repo.
+- The Curator desktop app installed on the founder's machine and pointed at the firm Ledger.
 
 All credentials needed by the provisioning script live in Bitwarden under the `founders` collection. The script reads via the `bw` CLI (`bw get item <name>`) — never via plaintext config files.
 
@@ -119,7 +119,7 @@ The partner enters these once; the script confirms before executing.
    - `project-specialists` team → push access to the specific project's repos only.
    - `advisors` team → read-only by default.
 3. The partner accepts the invitation in their email; the script polls until membership is `active` (timeout 24 hours; the partner can be reminded by Slack/dMail later).
-4. `gh api -X PUT /repos/{{brain_repo}}/collaborators/{{github_username}} -f permission=push` — explicit push access to the Brain repo (full-time partners only).
+4. `gh api -X PUT /repos/{{brain_repo}}/collaborators/{{github_username}} -f permission=push` — explicit push access to the Ledger (full-time partners only).
 
 ### Step 3 — Slack invite (cloud) or 4thtech onboarding (privacy)
 
@@ -175,7 +175,7 @@ The script does *not* execute on the partner's machine. It outputs a one-page ch
 
 1. Install the Curator desktop app from `https://github.com/talirezun/the-curator/releases/latest`.
 2. Configure cloud-LLM ingest with the firm's API key (founder provides via Bitwarden Send — one-time link, expires after first use).
-3. Add the firm Brain repo as the Curator's sync target.
+3. Add the firm Ledger as the Curator's sync target.
 4. Run `scan_wiki_health` — should return clean (no broken wikilinks at the partner's freshly created stub).
 5. Open `firm/partners/<id>/profile.md` and add one personal note to confirm write access works.
 6. Commit, push.

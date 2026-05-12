@@ -327,7 +327,7 @@ pollinationx --version
 
 ## Step 7 — GitHub plan-tier choice
 
-(Same as cloud plan Step 3. The privacy track still uses GitHub for the Brain repo — Routines push signed commits there. Finding 16 applies identically: GitHub Free private = advisory-only branch protection, doesn't enforce.)
+(Same as cloud plan Step 3. The privacy track still uses GitHub for the Ledger — Routines push signed commits there. Finding 16 applies identically: GitHub Free private = advisory-only branch protection, doesn't enforce.)
 
 🟡 **ASK USER** the same plan-tier question: team / public / free.
 
@@ -335,7 +335,7 @@ pollinationx --version
 
 ---
 
-## Step 8 — Create GitHub Brain repo + initial scaffold
+## Step 8 — Create GitHub Ledger + initial scaffold
 
 (Same as cloud plan Step 5, with these privacy-track deltas:)
 
@@ -352,7 +352,7 @@ cd "<FIRM_FOLDER>"
 git init -b main
 git config user.name "<firm name> Bot"
 git config user.email "<BRAIN_REPO_EMAIL>"
-git remote add origin "<BRAIN_REPO_URL>"
+git remote add origin "<LEDGER_REPO_URL>"
 
 mkdir -p firm/excel firm/output-logs firm/audit-logs firm/business-reviews firm/klarna-tests firm/compensation firm/brain-health firm/partners
 touch firm/output-logs/.gitkeep firm/audit-logs/.gitkeep firm/business-reviews/.gitkeep firm/klarna-tests/.gitkeep firm/compensation/.gitkeep firm/brain-health/.gitkeep firm/partners/.gitkeep
@@ -565,7 +565,7 @@ Tell me what you see for R5 and R6."
 - Per-partner Trezors beyond the founder's. Done at partner onboarding time.
 - The first partner's signed Charter / Reward Species Declaration. Human-signed.
 - Long-tail entitlement contracts. Counsel review.
-- Cloud track's Routines. If you want both: run cloud first, then privacy as a parallel install — they don't conflict; the privacy machine becomes a redundant runner against the same Brain repo.
+- Cloud track's Routines. If you want both: run cloud first, then privacy as a parallel install — they don't conflict; the privacy machine becomes a redundant runner against the same Ledger.
 
 ---
 

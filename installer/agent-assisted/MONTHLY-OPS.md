@@ -101,7 +101,7 @@ If any partner is in `partner_disputed` state: do NOT advance to founder_approve
 - Schedule a 30-min call between founder + partner + non-beneficiary reviewer.
 - Once resolved: the partner re-ticks the first box (review) or amends the dispute documentation.
 
-Disputes are normal in Gen 1 — the discipline is to handle them transparently. Per CLAUDE.md decision #5 the audit trail is in the Brain page, not in Slack.
+Disputes are normal in Gen 1 — the discipline is to handle them transparently. Per CLAUDE.md decision #5 the audit trail is in the Ledger page, not in Slack.
 
 ### 7. Quarterly long-tail (every 3 months)
 

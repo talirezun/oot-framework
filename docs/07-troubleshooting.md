@@ -93,7 +93,7 @@ This is a **living document.** Add to it as your firm encounters new failure mod
 
 **Fix:**
 1. Undo immediately (Ctrl+Z / Cmd+Z) if you can.
-2. If past undo: restore from the previous git commit. The Brain repo's git history is your backup.
+2. If past undo: restore from the previous git commit. The Ledger's git history is your backup.
 3. If formulas are persistently broken: re-generate the Excel file from `scripts/build_excel.py` (you'll lose live data — only do this on a fresh template).
 
 **Prevention:** never delete rows from `Output_Log` once they've been included in a paid `Monthly_Variable`. Use the renegotiation flow per S3 §4.1.
@@ -145,7 +145,7 @@ This is a **living document.** Add to it as your firm encounters new failure mod
 **Probable causes:**
 1. A page was renamed (slug changed) and backlinks weren't updated.
 2. A Curator ingest produced wikilinks to slugs that don't exist.
-3. The Brain repo's git history was force-pushed (this should be impossible if branch protection is configured).
+3. The Ledger's git history was force-pushed (this should be impossible if branch protection is configured).
 
 **Fix:**
 1. Run `mcp__my-curator__scan_wiki_health` immediately. It identifies every broken link.

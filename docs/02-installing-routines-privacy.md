@@ -15,7 +15,7 @@ The privacy track replaces Anthropic's [Claude Code Routines](https://claude.com
 - **Cloud:** Claude Code → `/schedule` → Anthropic infrastructure runs the Routine.
 - **Privacy:** cron / launchd / Task Scheduler → your always-on machine runs `llmster --skill <pack> --prompt-file <path>` against headless LM Studio.
 
-In both tracks, Excel writeback follows Pattern C (clone Brain repo → openpyxl → signed commit → push) per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](internal/ADR-001-cloud-routine-excel-writeback.md). The privacy track does this against a local Brain-repo clone; the cloud track against a fresh clone created on Anthropic's infrastructure for each Routine fire.
+In both tracks, Excel writeback follows Pattern C (clone Ledger → openpyxl → signed commit → push) per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](internal/ADR-001-cloud-routine-excel-writeback.md). The privacy track does this against a local Brain-repo clone; the cloud track against a fresh clone created on Anthropic's infrastructure for each Routine fire.
 
 The trade-off: cloud Routines fire while your laptop is closed; privacy-track Routines fire only while the always-on machine is on. **UPS strongly recommended.**
 
@@ -28,7 +28,7 @@ The trade-off: cloud Routines fire while your laptop is closed; privacy-track Ro
 - `llmster` headless CLI installed at `/usr/local/bin/llmster`.
 - LM Studio MCP host running with the required servers (`my-curator`, `excel-mcp`, `desktop-commander`, `github-mcp`).
 - Partner Trezors provisioned and 4thtech identities live (per Skill Pack S12).
-- Brain repo cloned to the always-on machine.
+- Ledger cloned to the always-on machine.
 
 ---
 
