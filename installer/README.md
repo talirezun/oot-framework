@@ -8,7 +8,7 @@ Open Terminal and paste this. That's it — no `git clone`, no `cd`, nothing els
 curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash
 ```
 
-The bootstrap checks your prerequisites (git, python ≥3.11, curl, gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv at `~/.oot/venv/`, installs the wizard's nice-UI dependencies, and hands you off to the 14-step interactive wizard. Safe to re-run — it detects an existing install and resumes.
+The bootstrap checks your prerequisites (git, python ≥3.11, curl, gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv at `~/.oot/venv/`, installs the wizard's nice-UI dependencies, and hands you off to the 15-step interactive wizard. Safe to re-run — it detects an existing install and resumes.
 
 If anything is missing, it prints the exact copy-paste command to install it (no auto-sudo, no auto-Homebrew). Re-run the same one-liner to continue.
 
@@ -49,7 +49,7 @@ For founders who prefer not to use a coding agent. **The bootstrap above is the 
 ~/.oot/venv/bin/python ~/.oot/oot-framework/installer/wizard.py --resume
 ```
 
-Interactive **14-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Ledger creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
+Interactive **15-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Ledger creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
 
 Programmatic where safe (folder creation, git operations, GPG key generation, file edits, smoke test); web-UI walkthrough where the user must approve a third-party action (GitHub repo creation, branch protection rule, GPG public-key upload, MCP installation in Claude Desktop).
 

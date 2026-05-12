@@ -20,7 +20,7 @@ You have a coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Cont
 
 ### 🛠️ Path B — Wizard (Python terminal) — **one-line install**
 
-For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** Same 14-step structure as Path A; interactive terminal prompts; resumable; dry-run available.
+For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** Same 15-step structure as Path A; interactive terminal prompts; resumable; dry-run available.
 
 **Fresh laptop, nothing installed?** Open Terminal and paste this single line:
 
@@ -28,7 +28,7 @@ For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** 
 curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash
 ```
 
-The bootstrap checks prerequisites (git / python 3.11+ / curl / gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv, installs the wizard's UI dependencies, then hands off to the 14-step wizard. The wizard then guides you through every folder location, the Ledger repo (operational state), the GPG signing key, GitHub branch protection, **installing the Curator app via its own one-line installer** (the Second Brain — your semantic knowledge graph), wiring the my-curator MCP into Claude Desktop, and the Day-1 Routines. Safe to re-run — picks up where you left off.
+The bootstrap checks prerequisites (git / python 3.11+ / curl / gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv, installs the wizard's UI dependencies, then hands off to the 15-step wizard. The wizard then guides you through every folder location, the Ledger repo (operational state), the GPG signing key, GitHub branch protection, **installing the Curator app via its own one-line installer** (the Second Brain — your semantic knowledge graph), wiring the my-curator MCP into Claude Desktop, and the Day-1 Routines. Safe to re-run — picks up where you left off.
 
 → [Wizard overview: `installer/README.md`](installer/README.md) (incl. `--resume` / `--dry-run` flags)
 
@@ -82,7 +82,7 @@ The framework's intellectual core is ~60 minutes of reading. You don't have to r
 | 3 | [`GENERATIONS.md`](GENERATIONS.md) | ~10 min | What's in Gen 1, what's deferred, why. |
 | 4 | [`governance/KLARNA-TEST.md`](governance/KLARNA-TEST.md) | ~10 min | The framework's signature epistemic discipline. Non-negotiable. |
 | 5 | [`docs/MODULES.md`](docs/MODULES.md) | ~10 min | What to install, in what order, and what's optional. The dependency graph + a Day-N progression table. |
-| 6 | [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) | ~15 min | How the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, the my-curator-MCP-reachability gap. |
+| 6 | [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) | ~15 min | How the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, **and the Second Brain bridge** — how cloud Routines reach the Curator-synced semantic graph via Curator's two-way GitHub sync. |
 | 7 | [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) | ~20 min | The external tools the framework rests on. With links to every wiki. |
 | 8 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — screenshot-rich, no shell required. |
 | 9 | [`research/README.md`](research/README.md) | optional | Going deeper — paper summaries, original articles, and the curated ecosystem index. |

@@ -5,7 +5,7 @@ Entry point: `python3 installer/wizard.py` or `oot-wizard` (after `pip install -
 
 Path B of the install-path overhaul. For founders who explicitly avoid using a
 coding agent (Path A) but want a guided form rather than the manual docs (Path C).
-Mirrors the 14-step structure of `installer/agent-assisted/cloud-install-plan.md`.
+Mirrors the 15-step structure of `installer/agent-assisted/cloud-install-plan.md`.
 
 Flags:
   --resume     Resume from the first incomplete step in ~/.oot/wizard-state.yaml.
@@ -681,7 +681,7 @@ def is_step_done(state: dict[str, Any], step_key: str) -> bool:
     return state.get("steps_completed", {}).get(step_key) == "done"
 
 
-# ----- the 14 steps ---------------------------------------------------------
+# ----- the 15 steps ---------------------------------------------------------
 
 def step_00_welcome(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_00_welcome"):
@@ -1121,11 +1121,28 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
         info("\n" + "─" * 60)
         info("YOUR PLAN")
         info("─" * 60)
-        info(f"  Foundation:   {', '.join(modules['foundation']) or '(none)'}")
-        info(f"  Curator:      {modules['curator_mode']}")
-        info(f"  Skill packs:  {', '.join(modules['skills']) or '(none)'}")
-        info(f"  Routines now: {', '.join(modules['routines']) or '(none)'}")
-        info(f"  Security:     {', '.join(modules['security']) or '(none)'}")
+        info(f"  Foundation:        {', '.join(modules['foundation']) or '(none)'}")
+        info(f"  Curator:           {modules['curator_mode']}")
+        info(f"  Skill packs:       {', '.join(modules['skills']) or '(none)'}")
+        info(f"  Routines now:      {', '.join(modules['routines']) or '(none)'}")
+        info(f"  Security:          {', '.join(modules['security']) or '(none)'}")
+        # Indicate whether the Second Brain bridge will be set up at Step 12.
+        track = state.get("firm_profile", {}).get("track", "cloud")
+        will_bridge = (
+            track == "cloud"
+            and modules["curator_mode"] != "skip-for-now"
+            and "R5" in modules["routines"]
+        )
+        if will_bridge:
+            info(f"  Second Brain:      bridge will be set up at Step 12 "
+                 f"(R5 will reach the Curator graph via GitHub-sync)")
+        elif track == "privacy":
+            info(f"  Second Brain:      not needed — privacy MCP runs alongside Routines")
+        elif modules["curator_mode"] == "skip-for-now":
+            info(f"  Second Brain:      skipped — no Curator means no Second Brain to bridge")
+        elif "R5" not in modules["routines"]:
+            info(f"  Second Brain:      not set up (no R5 selected — R5 is the only "
+                 f"Day-1 Routine that needs it)")
         info("")
 
         next_step = ask_select(
@@ -2171,12 +2188,60 @@ def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
         )]
         run(cmd, capture=False, check=False)
 
-    info("\n[3/3] Ledger folder structure:")
+    info("\n[3/4] Ledger folder structure:")
     for sub in ["excel", "output-logs", "audit-logs", "business-reviews",
                 "klarna-tests", "compensation", "brain-health", "partners"]:
         path = firm_folder / "firm" / sub
         marker = "✓" if path.exists() else "✗"
         info(f"  {marker} firm/{sub}/")
+
+    info("\n[4/4] Second Brain bridge:")
+    sb_url = state.get("second_brain_repo_url")
+    sb_verified = state.get("second_brain_verified")
+    sb_subfolder = state.get("second_brain_subfolder")
+    track = state.get("firm_profile", {}).get("track", "cloud")
+    modules = state.get("modules_chosen", {})
+
+    if track == "privacy":
+        info("  · Privacy track: my-curator MCP runs locally alongside Routines.")
+        info("    No bridge needed; full 17-tool MCP access from privacy-track Routines.")
+    elif modules.get("skip_curator"):
+        info("  · Curator skipped at Step 5 — no Second Brain to bridge.")
+        info("    To enable later: install Curator, then re-run the wizard from Step 12.")
+    elif not sb_url:
+        warn("  Bridge state missing. Step 12 (Second Brain sync) may not have completed.")
+        info("    To complete: re-run the bootstrap and let Step 12 run.")
+    else:
+        info(f"  ✓ Second Brain repo:  {sb_url}")
+        info(f"  ✓ Domain scope:        {sb_subfolder or '(unset)'}")
+        if sb_verified:
+            info(f"  ✓ Clone verification:  passed at Step 12.")
+        else:
+            warn(f"  Clone verification:  NOT verified at Step 12.")
+            info(f"    Test manually: open the repo URL above in your browser. You should")
+            info(f"    see a `{sb_subfolder or 'wiki/<domain>'}/` folder with markdown files.")
+        if gh_available_and_authed() and not dry_run:
+            sb_owner = state.get("second_brain_repo_owner")
+            sb_name = state.get("second_brain_repo_name")
+            if sb_owner and sb_name:
+                domain = (sb_subfolder or "wiki").split("/", 1)[-1] if "/" in (sb_subfolder or "") else ""
+                api_path = f"repos/{sb_owner}/{sb_name}/contents/{sb_subfolder}" if sb_subfolder else f"repos/{sb_owner}/{sb_name}/contents/wiki"
+                rc, out = run(["gh", "api", api_path, "--jq", ".[].name"],
+                               capture=True, check=False)
+                if rc == 0 and out.strip():
+                    pages = [p for p in out.strip().splitlines() if p.endswith(".md")]
+                    info(f"  ✓ Live API read:        found {len(pages)} markdown page(s) at "
+                         f"{sb_subfolder or 'wiki/'}")
+                    if pages:
+                        sample = ", ".join(pages[:3])
+                        info(f"     Sample:             {sample}{'...' if len(pages) > 3 else ''}")
+                elif rc == 0:
+                    warn(f"  Live API read:         folder exists but no pages yet. Add pages to your")
+                    info(f"    Curator domain '{domain or '<firm>'}' and Sync Up to populate the bridge.")
+                else:
+                    info(f"  · Live API read:         skipped (gh API call failed — repo might be private)")
+                    info(f"    Verify manually in your browser.")
+
     mark_step_done(state, "step_14_smoke_test")
 
 

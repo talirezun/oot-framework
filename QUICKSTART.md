@@ -73,7 +73,7 @@ Open [`templates/excel/oot-readiness.xlsx`](templates/excel/oot-readiness.xlsx) 
 
 ## After install — daily / weekly / monthly operations
 
-→ [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) — how the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, the my-curator-MCP-reachability gap.
+→ [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) — how the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, and the Second Brain bridge for cloud-track Routines.
 
 → For Path A users: the three daily-ops playbooks above keep your local clone synced and surface operational state.
 

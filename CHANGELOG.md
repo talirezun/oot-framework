@@ -4,6 +4,23 @@
 
 Doc + spec updates that land between v1.0.0 and the next tagged release. Code/spec only — no functional Routine changes.
 
+**Second Brain bridge — closes the v1.0 cloud Routines reachability gap (2026-05-12):**
+- Cloud Routines can now reach the firm's Second Brain (the Curator semantic graph) via Curator's existing two-way GitHub sync, without an always-on machine. Solves the gap that previously made R5 effectively broken on cloud track.
+- Mechanism: Curator's Sync tab mirrors the entire local vault to a private GitHub repo. Cloud Routines (specifically R5 in v1.0.1; R2/R8 candidates for Gen-2 enrichment) clone that repo at execution time, scoped to `wiki/<firm-curator-domain>/`, and operate on plain markdown files via Pattern C (ADR-001).
+- New wizard step `step_12_secondbrain_sync` — slots between Curator (11) and Routines (renumbered 13). Total wizard step count 14 → 15. Walks user through enabling Curator GitHub sync, creating a fine-grained PAT with Contents:Read only on the synced repo, verifying a clone works. PAT is never persisted to wizard state — user keeps it in their password manager and pastes into Claude Code's Routine connector at Step 13.
+- R5 prompt body rewritten v1.1.0 → v1.2.0. Two GitHub connectors (Ledger read-write, Second Brain read-only). Broken-wikilink / orphan / stale scans implemented via markdown parsing. Trade-off documented: no semantic-similarity scans on cloud (defer Gen-2), no auto-fix of typo-correctable wikilinks (read-only on cloud side — typos listed in report, user fixes via Curator app).
+- `docs/AUTOMATION-PIPELINE.md` gap section rewritten as "How the bridge works." Privacy-track positioning shifted from "the alternative" to "advanced / sovereignty mandate." Gen-2 paths flagged (Anthropic-hosted Curator OR stateless cloud-MCP variant).
+- `installer/agent-assisted/cloud-install-plan.md` gets a new Step 9b mirroring the wizard step.
+- Migration shim in `installer/wizard.py` `_migrate_state_keys()` promotes pre-rename step keys AND resets `step_13_routines` if the new bridge step isn't done, so mid-install users re-configure Routines with the second connector.
+
+**Naming cleanup: "Brain repo" → "Ledger"; introduce "Second Brain" as canonical (2026-05-12):**
+- "The Brain" had six distinct meanings across the framework. Rename pass: GitHub operational repo (which holds Excel files + audit logs + Routine writebacks) is now consistently called the **Ledger** / **operational Ledger**. The Curator's semantic knowledge graph keeps its name as **the Brain** / **Second Brain** (the PKM term users will recognise). Distinct from **Cotrugli Ledger** (Gen-3 accounting/governance backbone) — first-mention disambiguators added wherever both terms appear.
+- New GLOSSARY.md entries: **Ledger**, **Second Brain repo**.
+- 51 files changed; ~280 line-level renames across user-facing docs (GLOSSARY, README, QUICKSTART, GENERATIONS, all of `docs/`, all 16 Routine prompts) plus internal specs (CLAUDE.md, SPEC.md, BUILD-INSTRUCTIONS.md, ADR-001, PROVISIONING-SPEC.md). State-variable renames in `installer/wizard.py` (`brain_repo_url` → `ledger_repo_url`, etc.) with a backward-compat migration shim so existing wizard state files don't lose progress.
+- Kept as-is: `templates/brain/` folder (these are Curator-graph page templates), MANIFESTO.md Thesis 4 references (philosophical), Routine names like "R5 Brain Health Check" (proper names), Skill Pack S1 my-curator references (Curator-graph context).
+
+
+
 **Documentation alignment with the actual Anthropic product surface:**
 - "Anthropic Remote Routines" renamed to "Claude Code Routines" repo-wide (the actual product name; Anthropic launched the feature 14 April 2026). Old name preserved in v1.0.0 release notes for historical accuracy.
 - Per-day Routine run limits documented: Pro 5, Max 15, Team 25, Enterprise 25. Plan-tier guidance added to quickstart and routines docs.
