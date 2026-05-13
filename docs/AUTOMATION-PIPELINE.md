@@ -39,34 +39,54 @@ Two execution substrates, identical prompts:
 
 ---
 
-## The two main Legos
+## The three main Legos
 
-The framework's cloud-track automation rests on **two pieces of infrastructure** plus a few smaller dependencies:
+The framework's cloud-track automation rests on **three pieces of infrastructure** plus a few smaller dependencies — the Anthropic cloud where Routines run, the GitHub **Ledger** (operational state, read-write from Routines), and the GitHub **Second Brain repo** (the Curator-synced semantic graph, read-only from Routines):
 
 ```
-┌──────────────────────────────────┐         ┌──────────────────────────────────┐
-│   ANTHROPIC CLOUD                │  git    │   GITHUB BRAIN REPO              │
-│                                  │ ◄────►  │   (canonical source of truth)    │
-│   Claude Code Routines           │  ops    │                                  │
-│   + code execution sandbox       │         │   firm/excel/X1...X9.xlsx        │
-│   + connectors (GitHub, Slack)   │         │   firm/output-logs/*.md          │
-│                                  │         │   firm/audit-logs/*.md           │
-└──────────────────────────────────┘         └──────────────────────────────────┘
-                                                            ▲
-                                                            │ git pull / push
-                                                            │ (manual or GUI-app)
-                                                            ▼
-                                              ┌──────────────────────────────────┐
-                                              │   YOUR LOCAL WORKING CLONE       │
-                                              │   /Users/<you>/<firm-folder>/    │
-                                              │                                  │
-                                              │   You view + manually edit       │
-                                              │   .xlsx files here in Excel /    │
-                                              │   LibreOffice / Numbers          │
-                                              └──────────────────────────────────┘
+┌──────────────────────────────────┐
+│   ANTHROPIC CLOUD                │
+│                                  │  git ops (signed commits + push)
+│   Claude Code Routines           │ ◄────────────────────────────┐
+│   + code execution sandbox       │                              │
+│   + connectors (GitHub, Slack)   │  git clone (read-only PAT)   │
+│                                  │ ◄──────────────┐             │
+└────────────┬─────────────────────┘                │             │
+             │                                      │             │
+             │                                      ▼             ▼
+             │                          ┌──────────────────┐ ┌────────────────────────────┐
+             │                          │ SECOND BRAIN REPO│ │ LEDGER  (source of truth)  │
+             │                          │ (Curator-synced) │ │                            │
+             │                          │                  │ │  firm/excel/X1...X9.xlsx   │
+             │                          │  wiki/<domain>/  │ │  firm/output-logs/*.md     │
+             │                          │  *.md            │ │  firm/audit-logs/*.md      │
+             │                          │  conversations/  │ │  firm/business-reviews/*.md│
+             │                          │  schemas         │ │  firm/brain-health/*.md    │
+             │                          └────────▲─────────┘ └──────────────┬─────────────┘
+             │                                   │                          │
+             │                  Curator's two-way GitHub sync                │ git pull / push
+             │                  (the bridge — read more below)               │ (manual / GUI)
+             │                                   │                          │
+             │                          ┌────────┴───────┐                  ▼
+             │                          │  YOUR CURATOR  │     ┌────────────────────────────┐
+             └────► partner workstation │   APP + LOCAL  │     │   YOUR LOCAL WORKING       │
+                    via Claude Desktop  │  MY-CURATOR    │     │   CLONE                    │
+                    + MCP               │  MCP (17 tools)│     │   /Users/<you>/            │
+                                        └────────────────┘     │   <firm-folder>/           │
+                                                               │                            │
+                                                               │   View / edit .xlsx files  │
+                                                               │   in your spreadsheet app  │
+                                                               └────────────────────────────┘
 ```
 
-That's the whole picture. **Your laptop can be closed** — the Routines run on Anthropic's cloud and write directly to GitHub. **GitHub is the source of truth** for both Routines and humans. **Your local clone is just a working copy** that pulls from GitHub when you want to see fresh state.
+**What each piece does:**
+- **Anthropic cloud** — where Routines run on a schedule, in ephemeral sandboxes.
+- **Ledger (read-write)** — the canonical source of truth. Routines clone, mutate `.xlsx` via openpyxl, signed-commit, push back.
+- **Second Brain repo (read-only from cloud)** — the firm's Curator semantic graph mirrored to GitHub via the Curator app's built-in two-way sync. **The bridge:** cloud Routines that need Second Brain context (currently R5 only — see "How the bridge works" below) clone this repo at execution time, scoped to `wiki/<firm-curator-domain>/`, and read markdown files directly. They never write back to it; humans + the Curator app are the only writers.
+- **Local working clone** — your view of the Ledger. Pull when you want fresh state.
+- **Curator app + local MCP** — your partner-workstation interface to the Second Brain. The 17 my-curator MCP tools live here. Only partner workstations (with Claude Desktop) reach the MCP directly; cloud Routines do NOT — they use the Second Brain repo bridge instead.
+
+**Your laptop can be closed** — the Routines run on Anthropic's cloud. **The Ledger is the source of truth** for operational state. **The Second Brain is the source of truth** for company-context knowledge. **Your local clones** are working copies that pull from GitHub when you want to see fresh state.
 
 ### Where does the code execute?
 
@@ -202,7 +222,8 @@ This is **track-symmetric**: privacy-track Routines do the same operation (clone
 ```mermaid
 flowchart TB
     subgraph Sources["📥 Sources (read)"]
-        GitHub_src[GitHub Ledger<br/>+ firm code repos]
+        Ledger_src[GitHub Ledger<br/>+ firm code repos<br/>read-write, signing key]
+        SecondBrain_src[Second Brain repo<br/>Curator-synced<br/>READ-ONLY scoped to wiki/&lt;domain&gt;/]
         Slack[Slack workspace]
         Drive[Google Drive<br/>read-only]
         Bank[Banking APIs<br/>R8 only]
@@ -210,46 +231,50 @@ flowchart TB
 
     subgraph Anthropic["☁️ Anthropic infrastructure"]
         Routines[Claude Code Routines<br/>scheduled execution]
-        CodeExec[Code execution<br/>Python + openpyxl]
+        CodeExec[Code execution<br/>Python + openpyxl<br/>+ git clone of both repos]
     end
 
-    subgraph Curator["🧠 my-curator MCP<br/>(must be reachable)"]
-        CuratorMCP[Curator's 17 tools<br/>scan_wiki_health, get_index,<br/>search_wiki, etc.]
+    subgraph LocalOnly["🖥️ Partner workstation only — NOT reachable from cloud"]
+        CuratorApp[Curator app + local my-curator MCP<br/>17 tools — used by Claude Desktop, not by cloud Routines]
+        CuratorSync[Curator's two-way GitHub sync<br/>= the bridge]
     end
 
-    subgraph Outputs["📤 Outputs (write — signed commits)"]
+    subgraph Outputs["📤 Outputs (write — signed commits to Ledger)"]
         BrainXLSX[firm/excel/<br/>X1, X2, X3, X4, X7, X8]
         BrainMD[firm/output-logs/<br/>firm/audit-logs/<br/>firm/business-reviews/<br/>firm/brain-health/<br/>firm/klarna-tests/<br/>firm/compensation/<br/>firm/partners/...]
         Notify[Slack posts<br/>Email statements]
         StatusCheck[GitHub status check<br/>oot/klarna-test]
     end
 
-    GitHub_src --> Routines
+    Ledger_src --> Routines
+    SecondBrain_src -.read-only.-> Routines
     Slack --> Routines
     Drive --> Routines
     Bank --> Routines
 
     Routines --> CodeExec
-    Routines --> CuratorMCP
     CodeExec --> BrainXLSX
     Routines --> BrainMD
-    BrainXLSX -.signed commit.-> GitHub_src
-    BrainMD -.signed commit.-> GitHub_src
+    BrainXLSX -.signed commit.-> Ledger_src
+    BrainMD -.signed commit.-> Ledger_src
     Routines --> Notify
     Routines --> StatusCheck
 
+    CuratorApp -.sync up/down.-> CuratorSync
+    CuratorSync -.populates.-> SecondBrain_src
+
     style Anthropic fill:#e1f5ff,stroke:#0077b6
-    style Curator fill:#fff4e1,stroke:#cc5500
+    style LocalOnly fill:#fff4e1,stroke:#cc5500,stroke-dasharray:5
     style Outputs fill:#e8f5e9,stroke:#2e7d32
     style Sources fill:#f3e5f5,stroke:#6a1b9a
 ```
 
 **Key flows:**
 
-1. **Read sources** — Routine fires on schedule (or GitHub event for R7). Pulls today's commits/PRs from GitHub, watched Slack channels, watched Drive folders, banking APIs (R8).
-2. **Process via Anthropic-hosted Claude** — the Routine prompt runs on Anthropic infrastructure. Code execution available for openpyxl + signed commits.
-3. **Read/write Brain via my-curator MCP** — for Routines that touch the Curator (R5 mainly, R6 to find agent decisions).
-4. **Write operational state** — `.xlsx` mutations via openpyxl in code execution; markdown Brain pages directly. Signed commits push to `main`.
+1. **Read sources** — Routine fires on schedule (or GitHub event for R7). Clones the **Ledger** (read-write, with signing key) and, if the Routine needs Second Brain context (currently R5 only), clones the **Second Brain repo** read-only via a fine-grained PAT. Also pulls Slack channels, Drive folders, banking APIs (R8) as configured per-Routine.
+2. **Process via Anthropic-hosted Claude** — the Routine prompt runs on Anthropic infrastructure. Code execution available for openpyxl + signed commits + git clone of both repos.
+3. **Second Brain access (the bridge)** — cloud Routines CANNOT reach the local my-curator MCP (it's stdio on the partner's workstation). Instead they read plain markdown from the Curator-synced Second Brain repo. The Curator app keeps that GitHub repo in sync via its built-in two-way sync feature (Sync Up after work, Sync Down before machine-switch). See ["How the bridge works"](#how-the-bridge-works-cloud-routines-reaching-the-second-brain-via-curator-github-sync) for the full picture.
+4. **Write operational state** — `.xlsx` mutations via openpyxl in code execution; markdown Ledger pages directly. Signed commits push to `main` on the **Ledger** only. The Second Brain repo is never written to from cloud (read-only PAT).
 5. **Notify** — Slack posts, email statements.
 
 ---
@@ -374,11 +399,13 @@ Which Routine needs what other Routine's data?
 
 ```mermaid
 graph TD
-    Curator[my-curator MCP<br/>+ Curator domain populated]
-    Branch[Branch protection<br/>+ signing key]
+    Curator[Curator app installed<br/>+ Curator domain populated<br/>+ my-curator MCP wired to Claude Desktop]
+    Bridge["Curator GitHub sync ENABLED<br/>(= the Second Brain bridge)<br/><i>cloud track only</i>"]
+    Branch[Ledger branch protection<br/>+ signing key]
     Partner[First partner onboarded<br/>+ X2 reward-species sheet]
 
-    R5[R5 Brain Health]
+    R5_cloud["R5 Brain Health<br/>(cloud)"]
+    R5_privacy["R5 Brain Health<br/>(privacy)"]
     R6[R6 Audit Trail]
     R1[R1 Daily Output]
     R2[R2 Weekly BR]
@@ -387,7 +414,9 @@ graph TD
     R7[R7 Klarna Trigger]
     R8[R8 Treasury]
 
-    Curator --> R5
+    Curator --> Bridge
+    Curator --> R5_privacy
+    Bridge --> R5_cloud
     Branch --> R6
     Partner --> R1
     R1 --> R2
@@ -397,10 +426,12 @@ graph TD
     R6 -.both write to firm/audit-logs/.-> R1
 
     style Curator fill:#fff4e1
+    style Bridge fill:#ffe0b3,stroke:#cc5500,stroke-width:2px
     style Branch fill:#fff4e1
     style Partner fill:#fff4e1
 
-    style R5 fill:#90EE90
+    style R5_cloud fill:#90EE90
+    style R5_privacy fill:#90EE90
     style R6 fill:#90EE90
     style R1 fill:#90EE90
     style R2 fill:#90EE90
@@ -410,7 +441,14 @@ graph TD
     style R8 fill:#D3D3D3
 ```
 
-**Reading the graph:** orange boxes = pre-requisites (one-time setup); green = Day-1 Routines; gold = Day-30 / Day-90; pink = Day-90+; grey = optional. Every Routine that mutates `.xlsx` needs the signing key (so they all transitively depend on `Branch`).
+**Reading the graph:**
+- **Orange boxes** = pre-requisites (one-time setup): Curator domain (both tracks), the Second Brain bridge (cloud only — Curator GitHub sync enabled + fine-grained read-only PAT), Ledger branch protection + signing key, first partner onboarded.
+- **Green** = Day-1 Routines.
+- **Gold** = Day-30 / Day-90 Routines.
+- **Pink** = Day-90+ Routines.
+- **Grey** = optional Routines.
+
+Every Routine that mutates `.xlsx` needs the signing key (so they all transitively depend on `Branch protection`). **R5 splits by track** — cloud R5 depends on the bridge being enabled (Curator GitHub sync on); privacy R5 talks to the local my-curator MCP directly and bypasses the bridge entirely.
 
 ---
 

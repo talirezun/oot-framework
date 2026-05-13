@@ -124,7 +124,7 @@ The reference table from `SPEC.md` Layer 2, reproduced here:
 3. **Enable headless mode** (LM Studio ≥0.3.10 supports `llmster` CLI). This is what cron jobs invoke.
 4. **Configure MCP host** (LM Studio ≥0.3.17 native MCP support). In LM Studio settings → MCP Servers, add:
    - `my-curator` — the Curator MCP (per Curator install instructions).
-   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with the Brain repo path.
+   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with the Ledger path.
    - `desktop-commander` — for local filesystem operations.
    - `github-mcp` — for cross-machine sync; PAT stored in Bitwarden, retrieved at MCP startup.
 5. Run a self-test: ask the loaded model "list the firm's domains via my-curator's list_domains tool". Successful response = MCP host is configured.
@@ -169,7 +169,7 @@ The firm's `firm.yaml` (per `templates/partner-onboarding/PROVISIONING-SPEC.md`)
 
 **Brain integration:**
 
-Bulk files (recordings, videos, large PDFs >10MB) live on PollinationX, not in the Brain repo. Brain pages reference them via wikilinks of the form `[[px:<content-address>]]`. The Curator's wikilink discipline supports the `px:` prefix natively (per the Curator's MCP configuration).
+Bulk files (recordings, videos, large PDFs >10MB) live on PollinationX, not in the Ledger. Brain pages reference them via wikilinks of the form `[[px:<content-address>]]`. The Curator's wikilink discipline supports the `px:` prefix natively (per the Curator's MCP configuration).
 
 When a partner ingests a large file:
 
@@ -183,7 +183,7 @@ When a partner ingests a large file:
 The privacy track's spreadsheet automation parity hinges on `haris-musa/excel-mcp-server`. Install:
 
 1. `pip install excel-mcp-server` (or `uv pip install`).
-2. Configure with the Brain repo path: `EXCEL_MCP_BASE_PATH=/Users/<user>/oot-framework/templates/excel/`.
+2. Configure with the Ledger path: `EXCEL_MCP_BASE_PATH=/Users/<user>/oot-framework/templates/excel/`.
 3. Add to LM Studio's MCP host config (per §4.3 step 4).
 4. Test: ask the loaded model "list the worksheets in `partner-output-ledger.xlsx`". Successful response = configured.
 
@@ -197,7 +197,7 @@ The privacy track's spreadsheet automation parity hinges on `haris-musa/excel-mc
    - `~/Documents/firm/` (the partner's local Brain mirror) — read/write.
    - System paths — denied by default.
 3. Add to LM Studio's MCP host config.
-4. Test: ask the loaded model "list files in the firm Brain repo's output-logs". Successful response = configured.
+4. Test: ask the loaded model "list files in the firm Ledger's output-logs". Successful response = configured.
 
 The pack ships a recommended `desktop-commander.config.json` template at `examples/desktop-commander.config.json`.
 
@@ -206,11 +206,11 @@ The pack ships a recommended `desktop-commander.config.json` template at `exampl
 1. Generate a fine-scoped Personal Access Token (PAT) at `https://github.com/settings/tokens`. Scopes: `repo` (full), `workflow` (for R6 audit-log signed commits).
 2. Store in Bitwarden under the partner's per-partner collection.
 3. Install GitHub MCP per upstream docs.
-4. Configure with the Brain repo URL and the PAT (read from Bitwarden via `bw get item`).
+4. Configure with the Ledger URL and the PAT (read from Bitwarden via `bw get item`).
 5. Add to LM Studio's MCP host config.
-6. Test: ask the model "show me the latest commit on the firm Brain repo". Successful response = configured.
+6. Test: ask the model "show me the latest commit on the firm Ledger". Successful response = configured.
 
-The partner's local machine and the always-on machine both have GitHub MCP configured; both pull/push the Brain repo. Conflicts are resolved by the partner via standard git flow.
+The partner's local machine and the always-on machine both have GitHub MCP configured; both pull/push the Ledger. Conflicts are resolved by the partner via standard git flow.
 
 ### 4.10 OS-native scheduling — cron / launchd / Task Scheduler equivalents of cloud Routines
 
@@ -276,7 +276,7 @@ A 4-week structured migration. The pack walks through:
 - LM Studio + models downloaded.
 - 4thtech firm domain + dChat workspace provisioned.
 - PollinationX storage NFT acquired.
-- Brain repo cloned to the always-on machine.
+- Ledger cloned to the always-on machine.
 
 **Week 2 — parallel operation:**
 - Cloud Routines continue running.

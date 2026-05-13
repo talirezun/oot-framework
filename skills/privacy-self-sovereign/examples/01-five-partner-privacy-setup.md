@@ -86,7 +86,7 @@ Cost recap: 5 Trezors (€80 each = €400), founder's Yubikey (€60), Mac mini
 3. Test from Claude Desktop: *"List worksheets in partner-output-ledger.xlsx"* → returns the canonical list.
 4. **Desktop Commander** installed; allowed-paths configured per §4.8.
 5. **GitHub MCP** installed; PAT generated for `oot-bot` user (the firm's bot account); stored in Bitwarden `shared-services`; written to `~/.config/oot/github-token` on Mac mini.
-6. Test: *"Show me the latest commit on the firm Brain repo"* → returns the latest signed commit.
+6. Test: *"Show me the latest commit on the firm Ledger"* → returns the latest signed commit.
 
 ## Day 11-12 — Routines (cron + launchd)
 

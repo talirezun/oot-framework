@@ -103,7 +103,7 @@ The reference table from `SPEC.md` Layer 2:
 3. Enable headless mode (LM Studio ≥0.3.10 supports `llmster` CLI).
 4. Configure MCP host (LM Studio ≥0.3.17 native MCP):
    - `my-curator` — Curator MCP.
-   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with Brain repo path.
+   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with Ledger path.
    - `desktop-commander` — local filesystem.
    - `github-mcp` — cross-machine sync; PAT from Bitwarden.
 5. Self-test: ask the loaded model `"list the firm's domains via my-curator's list_domains tool"`. Successful response = configured.
@@ -167,7 +167,7 @@ Privacy-track Routines (R1, R2, R3, R4, R6, R7, R8) all read/write Excel via thi
    - `~/Documents/firm/` (partner's local Brain mirror) — read/write.
    - System paths — denied.
 3. Add to LM Studio's MCP host config.
-4. Test: `"list files in the firm Brain repo's output-logs"` → successful response.
+4. Test: `"list files in the firm Ledger's output-logs"` → successful response.
 
 Pack ships a recommended `desktop-commander.config.json` template at `examples/desktop-commander.config.json`.
 
@@ -176,9 +176,9 @@ Pack ships a recommended `desktop-commander.config.json` template at `examples/d
 1. Generate fine-scoped PAT at `github.com/settings/tokens`. Scopes: `repo` (full), `workflow` (for R6 signed commits).
 2. Store in Bitwarden under partner's collection.
 3. Install GitHub MCP per upstream docs.
-4. Configure with Brain repo URL + PAT (read via `bw get item`).
+4. Configure with Ledger URL + PAT (read via `bw get item`).
 5. Add to LM Studio MCP host config.
-6. Test: `"show me the latest commit on the firm Brain repo"` → successful response.
+6. Test: `"show me the latest commit on the firm Ledger"` → successful response.
 
 Partner's machine + always-on machine both have GitHub MCP. Both pull/push Brain. Conflicts resolved by partner via standard git flow.
 
@@ -241,7 +241,7 @@ Install: `launchctl load ~/Library/LaunchAgents/oot.r1.plist`. Verify: `launchct
 - LM Studio + models downloaded.
 - 4thtech firm domain + dChat workspace provisioned.
 - PollinationX storage NFT acquired.
-- Brain repo cloned to always-on machine.
+- Ledger cloned to always-on machine.
 
 **Week 2 — parallel operation:**
 - Cloud Routines continue.

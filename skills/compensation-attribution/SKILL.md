@@ -220,13 +220,23 @@ Firms calibrate absolute envelope numbers; **keep the ratio approximately 1:5:20
 
 Value tier set at Output Spec drafting; **refined as outcomes come in**. An M output that produces an S-level outcome stays M for variable (variable pays on output); recorded as S in long-tail (long-tail pays on outcome).
 
-## 5. Brain interaction protocol
+## 5. Brain / Ledger interaction protocol
 
-**Reads:** `firm/partners/<id>/profile.md`, `reward-species-declaration.md`, `output-specs/*`; `firm/output-logs/*`; `firm/decisions/*`; `firm/klarna-tests/*`.
+**Reads** (all live in the **Ledger** — the firm's GitHub operational repo, scoped to `firm/`): `firm/partners/<id>/profile.md`, `reward-species-declaration.md`, `output-specs/*`; `firm/output-logs/*`; `firm/decisions/*`; `firm/klarna-tests/*`.
 
-**Writes:** `firm/partners/<id>/variable-statements/*`, `long-tail-statements/*`; `firm/output-logs/*` (via R1); `firm/compensation/<month>/founder-approval.md`; `firm/compensation/<month>/disputes/*`; `firm/anomalies/*`.
+**Writes** (Ledger): `firm/partners/<id>/variable-statements/*`, `long-tail-statements/*`; `firm/output-logs/*` (via R1); `firm/compensation/<month>/founder-approval.md`; `firm/compensation/<month>/disputes/*`; `firm/anomalies/*`.
 
 Wikilink discipline: every page references existing slugs; no invented wikilinks.
+
+### Cloud-track invocation context
+
+When S3 is invoked from **cloud Routines** (R1, R3, R4, R7), the my-curator MCP tools listed in this Skill's frontmatter are **NOT reachable** — those tools are stdio MCPs on the founder's local machine, not on Anthropic's Routine sandbox. Inside cloud Routines the data flow is:
+
+- **Partner resolution / profile lookup** — read from X2 (`reward-species-declaration.xlsx`) via openpyxl. X2's Partner_Profile sheet holds the per-partner metadata Routines need; my-curator is unnecessary.
+- **Output spec / decision lookup** — read from the Ledger clone (markdown files under `firm/output-specs/`, `firm/decisions/`) using plain filesystem reads, since the Routine has the Ledger cloned anyway.
+- **Cross-partner context that would normally come from the Curator graph** — defer to v1.x. If a particular S3 invocation needs richer semantic context, the founder runs the corresponding manual workflow (§4.1, §4.2) on their own workstation where my-curator is reachable.
+
+When S3 is invoked **manually by a founder** (in Claude Desktop or Claude Code on their workstation), all my-curator tools work normally — that's the canonical Skill Pack execution environment.
 
 ## 6. Excel interaction protocol
 
