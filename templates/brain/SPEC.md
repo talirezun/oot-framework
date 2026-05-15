@@ -1,29 +1,35 @@
 # Brain Page Templates — SPEC
 
-Specification for the markdown templates Routines and Skill Packs use when creating Brain pages. Phase 4 of `BUILD-INSTRUCTIONS.md` generates the actual `.md` template files in this folder; this SPEC defines what each one must contain.
+Specification for the markdown templates Routines and partners use when creating pages. Phase 4 of `BUILD-INSTRUCTIONS.md` generates the actual `.md` template files in this folder; this SPEC defines what each one must contain.
 
-All templates use Mustache-style `{{placeholders}}`. Frontmatter follows the schema in `templates/brain/FIRM-ONTOLOGY.md`.
+All templates use Mustache-style `{{placeholders}}`. Frontmatter follows the schema in [`FIRM-ONTOLOGY.md`](FIRM-ONTOLOGY.md).
+
+**Two-repo split (per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)):** Routine-authored operational artefacts live in the **Ledger** repo; partner-authored firm IP lives in the **Firm Brain** repo as a Curator Shared Brain. The "Lives in" column below names the destination for each template.
+
+**Slug prefixing inside the Firm Brain:** Curator Shared Brain prescribes a top-level `entities / concepts / summaries` taxonomy. Firm Brain pages use the appropriate prefix in their slug — e.g., `entities/decisions/D-2026-005`, `entities/architecture/ADR-2026-003`, `entities/partners/<id>`, `concepts/theses`, `summaries/retrospectives/2026-Q2`. Ledger pages keep their flat `firm/<category>/<file>` slugs because they're plain markdown in a git repo, not Curator-managed.
 
 ---
 
 ## Templates to generate (Phase 4)
 
-| File | Used by | Purpose |
-|---|---|---|
-| `daily-output-log.md` | R1 | One file per day under `firm/output-logs/`. Lists outputs captured, anomalies, retroactive rework detections. |
-| `audit-log-day.md` | R6 | One file per day under `firm/audit-logs/`. Article 12 audit trail. |
-| `business-review.md` | R2 + facilitator | One file per Friday under `firm/business-reviews/`. Pre-meeting agenda + post-meeting outcomes. |
-| `klarna-test-page.md` | R7 + S6 | One file per Klarna Test (`KT-YYYY-NNN`). Full context, scores, decision, 90-day review pointer. |
-| `variable-statement.md` | R3 | One file per partner per month under `firm/partners/<id>/variable-statements/`. Statement + ack block. |
-| `long-tail-statement.md` | R4 | One file per partner per quarter under `firm/partners/<id>/long-tail-statements/`. Per-output settlement detail. |
-| `output-spec.md` | S3 (drafted with the partner) | One file per Output Spec under `firm/partners/<id>/output-specs/` and (linked) `firm/products/` if product-relevant. |
-| `partner-profile.md` | S3 onboarding | The per-partner identity page. |
-| `reward-species-declaration-summary.md` | S3 onboarding | The Brain-side summary page that wikilinks to the X2 row + signed PDF. |
-| `decision-record.md` | S5 | One file per decision under `firm/decisions/`. Lightweight ADR for non-architectural decisions. |
-| `adr.md` | S4 | One file per architectural decision under `firm/architecture/`. |
-| `pilot-summary.md` | S6 | One file per pilot under `firm/change/pilots/`. |
-| `dispute-record.md` | DECISION-RIGHTS.md three-tier flow | One file per dispute under `firm/compensation/<month>/disputes/`. |
-| `prompt-artefact.md` | S2 | One file per reusable prompt under `firm/prompts/`. |
+| File | Used by | Lives in | Purpose |
+|---|---|---|---|
+| `daily-output-log.md` | R1 | **Ledger** | One file per day under `firm/output-logs/`. Lists outputs captured, anomalies, retroactive rework detections. |
+| `audit-log-day.md` | R6 | **Ledger** | One file per day under `firm/audit-logs/`. Article 12 audit trail. |
+| `business-review.md` | R2 + facilitator | **Ledger** | One file per Friday under `firm/business-reviews/`. Pre-meeting agenda + post-meeting outcomes. |
+| `klarna-test-page.md` | R7 + S6 | **Ledger** | One file per Klarna Test (`KT-YYYY-NNN`). Full context, scores, decision, 90-day review pointer. |
+| `variable-statement.md` | R3 | **Ledger** | One file per partner per month under `firm/partners/<id>/variable-statements/`. Statement + ack block. |
+| `long-tail-statement.md` | R4 | **Ledger** | One file per partner per quarter under `firm/partners/<id>/long-tail-statements/`. Per-output settlement detail. |
+| `dispute-record.md` | DECISION-RIGHTS.md three-tier flow | **Ledger** | One file per dispute under `firm/compensation/<month>/disputes/`. |
+| `output-spec.md` | S3 (partner-authored) | **Firm Brain** | One file per Output Spec under `entities/partners/<id>/output-specs/`. Pushed via the partner's `firm` opted-in domain; referenced by R1 (which clones the Firm Brain to read it). |
+| `partner-profile.md` | S3 onboarding (partner-authored) | **Firm Brain** | The per-partner identity page at `entities/partners/<id>`. Each partner authors their own. |
+| `reward-species-declaration-summary.md` | S3 onboarding (partner-authored) | **Firm Brain** | The summary page at `entities/partners/<id>/reward-species-declaration`. **Operative truth is in the Ledger** (X2 row + signed PDF); this is the human-readable mirror. |
+| `decision-record.md` | S5 (partner-authored) | **Firm Brain** | One file per decision at `entities/decisions/D-YYYY-NNN`. Lightweight ADR for non-architectural decisions. |
+| `adr.md` | S4 (partner-authored) | **Firm Brain** | One file per architectural decision at `entities/architecture/ADR-YYYY-NNN`. |
+| `pilot-summary.md` | S6 (partner-authored) | **Firm Brain** | One file per pilot at `entities/pilots/<pilot_id>`. |
+| `prompt-artefact.md` | S2 (partner-authored) | **Firm Brain** | One file per reusable prompt at `entities/prompts/<prompt_slug>`. |
+
+**Write paths:** Ledger templates are written by Routines (signed commits on protected branch) or by partners editing in the Ledger repo (ack edits, dispute filing). Firm Brain templates are authored in the partner's *personal* Curator opted-in domain and pushed via Curator's `DeltaSummary` protocol; the admin's weekly Synthesize merges contributions into `collective/<firm-domain>/wiki/`.
 
 Each template below specifies: required frontmatter, required sections, optional sections, hard constraints. Generators must not omit required sections or rename them.
 

@@ -232,7 +232,40 @@ Install: `launchctl load ~/Library/LaunchAgents/oot.r1.plist`. Verify: `launchct
 
 **Windows (Task Scheduler):** XML templates ship in `examples/task-scheduler/`. Install via `schtasks /create /xml "r1.xml" /tn "ØØT R1 Daily Output Capture"`.
 
-### 4.11 Migration workflow (cloud → privacy)
+### 4.11 Curator Shared Brain on the privacy track (the Firm Brain)
+
+Per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md), the firm's collective knowledge (theses, decisions, ADRs, partner profiles, prompts) lives in the **Firm Brain** — a Curator Shared Brain instance (v3.0.0-beta+) in a dedicated `<firm>-brain` GitHub repo. The privacy track participates identically to the cloud track at the Shared Brain protocol layer; the deltas are about *what runs locally*.
+
+**S12 alignment with Shared Brain's data-handling model.** Curator's Shared Brain protocol is materially better aligned with S12's self-sovereign discipline than the pre-v1.0.1 pattern:
+
+- **Data minimisation.** Only the partner's *opted-in domain* contributes to the Firm Brain via preprocessed `DeltaSummary` JSON. Their other domains (`personal`, `customers`, `research`) stay on their machine. The retired pre-v1.0.1 `<firm>-secondbrain` pattern pushed the *entire* vault — strictly more data leakage.
+- **UUID-pseudonymous attribution by default.** Both `allow_name_attribution` (org-side) and `attribute_by_name` (contributor-side) default to `false`. Real names appear in synthesized pages only when both flags are explicitly true. This is exactly the posture S12 wants for partners who value pseudonymity.
+- **Right to erasure (GDPR Article 17) is first-class.** The admin can revoke a departing partner via `POST /api/sharedbrain/:id/revoke` with a typed-confirmation safety gate; all the partner's contributions are deleted and affected synthesized pages are rebuilt. S12 partners who insist on `contributor_retains` IP mode (advisors, contractors, outside collaborators) get a clean exit path.
+- **`contributor_retains` IP mode for the self-sovereign-aligned.** Curator's `data_handling_terms = "contributor_retains"` keeps copyright with the contributor while the firm owns only the synthesized output. **This is S12's default recommendation for advisors and contractors**; operating-LLC partners typically use `organisational` mode per their partner charter's IP-assignment clause (the firm-side decision recorded in CLAUDE.md decision #15).
+
+**Per-partner setup (privacy-track variant):**
+
+1. Receive the firm's invite token (`sbi_…`) via 4thtech dMail or dChat (not Slack — privacy track uses 4thtech for firm comms).
+2. Accept the GitHub collaborator invite on the `<firm>-brain` repo. **GitHub plan-tier requirement: Team minimum for branch protection** (Free private repos do not enforce protection — Finding #16); **GitHub Enterprise Cloud with EU residency option if your firm is EU-regulated**.
+3. Create a fine-grained PAT in your GitHub account with Contents read/write on the `<firm>-brain` repo. Store the PAT in **Bitwarden** (or 1Password) per the secrets policy; **do not commit it anywhere**.
+4. Run Curator's six-step contributor wizard. Curator runs locally on your machine — the wizard itself does not call any cloud LLM. Read the IP-mode disclosure before consenting.
+5. After save, Curator's connection card shows Push and Pull buttons. Push uploads only your opted-in domain. Pull mirrors the synthesized result into `~/curator/shared-<firm-slug>/` (read-only).
+
+**Synthesis caveat (Gen 1 gap).** The admin's weekly Synthesize step still calls a cloud LLM (Curator v3.0.0-beta uses Gemini Flash Lite). This is the **single remaining cloud-LLM dependency** in the privacy-track Gen-1 stack — the same gap [`GENERATIONS.md`](../../GENERATIONS.md) already flags for Curator broadly. Partners' own MCP interactions with their personal Second Brain can run fully on a local model (LM Studio + Qwen / Llama / DeepSeek); only Synthesize is cloud-coupled. Curator v3.1+ on the roadmap removes this dependency.
+
+**Cloud-LLM-call boundary on the privacy track:**
+- Partner authoring pages in their personal Second Brain via MCP → **local LLM** (LM Studio).
+- Partner running Push → **no LLM call** (deterministic preprocessing + git push).
+- Partner running Pull → **no LLM call** (git fetch + local file write).
+- Admin running Synthesize → **cloud LLM** (Gemini Flash Lite in v3.0.0-beta; ~$0.01 / 100-page brain / 5 contributors / week).
+
+**Storage residency on the privacy track.** The Firm Brain repo on GitHub is subject to GitHub's storage residency. EU firms requiring data residency must use **GitHub Enterprise Cloud with EU residency option** (paid; ~$21/seat/mo) for the `<firm>-brain` repo. Curator v3.1's Cloudflare R2 backend with per-bucket `jurisdiction = "eu"` will offer a more cost-effective EU-residency path; deferred to v3.1.
+
+**Hardware-key alignment.** Per §4.4, partner identity in 4thtech is wallet-on-Trezor. The Firm Brain PAT is a *different secret* — held in Bitwarden, not on the Trezor (PATs are software tokens, not on-chain keys). The double-secrets-layer is intentional: 4thtech keys (on-chain identity, irrecoverable if lost) are Trezor-isolated; Curator/GitHub PATs (software credentials, rotatable) live in Bitwarden.
+
+**Routines on the privacy track do not push to the Firm Brain.** Per ADR-002, Routines write only to the Ledger. Privacy-track Routines that need *firm-context knowledge* (e.g., R5 reporting, R2 BR pre-fill) clone the Firm Brain repo locally to read `collective/<firm-domain>/wiki/` — same pattern as cloud Routines.
+
+### 4.12 Migration workflow (cloud → privacy)
 
 4-week structured migration:
 
@@ -263,9 +296,15 @@ Migration documented in `firm/privacy-track/migration-runbook.md` per partner pe
 
 ## 5. Brain interaction protocol
 
-**Reads:** `firm/partners/<id>/profile.md`; `firm/privacy-track/*` (prior setup logs).
+S12 is a privacy-track-setup pack — its writes are *operational artefacts* (hardware register, migration runbook, troubleshooting logs), not partner-contributed firm IP. Per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md), operational artefacts live in the **Ledger**; partner-contributed knowledge lives in the **Firm Brain**.
 
-**Writes:** `firm/privacy-track/always-on-machine.md` (hardware register); `firm/privacy-track/per-partner-trezor.md` (per-partner inventory + wallet addresses); `firm/privacy-track/migration-runbook.md`; `firm/privacy-track/troubleshooting/*`.
+**Reads (Firm Brain — synthesized mirror or git clone):** `entities/partners/<id>` (partner profile), `concepts/theses` (firm theses), `entities/decisions/*` (relevant firm decisions on privacy posture).
+
+**Reads (Ledger):** `firm/privacy-track/*` (prior setup logs, written by this pack), `firm/audit-logs/*` (for troubleshooting cross-references).
+
+**Writes (Ledger only):** `firm/privacy-track/always-on-machine.md` (hardware register); `firm/privacy-track/per-partner-trezor.md` (per-partner inventory + wallet addresses); `firm/privacy-track/migration-runbook.md`; `firm/privacy-track/troubleshooting/*`. These are operational setup logs that need version control + signed commits, not firm-IP knowledge to be synthesized across partners.
+
+**Does not write to the Firm Brain.** S12 is operational; firm-IP authorship (theses, decisions, ADRs about privacy-track adoption rationale) is the founder's / partners' personal-Curator authoring task, pushed via Curator's standard Shared Brain Push.
 
 ## 6. Excel interaction protocol
 

@@ -1,10 +1,41 @@
 # Changelog
 
-## Unreleased — post-v1.0.0 (in progress, May 2026)
+ØØT follows [Semantic Versioning](https://semver.org). The framework's version is independent of Generation: v1.x is the Gen-1 release line; Gen-2 will open the v2.x line; Gen-3 will open v3.x.
 
-Doc + spec updates that land between v1.0.0 and the next tagged release. Code/spec only — no functional Routine changes.
+## v1.1.0 — 2026-05-15
 
-**Second Brain bridge — closes the v1.0 cloud Routines reachability gap (2026-05-12):**
+**The Firm Brain — Curator Shared Brain integration ([ADR-002](docs/internal/ADR-002-firm-brain-curator-shared-brain.md)).** The framework's "firm IP" layer is now a first-class Curator Shared Brain instance (v3.0.0-beta+), distinct from the Ledger and from each partner's personal Second Brain. Three named primitives:
+
+- **Ledger** (`<firm>-ledger`) — Excel + audit logs, written by Routines per ADR-001.
+- **Firm Brain** (`<firm>-brain`) — Curator Shared Brain, written by partners pushing their opted-in domain; synthesized weekly by the admin.
+- **Second Brain** — each partner's *personal* Curator vault on their own machine; one opted-in domain contributes to the Firm Brain.
+
+**Three new design decisions in `CLAUDE.md`** (#14–#16): the three-primitive split + retire `<firm>-secondbrain`; IP-mode defaults (`organisational` for full-time partners, `contributor_retains` for advisors/contractors; both attribution flags default false → UUID-pseudonymous attribution); plan-tier guidance now applies to *two* protected repos per firm.
+
+**Retired:** the pre-v1.0.1 per-partner `<firm>-secondbrain` repo pattern as a framework primitive. Cloud Routines that need firm-context knowledge now read the Firm Brain's `collective/<firm-domain>/wiki/` (synthesized, deduplicated, conflict-flagged). Personal Curator backup-to-GitHub remains available as a per-partner tooling choice. Existing v1.0 `<firm>-secondbrain` repos may be kept as personal backup, archived, or deleted at firm discretion — no forced migration.
+
+**New routine R9 — Firm Brain Synthesize.** Admin-run weekly (Sunday evening recommended). Curator merges per-partner contributions, applies Jaccard + selective-LLM conflict resolution, rebuilds the collective index, signed-commits to the Firm Brain repo. Does **not** count against Claude Code Routine per-day limits (runs on the admin's machine via Curator CLI).
+
+**Documents added / rewritten:**
+- New ADR: [`docs/internal/ADR-002-firm-brain-curator-shared-brain.md`](docs/internal/ADR-002-firm-brain-curator-shared-brain.md).
+- [`templates/brain/FIRM-ONTOLOGY.md`](templates/brain/FIRM-ONTOLOGY.md) — full rewrite. Three-primitive content layout (Ledger paths, Firm Brain `entities/concepts/summaries`, personal Second Brain). Sequence diagram of how a new firm decision propagates Push → Synthesize → Pull.
+- [`templates/brain/SPEC.md`](templates/brain/SPEC.md) — per-template "Lives in" column; Firm Brain slug-prefixing rules.
+- [`skills/my-curator/SKILL.md`](skills/my-curator/SKILL.md) — wrapper updated with Shared Brain context (canonical imported content untouched per upstream-import rule).
+- [`skills/privacy-self-sovereign/SKILL.md`](skills/privacy-self-sovereign/SKILL.md) (S12) — new §4.11 "Curator Shared Brain on the privacy track"; data-minimisation gain; `contributor_retains` for advisors; cloud-LLM-call boundary; hardware-key alignment.
+- [`skills/governance-compliance/SKILL.md`](skills/governance-compliance/SKILL.md) (S7) — new §4.6.5 GDPR Article 17 runbook for Curator's revoke endpoint.
+- [`governance/EU-AI-ACT.md`](governance/EU-AI-ACT.md) — Article 12 immutability now covers both Ledger and Firm Brain; **new section** for GDPR Article 17 with Curator revoke procedure + limitations + absolute-erasure handling.
+- [`governance/SECRETS-POLICY.md`](governance/SECRETS-POLICY.md) — Bitwarden vault now holds `admin_token` (founders), per-partner Firm Brain PATs (per-partner collection), Ledger Routine bot PAT (shared-services).
+- [`routines/SPEC.md`](routines/SPEC.md) — new "Routine write authority: Ledger only" section + per-Routine repo access matrix; R9 specification.
+- [`templates/partner-charter.md`](templates/partner-charter.md) — §8 IP clause expanded: §8.1 IP mode mapping, §8.2 what stays with partner vs firm, §8.3 GDPR Article 17 on exit. §10 Exit updated with Firm Brain access revocation.
+- [`GLOSSARY.md`](GLOSSARY.md) — five new / rewritten entries: **Firm Brain**, **Shared Brain (Curator primitive)**, **opted-in domain**, **synthesized mirror**; **Second Brain** reframed as explicitly personal; **Second Brain repo** marked deprecated as framework primitive.
+- [`GENERATIONS.md`](GENERATIONS.md) — Gen 1 tech layer now names two firm repos (Ledger + Firm Brain); Curator local-LLM ingest deferral clarified (admin's Synthesize step still cloud-LLM in Gen 1).
+
+**Versioning & release process.** Added a version badge in the README. CHANGELOG now opens with the semver-and-generation policy.
+
+### Second Brain bridge — closes the v1.0 cloud Routines reachability gap (2026-05-12)
+
+(Landed before the Shared Brain integration; included in v1.1.0 release.)
+
 - Cloud Routines can now reach the firm's Second Brain (the Curator semantic graph) via Curator's existing two-way GitHub sync, without an always-on machine. Solves the gap that previously made R5 effectively broken on cloud track.
 - Mechanism: Curator's Sync tab mirrors the entire local vault to a private GitHub repo. Cloud Routines (specifically R5 in v1.0.1; R2/R8 candidates for Gen-2 enrichment) clone that repo at execution time, scoped to `wiki/<firm-curator-domain>/`, and operate on plain markdown files via Pattern C (ADR-001).
 - New wizard step `step_12_secondbrain_sync` — slots between Curator (11) and Routines (renumbered 13). Total wizard step count 14 → 15. Walks user through enabling Curator GitHub sync, creating a fine-grained PAT with Contents:Read only on the synced repo, verifying a clone works. PAT is never persisted to wizard state — user keeps it in their password manager and pastes into Claude Code's Routine connector at Step 13.
@@ -13,13 +44,18 @@ Doc + spec updates that land between v1.0.0 and the next tagged release. Code/sp
 - `installer/agent-assisted/cloud-install-plan.md` gets a new Step 9b mirroring the wizard step.
 - Migration shim in `installer/wizard.py` `_migrate_state_keys()` promotes pre-rename step keys AND resets `step_13_routines` if the new bridge step isn't done, so mid-install users re-configure Routines with the second connector.
 
-**Naming cleanup: "Brain repo" → "Ledger"; introduce "Second Brain" as canonical (2026-05-12):**
+**Note on the bridge under ADR-002.** The bridge work above remains operational for *personal* Second Brain backup. For *firm* context, post-v1.1.0 Routines should prefer reading the Firm Brain's `collective/<firm-domain>/wiki/` per ADR-002 — the bridge's per-partner secondbrain repo is no longer the canonical firm-context source. Tier-3 updates (installer rewrites, quickstart docs) land in v1.2.0.
+
+### Naming cleanup: "Brain repo" → "Ledger"; introduce "Second Brain" as canonical (2026-05-12)
+
+(Landed before the Shared Brain integration; included in v1.1.0 release.)
+
 - "The Brain" had six distinct meanings across the framework. Rename pass: GitHub operational repo (which holds Excel files + audit logs + Routine writebacks) is now consistently called the **Ledger** / **operational Ledger**. The Curator's semantic knowledge graph keeps its name as **the Brain** / **Second Brain** (the PKM term users will recognise). Distinct from **Cotrugli Ledger** (Gen-3 accounting/governance backbone) — first-mention disambiguators added wherever both terms appear.
 - New GLOSSARY.md entries: **Ledger**, **Second Brain repo**.
 - 51 files changed; ~280 line-level renames across user-facing docs (GLOSSARY, README, QUICKSTART, GENERATIONS, all of `docs/`, all 16 Routine prompts) plus internal specs (CLAUDE.md, SPEC.md, BUILD-INSTRUCTIONS.md, ADR-001, PROVISIONING-SPEC.md). State-variable renames in `installer/wizard.py` (`brain_repo_url` → `ledger_repo_url`, etc.) with a backward-compat migration shim so existing wizard state files don't lose progress.
 - Kept as-is: `templates/brain/` folder (these are Curator-graph page templates), MANIFESTO.md Thesis 4 references (philosophical), Routine names like "R5 Brain Health Check" (proper names), Skill Pack S1 my-curator references (Curator-graph context).
 
-
+### Other v1.1.0 items (also landed post-v1.0.0)
 
 **Documentation alignment with the actual Anthropic product surface:**
 - "Anthropic Remote Routines" renamed to "Claude Code Routines" repo-wide (the actual product name; Anthropic launched the feature 14 April 2026). Old name preserved in v1.0.0 release notes for historical accuracy.

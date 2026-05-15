@@ -16,6 +16,31 @@ Track symmetry: cloud and privacy Routines perform the same operation. Privacy R
 
 ---
 
+## Routine write authority: Ledger only (ADR-002)
+
+**Routines write only to the Ledger.** They never push to the Firm Brain (Curator Shared Brain). Per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md):
+
+- **Ledger** (`<firm>-ledger`) — Routine-writable, openpyxl + signed commits per ADR-001. Holds all `.xlsx` files plus Routine-authored operational markdown: `firm/output-logs/`, `firm/audit-logs/`, `firm/business-reviews/`, `firm/klarna-tests/`, `firm/partners/<id>/variable-statements/`, `firm/partners/<id>/long-tail-statements/`, `firm/compensation/`, `firm/brain-health/`.
+- **Firm Brain** (`<firm>-brain`) — partner-writable only, via Curator Shared Brain Push. **No Routine pushes here.** Holds partner-authored firm IP: theses, decisions, ADRs, partner profiles, prompts, change-management artefacts. Routines may **read** the Firm Brain (via git clone of the `<firm>-brain` repo, scoped to `collective/<firm-domain>/wiki/`) when they need firm context — see the per-Routine "Firm Brain reads" column below.
+
+### Per-Routine repo access matrix
+
+| Routine | Ledger read | Ledger write | Firm Brain read | Firm Brain write |
+|---|---|---|---|---|
+| **R1** Daily Output Capture | ✓ | ✓ (X1, output-logs) | optional (output-spec lookup) | **✗** |
+| **R2** Weekly BR Prep | ✓ | ✓ (X3, business-reviews) | ✓ (decisions, ADRs, partner profiles for context) | **✗** |
+| **R3** Monthly Variable Calc | ✓ | ✓ (X1, X2, variable-statements, compensation) | optional (reward-species summary, partner profile) | **✗** |
+| **R4** Quarterly Long-Tail | ✓ | ✓ (X1, long-tail-statements, compensation) | optional (output-specs for outcome attribution) | **✗** |
+| **R5** Brain Health Check | ✓ | ✓ (X9, brain-health) | ✓ (synthesized firm IP — scans for orphans, broken links) | **✗** |
+| **R6** EU AI Act Audit Trail | ✓ | ✓ (X7, audit-logs) | ✗ | **✗** |
+| **R7** Klarna Test Trigger | ✓ | ✓ (X4, klarna-tests) | ✓ (decisions, ADRs touching the gated change) | **✗** |
+| **R8** Treasury Runway (opt) | ✓ | ✓ (X8) | ✗ | **✗** |
+| **R9** Firm Brain Synthesize | ✗ | ✗ | (admin-run; mutates `<firm>-brain` via Curator's API, not as a normal Routine commit) | ✓ — but via **Curator's Synthesize endpoint**, not via openpyxl + signed-commit |
+
+Firm Brain reads from cloud Routines use a fresh `git clone <firm>-brain` at the start of each run. Privacy-track Routines read from a local clone maintained on the always-on machine, refreshed via `git pull` before each run.
+
+---
+
 ## Plan-tier guidance (cloud track)
 
 Anthropic plan limits drive what's affordable for a firm:
@@ -425,6 +450,53 @@ Failure handling: if any banking API is unreachable, flag in alert; never silent
 **Expected outputs:** X8 Runway_Calc updated; alert if thresholds breached; signed commit on `main`.
 
 **Privacy-track delta:** Banking APIs identical (most are HTTP-callable); same openpyxl operation locally; dChat instead of Slack.
+
+---
+
+## R9 — Firm Brain Synthesize (admin-run)
+
+**Trigger:**
+- Cloud and privacy: **weekly, admin-run.** Not a typical Claude Code Routine — runs on the admin's laptop (or always-on machine on the privacy track) via Curator's Shared Brain admin wizard or `curator sharedbrain synthesize` CLI. **Recommended cadence: every Sunday evening, before the new week opens.**
+
+**Why this isn't a normal Routine.** R9 does not write to the Ledger; it mutates the Firm Brain via Curator's Shared Brain protocol (read `contributions/`, merge into `collective/<firm-domain>/wiki/`, append Provenance, commit + push to `<firm>-brain`'s main branch). Curator handles the writes — the framework's only responsibility is **ensuring it runs on the agreed cadence**.
+
+**Allowed Skills:** S1 (My Curator). No others — synthesis is bounded to Curator's own logic.
+
+**MCP servers and tools:** Curator desktop app or `curator` CLI on the admin's machine. Curator manages its own access to the `<firm>-brain` GitHub repo via the admin's PAT (held in the admin's Bitwarden, founders collection, per [`governance/SECRETS-POLICY.md`](../governance/SECRETS-POLICY.md)).
+
+**Operation (what happens during R9):**
+
+1. Curator reads all contributions in `<firm>-brain/contributions/<fellow_id>/*.json` newer than `state/last-synthesis.json`.
+2. For each affected page slug, Curator unions the new facts with the existing `collective/<firm-domain>/wiki/...` page.
+3. **Jaccard similarity ≥ 0.5 + < 1.0** between candidate facts → Curator calls the configured LLM (Gemini Flash Lite in v3.0.0-beta) to resolve. Unresolved contradictions are written as `⚠️ CONFLICTING SOURCES — review needed` markers.
+4. Provenance is appended: UUID by default; real names only when both `allow_name_attribution` (org-side) and `attribute_by_name` (contributor-side) flags are true.
+5. `collective/<firm-domain>/wiki/index.md` is rebuilt.
+6. `state/last-synthesis.json` is updated.
+7. The whole change is signed-committed and pushed to `<firm>-brain` main (branch protection enforces signed commits).
+
+**Expected outputs:**
+- Updated `collective/<firm-domain>/wiki/**/*.md` in the Firm Brain repo.
+- One signed commit on `main` from the admin's signing identity (NOT a Routine bot identity).
+- Cost: typically under $0.01 per weekly run for a 100-page brain with 5 contributors (per Curator's own measurement).
+
+**Admin checklist (each Sunday):**
+1. `git pull` the latest contributions (the admin's local Curator does this automatically via the Pull button).
+2. Run Curator's Synthesize via the wizard / CLI.
+3. Scan the output for `⚠️ CONFLICTING SOURCES` markers; if present, work with the conflicting partners to resolve in their personal Curator domains, then re-run.
+4. Confirm the push lands on `<firm>-brain` main with a Verified signature.
+5. Post a brief summary to firm comms ("Firm Brain synthesized for week of YYYY-MM-DD; N contributions merged, M conflicts open"); partners run Pull at their leisure.
+
+**Failure handling:**
+- LLM API unavailable: defer synthesis; rerun next day. The conflict-resolution step is the only LLM-dependent part — union-merge runs without LLM.
+- Branch protection rejects the push: investigate (signed-commit configuration, force-push attempt, etc.). Do NOT bypass protection.
+- A specific contribution payload is malformed: Curator logs the failure and skips that payload; the affected contributor is notified to re-Push.
+
+**Privacy-track delta:**
+- Runs on the always-on machine instead of the admin's daily laptop.
+- The synthesis LLM is the **only remaining cloud-LLM dependency** in the Gen 1 privacy stack. Curator v3.1's local-LLM synthesis support will remove this; tracked in [`GENERATIONS.md`](../GENERATIONS.md).
+- Cron entry on the always-on machine (admin's machine if dedicated): `0 19 * * 0 /usr/local/bin/curator sharedbrain synthesize --brain <firm>-brain >> ~/oot/logs/r9.log 2>&1`.
+
+**Plan-tier note:** R9 runs on the admin's machine via Curator's local CLI; it does NOT count against Claude Code Routine per-day limits.
 
 ---
 

@@ -30,8 +30,8 @@ The current release. What ships in this repository.
 
 **Tech layer (Gen 1):**
 
-- Cloud track: Claude Desktop, Claude Code, Slack, GitHub (Ledger holds markdown + `.xlsx` state per ADR-001; Second Brain repo holds the Curator-synced semantic graph), Curator + MyCuratorMCP, Claude Code Routines. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
-- Privacy track at full Gen 1 parity: LM Studio + local Qwen/Llama/DeepSeek, Desktop Commander MCP, Excel MCP (`haris-musa/excel-mcp-server`), 4thtech (dMail, dChat, file transfer), PollinationX (decentralised storage), GitHub MCP, OS-native scheduling.
+- Cloud track: Claude Desktop, Claude Code, Slack, GitHub (**two firm repos per firm — the Ledger** holds markdown + `.xlsx` operational state per [ADR-001](docs/internal/ADR-001-cloud-routine-excel-writeback.md); **the Firm Brain** holds the firm's Curator Shared Brain per [ADR-002](docs/internal/ADR-002-firm-brain-curator-shared-brain.md). Each partner's personal Curator backup-to-GitHub is a personal-tooling choice, not framework-orchestrated), Curator + MyCuratorMCP (v3.0.0-beta+ Shared Brain–aware), Claude Code Routines. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
+- Privacy track at full Gen 1 parity: LM Studio + local Qwen/Llama/DeepSeek (powers each partner's personal Second Brain MCP interactions), Desktop Commander MCP, Excel MCP (`haris-musa/excel-mcp-server`), 4thtech (dMail, dChat, file transfer), PollinationX (decentralised storage), GitHub MCP, OS-native scheduling. **The Firm Brain's weekly Synthesize step still calls a cloud LLM in Gen 1** (Curator v3.0.0-beta uses Gemini Flash Lite); this is the same Curator-side cloud-LLM gap noted below and is acceptable for Gen 1.
 - Secrets architecture: Bitwarden (passwords/tokens) + Trezor (crypto signing) + Yubikey (org-level admin).
 
 **Skills (Gen 1):**
@@ -63,7 +63,7 @@ The current release. What ships in this repository.
 - Stablecoin payroll rails. FIAT only. (The reward-species declaration includes a one-line stablecoin upgrade preference field that gets activated in Gen 2.)
 - Smart-contract long-tail entitlements. Gen 1 long-tail is Excel-tracked and quarterly-settled.
 - Internal Unit Fund. Requires 6–9 months of pilot data per the YOLO model and material legal scoping. Gen 2.
-- Curator local-LLM ingest. Cloud-LLM only in Gen 1 (Gemini Flash Lite or Anthropic, pay-as-you-go).
+- Curator local-LLM ingest *and* local-LLM Shared Brain synthesis. Cloud-LLM only in Gen 1 (Gemini Flash Lite or Anthropic, pay-as-you-go) for both personal-Curator ingest *and* the admin's weekly Firm Brain Synthesize step. Partners' MCP read/write interactions on their personal Second Brain can already be served by a local LLM on the privacy track — only ingest and synthesis still require cloud.
 - Triple-entry-style audit logs. Plain markdown audit trails per EU AI Act Article 12 are sufficient in Gen 1.
 - Cotrugli Ledger anchoring (the Gen-3 accounting/governance backbone — *distinct from the operational Ledger introduced in v1.0*). Theoretical / research-stage; Gen 3.
 - Autonomous agent business units. Reference: Kelly / OpenClaw pattern. Gen 3.
@@ -91,7 +91,7 @@ The first major upgrade. Adds the compensation primitives that require crypto ra
 
 **Tech:**
 
-- Curator local-LLM ingest (T12). Removes the cloud dependency for Brain ingest. Privacy track gains end-to-end local operation.
+- Curator local-LLM ingest + local-LLM Shared Brain synthesis (T12). Removes the last cloud dependency for both personal Second Brain ingest *and* the Firm Brain's weekly Synthesize step. Privacy track gains end-to-end local operation.
 - Multi-agent orchestration (T22). Augment Intent, Claude Agent Teams, and equivalent multi-agent patterns mature enough for org-wide use. The Code & QA Skill Pack v2.0 documents safe orchestration patterns.
 - **ØØT desktop application (T23, NEW)**. Native macOS / Windows / Linux app that wraps the Gen-1 "agent-as-daily-UI" pattern in a graphical interface: auto-sync of the firm operational repo (`git pull` in the background); a dashboard showing recent Routine fires + their outcomes; click-to-acknowledge for partner variable-pay statements; Brain-page viewer with wikilink navigation; one-click manual Routine fire; signed-commit health indicator. Replaces the need for the founder to interact with a coding agent for daily ops (see [`installer/agent-assisted/DAILY-OPS.md`](installer/agent-assisted/DAILY-OPS.md) for the Gen-1 interim pattern). Goal: a non-technical founder operates the framework without ever touching a terminal or markdown playbook.
 
@@ -156,7 +156,7 @@ These hold across all three generations.
 
 **Partner agency does not decrease over generations.** Partners in Gen 1 can decline crypto pay; partners in Gen 2 can decline Unit Fund participation; partners in Gen 3 can decline working alongside autonomous agent units. The framework's defaults shift over generations; the partner's right to opt out does not.
 
-**Both the Ledger and the Second Brain remain the source of truth across generations.** Gen 2's smart contracts read entitlement data from the Ledger (Excel files like `partner-output-ledger.xlsx`). Gen 3's autonomous units write their signed decisions to the Ledger (`firm/audit-logs/`). The Second Brain (the Curator semantic graph) likewise compounds — every conversation, decision, contract, and research note authored in v1 remains queryable through every successor generation. Nothing in v2 or v3 invalidates either the v1 Ledger or the v1 Second Brain.
+**The Ledger, the Firm Brain, and each partner's Second Brain remain the sources of truth across generations.** Gen 2's smart contracts read entitlement data from the Ledger (Excel files like `partner-output-ledger.xlsx`). Gen 3's autonomous units write their signed decisions to the Ledger (`firm/audit-logs/`). The Firm Brain (the firm's synthesized Curator Shared Brain) compounds firm IP across generations. Each partner's Second Brain (their personal Curator graph) likewise compounds — every conversation, decision, contract, and research note authored in v1 remains queryable through every successor generation. Nothing in v2 or v3 invalidates the v1 Ledger, the v1 Firm Brain, or any partner's v1 Second Brain.
 
 **The framework is forward-compatible.** Gen 1 adopters never need to discard work to upgrade. Reward-species declarations port forward; output ledgers port forward; Skill Packs port forward; Excel templates upgrade with new sheets, not new files. Forward compatibility is a design constraint, not an afterthought.
 

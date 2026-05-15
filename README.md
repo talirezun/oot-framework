@@ -1,5 +1,7 @@
 # ØØT — Organisation of Tomorrow
 
+[![Version](https://img.shields.io/github/v/tag/talirezun/oot-framework?label=version&color=blue&sort=semver)](https://github.com/talirezun/oot-framework/releases) [![License — Code](https://img.shields.io/badge/license%20(code)-Apache_2.0-green)](LICENSE) [![License — Docs](https://img.shields.io/badge/license%20(docs)-CC_BY--SA_4.0-green)](LICENSE-DOCS) [![Generation](https://img.shields.io/badge/generation-1-orange)](GENERATIONS.md)
+
 > **TL;DR:** An open framework for partner-run, AI-augmented organisations. Three install paths below. **Most founders → use Path A.**
 
 ØØT is a complete, opinionated, file-based framework for building and running an organisation in which the people producing value are paid for it as it lands, paid again as it compounds, and own a real stake in what they helped create — while the technical machinery underneath (AI agents, Skills, MCP, the Collecting Brain) compounds the firm's intellectual property in lockstep.

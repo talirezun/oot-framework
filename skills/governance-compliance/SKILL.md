@@ -76,15 +76,31 @@ This pack is **mandatory for EU-operating organisations** before 2 August 2026 (
 
 <!-- TODO: harden — verify no Routine makes a final decision affecting partners/customers without human sign-off. -->
 
+### 4.6.5 GDPR Article 17 — Right to Erasure (Firm Brain)
+
+The Firm Brain (Curator Shared Brain, per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)) ships a **first-class Article 17 mechanism**: the admin revoke endpoint with typed-confirmation safety gate. See [`governance/EU-AI-ACT.md`](../../governance/EU-AI-ACT.md) §"GDPR Article 17" for the runbook.
+
+**S7 responsibilities for revocation:**
+1. **Maintain the `admin_token`** (founders Bitwarden collection per [`governance/SECRETS-POLICY.md`](../../governance/SECRETS-POLICY.md)). Rotate annually and on suspected compromise.
+2. **Verify the revoke audit log** quarterly: confirm `state/revocation-log.json` entries match the firm's records of contributor exits.
+3. **Coordinate absolute erasure when required** (`git filter-repo` + force-push + backup purge for both the Firm Brain and the Ledger if the data subject's request goes beyond Curator's built-in revoke). This is counsel-coordinated; document the procedure outcome in `firm/compliance/erasure-requests/<request_id>.md` in the Ledger.
+4. **For EU firms,** confirm Firm Brain storage residency: GitHub Enterprise Cloud EU option until Curator v3.1 ships Cloudflare R2 with `jurisdiction = "eu"`.
+
 ### 4.7 Italian Law 132/2025 (for orgs operating in Italy)
 
 <!-- TODO: harden — Art. 612-quater mapping; aggravating-circumstances awareness; counsel coordination. -->
 
 ## 5. Brain interaction protocol
 
-**Reads:** `firm/audit-logs/*`, `firm/decisions/*`, `firm/klarna-tests/*`.
+Per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md), compliance evidence lives in the **Ledger** (signed-commit audit trail) and compliance *knowledge* (decision rationales, ADRs on compliance posture) lives in the **Firm Brain**.
 
-**Writes:** `firm/audit-logs/<date>.md` (via R6); `firm/compliance/quarterly-reviews/<quarter>.md`; `firm/compliance/counsel-reviews/<date>.md`.
+**Reads (Ledger):** `firm/audit-logs/*`, `firm/klarna-tests/*` (operational evidence).
+
+**Reads (Firm Brain — synthesized mirror or git clone):** `entities/decisions/*` (compliance-relevant decisions), `entities/architecture/*` (ADRs touching compliance — e.g., audit-trail anchoring).
+
+**Writes (Ledger only):** `firm/audit-logs/<date>.md` (via R6); `firm/compliance/quarterly-reviews/<quarter>.md`; `firm/compliance/counsel-reviews/<date>.md`; `firm/compliance/erasure-requests/<request_id>.md` (Article 17 absolute-erasure records).
+
+**No Firm Brain writes from S7.** Compliance ADRs and decision rationales are authored by the accountable partner in their personal Curator and pushed via Curator Shared Brain — that's an authorship flow, not an S7 Routine flow.
 
 ## 6. Excel interaction protocol
 

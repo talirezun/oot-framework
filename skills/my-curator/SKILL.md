@@ -8,18 +8,36 @@ oot_status: hardened
 oot_dependencies: []
 oot_provides_to: [S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12]
 oot_klarna_test: false
-last_updated: 2026-05-08
+last_updated: 2026-05-15
 ---
 
 # ØØT Skill Pack S1 — My Curator (Canonical Brain Skill Pack)
 
-This is the canonical Brain Skill Pack of the ØØT framework. It is imported verbatim from `talirezun/the-curator` and is the single source of truth for Brain operations across all twelve ØØT Skill Packs.
+This is the canonical Brain Skill Pack of the ØØT framework. It is imported verbatim from `talirezun/the-curator` and is the single source of truth for personal Second Brain operations across all twelve ØØT Skill Packs.
 
 **For ØØT adopters:** every other Skill Pack assumes this one is installed and operational. Install S1 first, run the Curator self-test, and verify your domain structure before installing any other pack.
 
 **For maintainers:** do not modify this file directly. Updates flow from the upstream Curator project. To customise Brain behaviour for your firm, layer additional instructions in your firm's `CLAUDE.md` or project-level documentation, never in this `SKILL.md`.
 
-*[The imported canonical content begins below.]*
+## ØØT-specific context (read before the imported canonical content below)
+
+**Three primitives, per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md):** Each partner's **Second Brain** is a personal Curator vault on their own machine — that is what the canonical content below addresses. The **Firm Brain** is a *Curator Shared Brain instance* (v3.0.0-beta+) at the firm's `<firm>-brain` GitHub repo, populated by partners pushing their opted-in domain via Curator's `DeltaSummary` protocol and synthesized weekly by the admin. The **Ledger** is a separate GitHub repo holding Excel + Routine-authored markdown (per [ADR-001](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md)) — not Curator-managed.
+
+**Mirror-domain readonly rule.** After running Pull, each partner's local Curator gains a sibling `shared-<firm-slug>/` domain that mirrors the synthesized Firm Brain. **MCP write tools (`compile_to_wiki`, `fix_wiki_issue`) refuse writes to mirror domains** — the `readonly: true` frontmatter on the mirror is enforced. To contribute to the Firm Brain, edit pages in your *personal* opted-in domain (typically `firm`), then run Push. The next Synthesize will merge your contribution into the collective.
+
+**Onboarding sequence for a new partner joining a firm's Shared Brain:**
+1. Receive the firm's invite token (`sbi_…`) from the firm admin via any channel.
+2. Accept the GitHub collaborator invite on the `<firm>-brain` repo.
+3. Run Curator's six-step contributor wizard: paste invite token → verify access → create a fine-grained PAT → select your opted-in domain → consent to the firm's IP-mode terms → save.
+4. Curator now exposes Push / Pull buttons; the firm admin's weekly Synthesize will surface your contributions in the next mirror Pull.
+
+**IP mode awareness.** Curator's `data_handling_terms` is set by the admin at firm setup and locked once invite tokens go out. ØØT firms typically default to `organisational` (partners assign IP to the operating LLC per their partner charter); advisors / contractors / outside collaborators connect in `contributor_retains` mode. Curator's wizard surfaces the active mode in the consent step — you should read it before consenting.
+
+**Attribution flags.** Both `allow_name_attribution` (org-side) and `attribute_by_name` (contributor-side) default to **false** — UUID-pseudonymous attribution is the safe baseline. Surface your real name only if both flags are explicitly set true.
+
+**For Routine reads.** Cloud Routines that need firm-context knowledge (e.g., R5 reporting, R2 Friday business-review pre-fill) read the Firm Brain repo's `collective/<firm-domain>/wiki/` directly via git-clone — they do not use the my-curator MCP. The mirror is for partners' interactive use; the synthesized git tree is what Routines target.
+
+*[The imported canonical content — covering personal Second Brain operations — begins below. For Shared Brain Push / Pull / Synthesize operations, see Curator's [shared-brain.md](https://github.com/talirezun/the-curator/blob/main/docs/shared-brain.md) and [shared-brain-admin.md](https://github.com/talirezun/the-curator/blob/main/docs/shared-brain-admin.md).]*
 
 # My Curator — second brain playbook
 

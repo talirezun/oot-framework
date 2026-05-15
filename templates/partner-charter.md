@@ -22,7 +22,7 @@ Cohort changes require a signed renegotiation per §6.
 
 ## 2. Reward Species Declaration
 
-The Partner has signed a Reward Species Declaration recorded in `templates/excel/reward-species-declaration.xlsx` sheet `{{PARTNER_ID}}` and mirrored in the Brain at `firm/partners/{{PARTNER_ID}}/reward-species-declaration.md`. The declaration specifies:
+The Partner has signed a Reward Species Declaration recorded in `firm/excel/reward-species-declaration.xlsx` (X2) sheet `{{PARTNER_ID}}` in the **Ledger** repo (operative truth) and optionally mirrored in the Firm Brain at `entities/partners/{{PARTNER_ID}}/reward-species-declaration` (human-readable summary, partner-authored). The declaration specifies:
 
 - Reward species: `{{eat-what-you-kill | lockstep | hybrid}}`.
 - Annual base amount: {{BASE}} {{CURRENCY}}.
@@ -97,7 +97,30 @@ The Partner agrees:
 
 - All work product produced for the Firm — code, contracts, designs, content, prompts, ADRs — is the Firm's IP, with the licence-split applying for any externally-published content (Apache 2.0 for code; CC BY-SA 4.0 for documentation, where the Firm's IP is published openly).
 - Customer information, partner-private information, and the Firm's trade secrets are confidential.
-- The Brain is the Firm's IP; the Partner contributes to it; the Partner does not retain a personal copy upon exit beyond what was authored as their attributable contribution.
+
+### 8.1 IP mode for the Firm Brain (per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md))
+
+The Firm operates a Curator Shared Brain instance (the "Firm Brain") to which the Partner contributes via their personal Curator's opted-in domain. The Partner's contributions to the Firm Brain are bound by the Firm Brain's `data_handling_terms` field, set by the Firm's admin at Shared Brain setup and locked once invite tokens are distributed.
+
+The default IP mode for **full-time partners** (per §1 cohort designation) is **`organisational`** — copyright in pages contributed to the Firm Brain is assigned to the Firm. The Partner acknowledges and consents to this assignment by completing Curator's contributor wizard consent step.
+
+The default IP mode for **advisors** and **project specialists** is **`contributor_retains`** — copyright in pages contributed to the Firm Brain stays with the contributor; the Firm owns only the synthesized output. If a project specialist or advisor instead joins under `organisational` mode, this is documented in their charter as a side-letter override.
+
+Attribution flags `allow_name_attribution` (org-side) and `attribute_by_name` (Partner-side) default to **false** unless both Firm and Partner explicitly enable them; UUID-pseudonymous attribution is the baseline.
+
+### 8.2 What stays with the Partner; what is the Firm's
+
+- **The Partner's personal Second Brain** (their local Curator vault on their own machine, including the `personal` domain and any non-opted-in domains) is and remains the Partner's. The Firm has no claim on it. On exit, the Partner keeps it.
+- **The Partner's contributions to the Firm Brain** are governed by the IP mode set in §8.1. Under `organisational`, those contributions are the Firm's. Under `contributor_retains`, copyright stays with the Partner; the Firm owns only the synthesized output.
+- **The Ledger** (Excel files, audit logs, output logs) is and remains the Firm's IP regardless of IP mode — it is operational state, not knowledge contribution.
+
+### 8.3 Right to erasure on exit (GDPR Article 17)
+
+On the Partner's exit, the Firm's admin **may** invoke Curator's `POST /api/sharedbrain/:id/revoke` to remove the Partner's contributions from the Firm Brain (per [`governance/EU-AI-ACT.md`](../governance/EU-AI-ACT.md) §"GDPR Article 17"). The Partner has the right to request such revocation. The Firm has the right to decline only where retention is required by law (counsel-coordinated).
+
+Curator's revoke deletes the Partner's `contributions/<fellow_id>/*.json` payloads and triggers a re-synthesis. **Git history retains the prior commits** unless absolute erasure is additionally performed (`git filter-repo` + force-push + backup purge); the Partner may request this additional step at exit if they invoked `contributor_retains` mode.
+
+Regardless of revocation, the Partner's local personal Second Brain remains theirs (§8.2).
 
 ## 9. Two Worlds of Code self-identification
 
@@ -109,9 +132,11 @@ The Partner may exit the partnership with **30 days' written notice** (Gen 1 def
 
 - All variable pay through exit date is calculated and paid per the standard R3 cycle.
 - Long-tail entitlements continue per the Long_Tail_Schedule (Gen 1: until end_date specified at output sign-off; Gen 2: per smart-contract terms).
-- Bitwarden access revoked within 24 hours per `governance/SECRETS-POLICY.md`.
+- Bitwarden access revoked within 24 hours per `governance/SECRETS-POLICY.md`. This includes the Partner's Firm Brain GitHub PAT (per-partner collection).
+- The Partner's Firm Brain GitHub collaborator access is revoked within 24 hours.
 - 4thtech wallet (privacy track) remains the Partner's; the Firm updates routing.
-- The Partner's contributions to the Brain remain in the Brain, attributed to them.
+- **The Partner's contributions to the Firm Brain** remain by default (attributed via Provenance), unless the Partner requests revocation per §8.3 OR the Partner contributed in `contributor_retains` mode and elects to invoke their erasure right.
+- **The Partner's personal Second Brain** stays with the Partner on their own machine (§8.2). The Firm has no claim and no automated process touches it.
 
 The Firm may exit the partnership with the Partner only:
 

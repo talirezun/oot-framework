@@ -36,6 +36,9 @@ Commercial. Polished. Excellent UX. Supports the same organisational features. R
 - SSH private keys (encrypted in Bitwarden Secure Notes or via Bitwarden SSH agent).
 - TOTP secrets where the partner cannot use a hardware key.
 - Database passwords, internal service credentials.
+- **Curator Shared Brain `admin_token`** — 32+ random characters; gates the `POST /api/sharedbrain/:id/revoke` endpoint that performs GDPR Article 17 erasure on the Firm Brain. **Founders collection only.** Rotate on suspected compromise.
+- **GitHub fine-grained PATs for the Firm Brain** (one per partner; Contents read/write on the `<firm>-brain` repo) — used by each partner's Curator instance to Push their opted-in domain. **Per-partner collection.** Revoke on contributor exit; the corresponding Firm Brain revoke endpoint (see [EU-AI-ACT.md](EU-AI-ACT.md) Article 17) removes their contributions.
+- **GitHub fine-grained PATs for the Ledger** (one per Routine bot identity; Contents read/write on the `<firm>-ledger` repo, signed-commits enabled) — used by Routines per [ADR-001](../docs/internal/ADR-001-cloud-routine-excel-writeback.md). **Shared-services collection.**
 
 ### What does NOT go in Bitwarden
 
@@ -162,6 +165,9 @@ If both Yubikeys are lost: each account's recovery procedure must be invoked ind
 | API keys, OAuth tokens, SaaS passwords | Bitwarden | Per appropriate collection |
 | SSH private keys | Bitwarden Secure Notes or SSH agent | Use the SSH agent if available |
 | TOTP secrets | Bitwarden TOTP field | Or hardware key if account supports it |
+| **Curator Shared Brain `admin_token`** | **Bitwarden — founders collection** | Gates GDPR Article 17 revoke endpoint; rotate on suspected compromise |
+| **Firm Brain GitHub PAT (per partner)** | **Bitwarden — per-partner collection** | Fine-grained; Contents r/w on `<firm>-brain`; revoke on partner exit |
+| **Ledger GitHub PAT (Routine bot identity)** | **Bitwarden — shared-services collection** | Fine-grained; Contents r/w on `<firm>-ledger`; signed-commits enabled |
 | Crypto wallet seed phrases | Trezor recovery card (paper) | Never digital |
 | Crypto signing keys | Trezor (on-device) | Never exported |
 | 4thtech wallet identity (privacy track) | Trezor (on-device) | Per-partner |

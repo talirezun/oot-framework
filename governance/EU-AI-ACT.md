@@ -78,9 +78,10 @@ The four articles ØØT explicitly maps:
 
 **ØØT mapping:**
 
-- Routine R6 (EU AI Act Audit Trail) is the framework's primary logging mechanism. Runs daily at 23:00. Appends to a markdown audit log committed to the Brain.
+- Routine R6 (EU AI Act Audit Trail) is the framework's primary logging mechanism. Runs daily at 23:00. Appends to a markdown audit log committed to the **Ledger** repo (per [ADR-001](../docs/internal/ADR-001-cloud-routine-excel-writeback.md) and [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)).
 - The audit log captures: AI system identifier, decision context, input summary (sanitised for PII), output, human reviewer if any, timestamp.
-- **Practical immutability is provided by three combined controls** on the Brain repo's audit branch (typically `main`): (a) force-push disabled; (b) deletion disabled; (c) signed commits required (GPG or SSH); (d) audit log paths under `firm/audit-logs/` are append-only by convention. Plain `git history` alone is **not** immutable — force-push can rewrite history — so the controls above must be configured at the GitHub repo level. The cloud installer (Phase 9) and the Code & QA SKILL.md (S4) document the configuration. Generation 2 introduces external anchoring (daily SHA-256 of the audit log committed to a public ledger or service) for adopters who require stronger guarantees.
+- **Practical immutability is provided by three combined controls** on the Ledger repo's audit branch (typically `main`): (a) force-push disabled; (b) deletion disabled; (c) signed commits required (GPG or SSH); (d) audit log paths under `firm/audit-logs/` are append-only by convention. Plain `git history` alone is **not** immutable — force-push can rewrite history — so the controls above must be configured at the GitHub repo level. **The Firm Brain repo (Curator Shared Brain) inherits the same three controls** for its synthesized output history; Curator's per-contributor revocation audit log lives alongside (`state/last-synthesis.json` + per-revoke audit entries). The cloud installer (Phase 9) and the Code & QA SKILL.md (S4) document the configuration. Generation 2 introduces external anchoring (daily SHA-256 of the audit log committed to a public ledger or service) for adopters who require stronger guarantees.
+- **GitHub plan-tier requirement (Finding #16):** GitHub Free private repos do **not** enforce branch protection. The Article 12 immutability claim is therefore only defensible on **GitHub Team** or higher for both the Ledger and the Firm Brain. EU firms requiring data residency must additionally be on **GitHub Enterprise Cloud with the EU residency option**.
 
 **Adopter actions:**
 - Confirm R6 is configured and running for every high-risk use case.
@@ -136,6 +137,37 @@ The framework's variable pay calculations and Klarna Test gating both have poten
 **Adopter actions:**
 - Confirm no Routine in your organisation's deployment makes a final decision affecting partner compensation without human sign-off.
 - If you customise R3 to auto-pay, document the legal basis and inform partners.
+
+---
+
+## GDPR Article 17 — Right to Erasure ("Right to be Forgotten")
+
+**Obligation:** Data subjects have the right to obtain erasure of personal data concerning them, in defined circumstances (consent withdrawn, data no longer necessary, unlawful processing, legal obligation, etc.).
+
+**ØØT mapping:**
+
+The Firm Brain (Curator Shared Brain instance, per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)) provides a **first-class Article 17 mechanism** via Curator's built-in admin revoke endpoint. This replaces the hand-rolled erasure procedure of pre-v1.0.1 ØØT.
+
+**Revocation procedure (departing partner / advisor / contractor):**
+
+1. Admin (cohort administrator — typically the founding partner) authenticates with the `admin_token` (held in Bitwarden per the secrets policy).
+2. Admin calls `POST /api/sharedbrain/:id/revoke` with the departing contributor's UUID and a typed confirmation string of the form `REVOKE-<fellow_id>`. The typed-confirmation safety gate prevents accidental erasure.
+3. Curator deletes the contributor's payloads from `contributions/<fellow_id>/` in the Firm Brain repo and triggers a re-synthesis excluding their content.
+4. Curator appends a revoke audit entry (UUID only, no PII) to `state/revocation-log.json`.
+
+**Important limitations of the built-in revoke:**
+
+- **Git history retains old commits.** True absolute erasure requires `git filter-repo`, force-push (which requires temporarily lifting branch protection — record this in the Risk Register), backup purging across mirrors, and notification to any contributor who pulled before revocation. Curator's revoke does **not** pretend to cover this.
+- **Local contributor mirrors are not auto-purged.** Each partner's local `shared-<firm-slug>/` domain still contains the pre-revocation snapshot until they next Pull. Communicate the revocation through firm comms (Slack / 4thtech dChat) so partners re-Pull.
+- **External backups (PollinationX, GitHub backups, downstream archives) are unaffected** by the revoke endpoint. The firm's data-retention policy must specify how those are handled on revocation.
+
+**Per-contributor / per-customer Article 17 requests against personal data in the Ledger** (e.g., a former customer asks for erasure of contract data in `firm/customers/`): the Ledger is GitHub-native, not Curator-managed; erasure is `git filter-repo` + force-push + backup-purge + auditor notification, performed by the firm under counsel's guidance.
+
+**Adopter actions:**
+- Store the Curator Shared Brain `admin_token` in the **founders** Bitwarden collection (32+ random characters). Rotate on suspected compromise.
+- Document the firm's "data retention policy" addressing both Curator-revoke (Firm Brain) and `git filter-repo` (Ledger) procedures.
+- Train at least one founder + one alternate on running both procedures end-to-end before any contributor erasure request arrives.
+- For EU firms: confirm Firm Brain storage residency is EU-compliant (GitHub Enterprise Cloud EU option today; Cloudflare R2 with `jurisdiction = "eu"` in Curator v3.1).
 
 ---
 
