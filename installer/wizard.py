@@ -66,7 +66,7 @@ except ImportError:
 
 # ----- constants ------------------------------------------------------------
 
-WIZARD_VERSION = "1.1.0"
+WIZARD_VERSION = "1.2.0"
 OOT_HOME = Path(os.environ.get("OOT_HOME", Path.home() / ".oot"))
 STATE_FILE = OOT_HOME / "wizard-state.yaml"
 VENV_DIR = OOT_HOME / "venv"
@@ -1280,7 +1280,7 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
 def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_08_brain_repo"):
         return
-    header("Step 8 / 15 — Create the Ledger GitHub repo", level=2)
+    header("Step 8 / 15 — Create the Ledger + Firm Brain GitHub repos", level=2)
 
     locations = state["locations"]
     profile = state["firm_profile"]
@@ -1291,17 +1291,22 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
 
     explainer(
         "What this step does and why",
-        "Your firm's operational data — Excel files, output logs, audit logs, partner\n"
-        "ledgers — lives in a GitHub repository. The framework's Routines read from it\n"
-        "and write back to it via signed commits (that's how the audit trail stays\n"
-        "tamper-evident). This step does FOUR things:\n\n"
-        "  1. Creates a folder on YOUR machine (the local clone).\n"
+        "Per ADR-002 your firm uses TWO GitHub repos:\n\n"
+        "  - The Ledger (<firm-slug>-ledger): your operational state — Excel files,\n"
+        "    output logs, audit logs. Mutated by Routines via signed commits per ADR-001.\n"
+        "  - The Firm Brain (<firm-slug>-brain): a Curator Shared Brain instance —\n"
+        "    synthesized firm IP (theses, decisions, ADRs, partner profiles).\n"
+        "    Populated by partners pushing from their personal Curators; synthesized\n"
+        "    weekly by the admin (you, the founder).\n\n"
+        "This step does FIVE things:\n\n"
+        "  1. Creates a folder on YOUR machine (the Ledger's local clone).\n"
         "  2. Scaffolds the firm/ subfolder structure (excel/, output-logs/, etc.)\n"
         "     and copies in the 9 Excel templates from the framework.\n"
         "  3. Makes the first commit (unsigned for now — signing key comes next step).\n"
-        "  4. Creates the GitHub repo and pushes everything to it.\n\n"
-        "If your `gh` CLI is installed and you're logged in, step 4 is one command and\n"
-        "5 seconds. Otherwise we walk you through clicking through github.com.",
+        "  4. Creates the LEDGER GitHub repo and pushes everything to it.\n"
+        "  5. Creates the FIRM BRAIN GitHub repo (empty — Curator populates it in Step 11).\n\n"
+        "If your `gh` CLI is installed and you're logged in, steps 4+5 are one command\n"
+        "each. Otherwise we walk you through clicking through github.com.",
     )
 
     # --- Substep 1: local folder + git init -------------------------------
@@ -1375,9 +1380,9 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             check=False)
 
     # --- Substep 4: create the GitHub repo + push -------------------------
-    info("\n[4/4] Create the GitHub repo + push")
-    repo_name_default = f"{firm_slug}-brain"
-    repo_name = ask_text("Repository name on GitHub", default=repo_name_default)
+    info("\n[4/5] Create the Ledger GitHub repo + push")
+    repo_name_default = f"{firm_slug}-ledger"
+    repo_name = ask_text("Ledger repository name on GitHub", default=repo_name_default)
 
     repo_created_via_gh = False
     if gh_available_and_authed():
@@ -1450,6 +1455,77 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             ok("Added remote 'origin'.")
         if ask_confirm("Push to origin/main now? (May prompt for GitHub credentials.)", default=True):
             run(["git", "push", "-u", "origin", "main"], dry_run=dry_run, check=False)
+
+    # --- Substep 5: create the Firm Brain repo (empty) --------------------
+    info("\n[5/5] Create the Firm Brain GitHub repo (empty — Curator populates it in Step 11)")
+    explainer(
+        "Why an empty repo here",
+        "The Firm Brain is a Curator Shared Brain — Curator's admin wizard (Step 11)\n"
+        "will populate it with `contributions/`, `collective/`, `state/`, etc. We just\n"
+        "need the empty repo to exist on GitHub so Curator can push the initial scaffold.",
+    )
+
+    fb_repo_name_default = f"{firm_slug}-brain"
+    fb_repo_name = ask_text("Firm Brain repository name on GitHub", default=fb_repo_name_default)
+
+    # Confirm it differs from the Ledger repo name
+    if fb_repo_name == repo_name:
+        warn(
+            f"The Firm Brain repo name ('{fb_repo_name}') is the same as the Ledger\n"
+            f"repo name. They MUST be different. Picking '{fb_repo_name_default}-firm' instead — \n"
+            f"or you can override with another name."
+        )
+        fb_repo_name = ask_text("Firm Brain repository name (must differ from Ledger)",
+                                default=f"{firm_slug}-firm-brain")
+
+    fb_repo_created_via_gh = False
+    if gh_available_and_authed():
+        login = gh_user_login() or "(you)"
+        fb_full_repo = f"{login}/{fb_repo_name}"
+        if ask_confirm(
+            f"Create the Firm Brain repo {fb_full_repo} (private) automatically via `gh`? "
+            "(recommended — empty repo, no push)",
+            default=True,
+        ):
+            info(f"  Creating {fb_full_repo}...")
+            rc, out = run(
+                ["gh", "repo", "create", fb_full_repo,
+                 "--private",
+                 "--description", f"ØØT Firm Brain for {profile['name']} — Curator Shared Brain (synthesized firm IP)"],
+                dry_run=dry_run, capture=True, check=False,
+            )
+            if rc == 0:
+                ok(f"Firm Brain repo created: https://github.com/{fb_full_repo}")
+                state["firm_brain_repo_url"] = f"https://github.com/{fb_full_repo}.git"
+                state["firm_brain_repo_owner"] = login
+                state["firm_brain_repo_name"] = fb_repo_name
+                fb_repo_created_via_gh = True
+            else:
+                warn("`gh repo create` for Firm Brain failed. Output:")
+                if out:
+                    info(out)
+                warn("Falling back to the web UI walkthrough.")
+
+    if not fb_repo_created_via_gh:
+        info(
+            "\n  Manual Firm Brain repo creation:\n"
+            f"    1. Open https://github.com/new in your browser.\n"
+            f"    2. Repository name:        {fb_repo_name}\n"
+            f"    3. Description:            ØØT Firm Brain for {profile['name']} — Curator Shared Brain\n"
+            f"    4. Visibility:             Private (always private for the Firm Brain)\n"
+            f"    5. Initialize:             leave ALL THREE checkboxes UNCHECKED\n"
+            f"    6. Click 'Create repository'.\n"
+        )
+        if not ask_confirm("Firm Brain repo created on GitHub.com?", default=True):
+            info("Pausing. Re-run the bootstrap to resume.")
+            sys.exit(0)
+        fb_repo_url = ask_text(
+            "Firm Brain repo HTTPS URL",
+            default=f"https://github.com/<you>/{fb_repo_name}.git",
+        )
+        if not fb_repo_url.endswith(".git"):
+            fb_repo_url = fb_repo_url.rstrip("/") + ".git"
+        state["firm_brain_repo_url"] = fb_repo_url
 
     mark_step_done(state, "step_08_brain_repo")
 
@@ -1688,7 +1764,7 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
     if not applied_via_gh:
         settings_url = (repo_url.removesuffix(".git") or "<repo>") + "/settings/branches"
         info(
-            f"\nManual branch-protection setup:\n"
+            f"\nManual branch-protection setup (Ledger):\n"
             f"  1. Open {settings_url} in your browser.\n"
             "  2. Click 'Add classic branch protection rule' (or 'Add ruleset').\n"
             "  3. Branch name pattern: main\n"
@@ -1699,9 +1775,84 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
             "       ☐  Require pull request before merging\n"
             "  5. Click 'Create'.\n"
         )
-        if not ask_confirm("Branch protection rule created?", default=True):
+        if not ask_confirm("Branch protection rule (Ledger) created?", default=True):
             info("Pausing.")
             sys.exit(0)
+
+    # --- Now also do the Firm Brain repo (ADR-002) ------------------------
+    header("Step 10b — Branch protection on the Firm Brain repo", level=3)
+    explainer(
+        "Why also on the Firm Brain",
+        "Per ADR-002, the Firm Brain repo (<firm-slug>-brain) holds Curator's\n"
+        "synthesized firm IP with UUID Provenance attribution and the GDPR Article 17\n"
+        "revoke audit log. Without branch protection, force-push or unsigned-commit\n"
+        "would compromise those guarantees. Same checkbox configuration as the Ledger.",
+    )
+    fb_url = state.get("firm_brain_repo_url", "")
+    fb_owner = state.get("firm_brain_repo_owner")
+    fb_name = state.get("firm_brain_repo_name")
+    fb_applied_via_gh = False
+    if gh_available_and_authed() and fb_owner and fb_name:
+        if ask_confirm(
+            f"Apply identical branch protection to the Firm Brain ({fb_owner}/{fb_name}) "
+            "automatically via `gh api`?",
+            default=True,
+        ):
+            fb_payload = {
+                "required_status_checks": None,
+                "enforce_admins": True,
+                "required_pull_request_reviews": None,
+                "restrictions": None,
+                "required_signatures": True,
+                "allow_force_pushes": False,
+                "allow_deletions": False,
+            }
+            fb_payload_path = Path("/tmp/oot-firm-brain-branch-protection.json")
+            import json as _json
+            fb_payload_path.write_text(_json.dumps(fb_payload))
+            rc, out = run(
+                ["gh", "api", "-X", "PUT",
+                 f"repos/{fb_owner}/{fb_name}/branches/main/protection",
+                 "-H", "Accept: application/vnd.github+json",
+                 "--input", str(fb_payload_path)],
+                dry_run=dry_run, capture=True, check=False,
+            )
+            # On a freshly-created empty Firm Brain repo without a `main` branch yet,
+            # branch protection cannot be applied. Curator's admin wizard (Step 11)
+            # will create the initial commit on main; THEN we can apply protection.
+            # If `gh api` fails with 404 here, surface that and defer.
+            if rc == 0:
+                run(["gh", "api", "-X", "POST",
+                     f"repos/{fb_owner}/{fb_name}/branches/main/protection/required_signatures",
+                     "-H", "Accept: application/vnd.github.zzzax-preview+json"],
+                    dry_run=dry_run, capture=True, check=False)
+                ok("Branch protection applied on Firm Brain main.")
+                fb_applied_via_gh = True
+            else:
+                if "404" in (out or "") or "Branch not found" in (out or ""):
+                    warn(
+                        "Firm Brain has no `main` branch yet (the repo is empty until\n"
+                        "Curator's admin wizard pushes the first commit in Step 11).\n"
+                        "We'll re-apply branch protection on Firm Brain at the end of Step 11."
+                    )
+                    state["firm_brain_protection_deferred"] = True
+                else:
+                    warn("`gh api` failed for Firm Brain. Output:")
+                    if out:
+                        info(out)
+            fb_payload_path.unlink(missing_ok=True)
+
+    if not fb_applied_via_gh and not state.get("firm_brain_protection_deferred"):
+        fb_settings_url = (fb_url.removesuffix(".git") or "<firm-brain-repo>") + "/settings/branches"
+        info(
+            f"\nManual branch-protection setup (Firm Brain):\n"
+            f"  1. After Curator's admin wizard (Step 11) makes the first commit on the\n"
+            f"     Firm Brain repo's main branch, open {fb_settings_url} in your browser.\n"
+            f"  2. Apply the SAME branch protection checkboxes as the Ledger above.\n"
+            f"  3. Click 'Create'.\n"
+            f"  4. Tell the wizard `done` at the end of Step 11."
+        )
+        state["firm_brain_protection_deferred"] = True
 
     mark_step_done(state, "step_10_branch_protection")
 
@@ -1819,6 +1970,160 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     if not ask_confirm("Curator integration complete (Curator running + MCP green)?", default=True):
         info("Pausing here. Re-run the bootstrap to resume.")
         sys.exit(0)
+
+    # --- Step 11b: Firm Brain admin wizard (Curator Shared Brain) ----------
+    header("Step 11b — Firm Brain admin wizard (Curator Shared Brain v3.0.0-beta+)", level=3)
+    explainer(
+        "What this sub-step does and why",
+        "Per ADR-002, your firm's collective knowledge — theses, decisions, ADRs,\n"
+        "partner profiles, prompts — lives in the Firm Brain, a Curator Shared Brain\n"
+        "instance in the repo you created at Step 8 (`<firm-slug>-brain`). You're the\n"
+        "admin. This sub-step walks you through Curator's admin wizard, generates the\n"
+        "admin_token + invite token, and verifies the Push → Synthesize → Pull loop.\n\n"
+        "Requires Curator v3.0.0-beta+. Older Curator versions don't have the Shared\n"
+        "Brain feature — upgrade Curator before continuing.",
+    )
+
+    fb_url = state.get("firm_brain_repo_url", "")
+
+    # IP mode decision
+    info("\n[11b/1] IP mode for the Firm Brain")
+    info("  Curator's `data_handling_terms` field locks once invite tokens are distributed,")
+    info("  so pick now:")
+    info("    - `organisational` (recommended): copyright in contributions assigns to the firm.")
+    info("      Standard for ØØT firms with full-time partners signing the Partner Charter.")
+    info("    - `contributor_retains`: copyright stays with contributors; firm owns only the")
+    info("      synthesized output. Best for advisor/contractor-heavy firms.")
+    ip_mode = ask_select(
+        "IP mode",
+        choices=["organisational", "contributor_retains"],
+        default="organisational",
+    )
+    state.setdefault("firm_profile", {})["firm_brain_ip_mode"] = ip_mode
+    info(f"  ✓ IP mode set to: {ip_mode}")
+
+    # Curator admin wizard (manual — runs in Curator's GUI)
+    info("\n[11b/2] Run Curator's admin wizard")
+    info(f"  In the Curator desktop app: Shared Brain → Admin Setup.")
+    info(f"  Configure with these values:")
+    info(f"    - GitHub repo URL:     {fb_url or '<your Firm Brain repo URL>'}")
+    info(f"    - Brain name:          {state['firm_profile'].get('name', '<firm name>')}")
+    info(f"    - data_handling_terms: {ip_mode}")
+    info(f"    - allow_name_attribution: ☐ unchecked (UUID-pseudonymous baseline)")
+    info(f"    - attribute_by_name (self):  ☐ unchecked")
+    info("  Click 'Generate admin token + invite token'. Two values appear:")
+    info("    - admin_token (gates GDPR Article 17 revoke endpoint)")
+    info("    - invite token (sbi_...) — what you share with each partner during onboarding")
+
+    if not ask_confirm("Both tokens displayed in Curator?", default=True):
+        info("Pausing here. Re-run with --resume after running the admin wizard.")
+        sys.exit(0)
+
+    # Persist that tokens were generated (NEVER persist the values themselves)
+    info("\n[11b/3] SAVE the tokens to Bitwarden NOW (do not skip this)")
+    info("  Open Bitwarden and create two new entries in the 'founders' collection:")
+    firm_slug = state.get("locations", {}).get("firm_slug", "<firm-slug>")
+    info(f"    1. Name: '{firm_slug} — Curator Shared Brain admin_token'")
+    info(f"       Paste the admin_token into the password field.")
+    info(f"    2. Name: '{firm_slug} — Firm Brain invite token (sbi_)'")
+    info(f"       Paste the invite token (you'll share this with each partner).")
+
+    if not ask_confirm("Both tokens saved to Bitwarden founders collection?", default=True):
+        warn("Tokens MUST be saved before continuing — losing the admin_token means you")
+        warn("cannot perform GDPR Article 17 revocations without rotating the brain.")
+        if not ask_confirm("OK to proceed anyway (you'll save them right after)?", default=False):
+            sys.exit(0)
+    state["firm_brain_admin_token_saved"] = True
+    state["firm_brain_invite_token_saved"] = True
+
+    # Founder runs their own contributor wizard
+    info("\n[11b/4] Run your own contributor wizard (founders contribute too)")
+    info("  In Curator: Shared Brain → Connect to Brain. Then the six-step wizard:")
+    info("    1. Paste your invite token (sbi_...)")
+    info("    2. Verify GitHub collaborator access (you own the repo, so this passes)")
+    info(f"    3. Create a fine-grained PAT scoped to {fb_url or '<firm-brain-repo>'}")
+    info("       (Contents: read+write; Metadata: read).")
+    info(f"    4. Select your opted-in domain: {state.get('locations', {}).get('curator_domain', '<domain>')}")
+    info(f"    5. Consent to the IP-mode terms ({ip_mode}).")
+    info("    6. Save. Connection card with Push/Pull buttons appears.")
+
+    info("\n  Save the PAT to Bitwarden under your **per-partner** collection,")
+    info(f"  named '{firm_slug} — Firm Brain contributor PAT (founder)'.")
+    if not ask_confirm("Founder contributor wizard complete + PAT saved?", default=True):
+        info("Pausing. Re-run with --resume after completion.")
+        sys.exit(0)
+
+    # Verify the loop end-to-end
+    info("\n[11b/5] Verify Push → Synthesize → Pull end-to-end")
+    info("  In Curator (your opted-in domain), create a one-line page:")
+    info("    concepts/theses.md  →  'First thesis: <something simple>'")
+    info("  Click Push. Then verify on GitHub:")
+    info(f"    {fb_url.removesuffix('.git') if fb_url else '<firm-brain-repo>'}/tree/main/contributions/")
+    info("  You should see one JSON file (your DeltaSummary payload).")
+    if not ask_confirm("First Push verified (JSON file visible in contributions/)?", default=True):
+        warn("Push didn't land. Common causes: PAT missing Contents:write; branch protection")
+        warn("rejecting unsigned commits; firewall blocking Curator's GitHub API call.")
+        sys.exit(0)
+
+    info("\n  Now run Synthesize (admin-only):")
+    info("    In Curator: Shared Brain → Run Synthesize.")
+    info("  Verify:")
+    info(f"    {fb_url.removesuffix('.git') if fb_url else '<firm-brain-repo>'}/tree/main/collective/")
+    info(f"    You should see the synthesized concepts/theses.md page with a Provenance block (UUID-attributed).")
+    if not ask_confirm("First Synthesize verified (collective/ folder populated)?", default=True):
+        sys.exit(0)
+    state["firm_brain_first_synthesize_ok"] = True
+
+    info("\n  Now click Pull. Curator downloads the synthesized result into a local")
+    info(f"  read-only domain 'shared-{firm_slug}/'. Verify in Claude Desktop:")
+    info("    > Use my-curator. List domains.")
+    info(f"  You should see both '{state.get('locations', {}).get('curator_domain', '<domain>')}'")
+    info(f"  (your personal opted-in domain) AND 'shared-{firm_slug}/' (the read-only mirror).")
+    if not ask_confirm("Pull verified (mirror domain visible)?", default=True):
+        sys.exit(0)
+
+    # If we deferred branch protection on the Firm Brain at Step 10, apply it now
+    if state.get("firm_brain_protection_deferred"):
+        info("\n[11b/6] Apply branch protection to the Firm Brain (was deferred at Step 10)")
+        info("  Curator's admin wizard has now committed to the Firm Brain repo's main branch,")
+        info("  so branch protection can be applied.")
+        fb_owner = state.get("firm_brain_repo_owner")
+        fb_name = state.get("firm_brain_repo_name")
+        applied = False
+        if gh_available_and_authed() and fb_owner and fb_name:
+            if ask_confirm("Apply branch protection automatically via `gh api`?", default=True):
+                fb_payload = {
+                    "required_status_checks": None,
+                    "enforce_admins": True,
+                    "required_pull_request_reviews": None,
+                    "restrictions": None,
+                    "required_signatures": True,
+                    "allow_force_pushes": False,
+                    "allow_deletions": False,
+                }
+                fb_payload_path = Path("/tmp/oot-firm-brain-branch-protection-deferred.json")
+                import json as _json
+                fb_payload_path.write_text(_json.dumps(fb_payload))
+                rc, out = run(
+                    ["gh", "api", "-X", "PUT",
+                     f"repos/{fb_owner}/{fb_name}/branches/main/protection",
+                     "-H", "Accept: application/vnd.github+json",
+                     "--input", str(fb_payload_path)],
+                    dry_run=dry_run, capture=True, check=False,
+                )
+                if rc == 0:
+                    ok("Branch protection applied on Firm Brain main.")
+                    applied = True
+                else:
+                    warn(f"`gh api` failed: {out}")
+                fb_payload_path.unlink(missing_ok=True)
+        if not applied:
+            fb_settings_url = (fb_url.removesuffix(".git") or "<firm-brain-repo>") + "/settings/branches"
+            info(f"  Manual: open {fb_settings_url} and apply the same checkbox configuration as Step 10.")
+            ask_confirm("Firm Brain branch protection applied?", default=True)
+        state.pop("firm_brain_protection_deferred", None)
+
+    ok("Firm Brain admin setup complete.")
     mark_step_done(state, "step_11_curator")
 
 
@@ -2275,8 +2580,17 @@ def step_15_summary(state: dict[str, Any], dry_run: bool) -> None:
         f"- Required: {', '.join(modules.get('required', []))}\n"
         f"- Recommended: {', '.join(modules.get('recommended', [])) or '(none)'}\n"
         f"- Deferred: {', '.join(modules.get('deferred', [])) or '(none)'}\n"
-        f"\n## GitHub repo\n\n"
-        f"{state.get('ledger_repo_url', '<not configured>')}\n"
+        f"\n## GitHub repos (two — per ADR-002)\n\n"
+        f"- **Ledger** (operational state — Excel, audit logs):\n"
+        f"  {state.get('ledger_repo_url', '<not configured>')}\n"
+        f"- **Firm Brain** (Curator Shared Brain — synthesized firm IP):\n"
+        f"  {state.get('firm_brain_repo_url', '<not configured>')}\n"
+        f"\n## Firm Brain configuration\n\n"
+        f"- IP mode: `{profile.get('firm_brain_ip_mode', '<not set>')}` "
+        f"({'partners assign IP to firm' if profile.get('firm_brain_ip_mode') == 'organisational' else 'contributors retain IP' if profile.get('firm_brain_ip_mode') == 'contributor_retains' else '<unset>'})\n"
+        f"- admin_token saved to Bitwarden: {'YES' if state.get('firm_brain_admin_token_saved') else 'NO — DO THIS NOW'}\n"
+        f"- Invite token (sbi_) saved to Bitwarden: {'YES' if state.get('firm_brain_invite_token_saved') else 'NO — DO THIS NOW'}\n"
+        f"- First Synthesize verified: {'YES' if state.get('firm_brain_first_synthesize_ok') else 'NO'}\n"
         f"\n## Signing key\n\n"
         f"GPG key ID: `{state.get('signing_key_id', '<not generated>')}`\n"
     )

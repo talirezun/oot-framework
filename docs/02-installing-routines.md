@@ -140,6 +140,22 @@ If both verifications pass, R5 is operational. ✓
 - **R4** — install after the first quarter (so partners have shipped long-tail-eligible outputs).
 - **R7** — install after Phase 8 ships `.github/workflows/klarna-gate.yml` and you have configured the `ai-replaces-human` auto-labeller and the required-status-check branch protection.
 - **R8** — install only if the firm adopts the Unit Fund (Generation 2 readiness).
+- **R9 — Firm Brain Synthesize** — install as soon as the Firm Brain (Curator Shared Brain) is provisioned, typically Weekend One Sunday evening alongside the founder's contributor wizard. **R9 is the *one routine that does not run on Claude Code Routines* — it runs on the admin's machine via Curator's local CLI (or the Curator desktop app's Synthesize button).** It does **not** count against Claude Code Routine per-day plan-tier limits. Schedule weekly (Sunday evening recommended) — on the cloud track, that's a calendar reminder or a local cron; on the privacy track, a cron on the always-on machine: `0 19 * * 0 /usr/local/bin/curator sharedbrain synthesize --brain <firm>-brain >> ~/oot/logs/r9.log 2>&1`. See [`routines/SPEC.md`](../routines/SPEC.md) §R9 for the full operation flow + failure handling.
+
+### Per-Routine repo access (post-ADR-002)
+
+Routines that need firm-context knowledge (decision rationales, partner profiles, prompt artefacts) read the **Firm Brain repo's** `collective/<firm-domain>/wiki/` directly via git clone — they do not push to it. The per-Routine access matrix is documented in [`routines/SPEC.md`](../routines/SPEC.md) "Routine write authority: Ledger only" section. Quick reference:
+
+| Routine | Reads Firm Brain? | Why |
+|---|---|---|
+| R1 | optional | Output-spec lookup at value-tier resolution |
+| R2 | yes | Decisions / ADRs / partner profiles for the Friday BR pre-fill |
+| R3 | optional | Reward-species summary + partner profile |
+| R5 | yes | Brain health scans synthesized firm IP for orphans / broken links |
+| R7 | yes | Decisions / ADRs touching the gated change |
+| R9 | (writes via Curator's protocol, not git push) | Admin-only Synthesize |
+
+For Routines that need Firm Brain reads, add a **second GitHub connector** in their Claude Code Routines configuration pointing at `<firm-slug>-brain` with **read-only** access. Same pattern as the existing Second Brain bridge connector (`<firm-slug>-secondbrain` is retired as a framework primitive per [ADR-002](internal/ADR-002-firm-brain-curator-shared-brain.md); Routines now target the Firm Brain repo for firm context).
 
 ---
 

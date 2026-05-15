@@ -9,7 +9,11 @@
   - 3 advisors (industry, technical, M&A).
 - **Reward species mix:** 3 hybrid, 1 lockstep (most senior founder), 1 eat-what-you-kill.
 - **Track:** cloud.
-- **Brain status:** Level 4. 4 Curator domains: `firm`, `customers`, `products`, `legal`.
+- **Brain status:** Level 4. Each partner runs their own Curator with 4 personal domains: `firm`, `customers`, `products`, `legal`. The `firm` domain is opted-in to the Firm Brain. **Firm Brain** is a Curator Shared Brain instance per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md).
+- **GitHub repos:** two — `brda-coop-ledger` (operational state) + `brda-coop-brain` (Firm Brain). EU-residency requirement (one customer is a regulated EU supervisor) means **GitHub Enterprise Cloud with EU residency option** for both repos (5 seats = ~€105/mo).
+- **Firm Brain IP mode:** `organisational` (binding via the cooperative's IP-assignment policy in each Partner Charter §8.1). The 3 advisors signed side-letters explicitly affirming `organisational` for the brain even though they are paid as advisors — the cooperative's policy is that all firm-IP contributions go to the cooperative regardless of cohort. Specialists' Output Specs (one per customer engagement) remain in the Ledger as operational artefacts; only firm-level theses, decisions, ADRs go to the Firm Brain.
+- **Attribution flags:** UUID-pseudonymous baseline. Three founders enable `attribute_by_name` selectively on customer-facing thought-leadership pages (signed firm theses, market analyses) that go to the firm's external blog after synthesis.
+- **Synthesize cadence:** weekly, Sunday evening, alternates between the founders (rotation logged in `firm/routines/changelog.md`). Cost ~$0.04/week (heavier than small-org because of higher contribution volume).
 - **Legal posture:** Slovenian cooperative (`zadruga`) + Croatian d.o.o. sister entity. EU-only operations.
 - **EU AI Act exposure:** Limited + ONE high-risk use case (AI-driven supplier-trust scoring used by wine-industry customers). Counsel engaged; full Article 9/12/13/14 mapping in X7.
 

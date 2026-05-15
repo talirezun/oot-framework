@@ -114,12 +114,16 @@
 ## Both-track tools
 
 ### The Curator (the reference Brain implementation)
-- **What:** open-source desktop app + MyCuratorMCP server (17 tools).
-- **Why ØØT uses it:** Skill Pack S1 imports the Curator's `SKILL.md` verbatim. The Brain is the framework's compounding-IP substrate.
+- **What:** open-source desktop app + MyCuratorMCP server (17 tools) + **Shared Brain primitive** (v3.0.0-beta+).
+- **Why ØØT uses it:** Skill Pack S1 imports the Curator's `SKILL.md` verbatim. Each partner's personal **Second Brain** is a Curator vault on their own machine. Per [ADR-002](internal/ADR-002-firm-brain-curator-shared-brain.md), the firm's collective IP (the **Firm Brain**) is a Curator Shared Brain instance — partners push from their opted-in domain, the admin runs weekly Synthesize.
+- **Version requirement (Gen 1):** **Curator v3.0.0-beta+** for Shared Brain support. Older versions support only personal Second Brain. If you're on Curator v2.x, upgrade before completing the install — the Firm Brain step in the install plan requires Shared Brain features.
+- **Shared Brain features:** (1) opted-in domain contribution with `DeltaSummary` preprocessing — only the opted-in domain leaves the partner's machine; (2) Jaccard + selective-LLM conflict resolution at synthesis; (3) UUID-pseudonymous Provenance attribution with optional double-gated name-attribution; (4) `data_handling_terms` field (`organisational` vs `contributor_retains`) locked at admin setup; (5) GDPR Article 17 revoke endpoint with typed-confirmation safety gate.
 - **Repo + research:** [github.com/talirezun/the-curator](https://github.com/talirezun/the-curator)
+- **Shared Brain docs:** [shared-brain.md](https://github.com/talirezun/the-curator/blob/main/docs/shared-brain.md) (user guide), [shared-brain-admin.md](https://github.com/talirezun/the-curator/blob/main/docs/shared-brain-admin.md), [shared-brain-compliance.md](https://github.com/talirezun/the-curator/blob/main/docs/shared-brain-compliance.md), [shared-brain-design.md](https://github.com/talirezun/the-curator/blob/main/docs/shared-brain-design.md).
 - **Research articles:** [github.com/talirezun/the-curator/tree/main/research](https://github.com/talirezun/the-curator/tree/main/research)
-- **When you'll meet it:** Sunday morning of Weekend One. Install + first ingest. See [`docs/01-installing-the-curator.md`](01-installing-the-curator.md).
-- **Cost:** free app + cloud-LLM ingest at ~€5-10/month per heavy user.
+- **When you'll meet it:** Sunday morning of Weekend One. Install + first ingest + Firm Brain admin wizard. See quickstart §Step 8 / 8b.
+- **Gen 1 cloud-LLM dependency (single remaining):** Curator v3.0.0-beta uses Gemini Flash Lite at personal Second Brain ingest AND at the admin's weekly Firm Brain Synthesize step. Partners' own MCP read/write interactions on the privacy track can run fully on a local LLM (LM Studio + Qwen/Llama/DeepSeek). **Curator v3.1 (Gen 2 alignment)** ships local-LLM ingest + local-LLM synthesis, plus a Cloudflare R2 backend with `jurisdiction = "eu"` for EU residency at lower cost than GitHub Enterprise Cloud.
+- **Cost:** free app + cloud-LLM ingest + admin weekly synthesis at ~€5-10/month per heavy user; Firm Brain synthesis ~$0.01/week for a 100-page brain with 5 contributors.
 
 ### Bitwarden
 - **What:** open-source password manager (or 1Password as commercial alternative).

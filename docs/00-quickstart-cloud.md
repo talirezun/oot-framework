@@ -84,15 +84,23 @@ Pick A if you have an existing second-brain; B otherwise.
 
 **This is the most important structural decision in this whole guide.** GitHub Free private repos do *not* enforce branch protection rules. The rule shows in the UI but it's advisory only — anyone with push access can force-push or push unsigned commits, even with the rule "set."
 
+**Your firm will have *two* protected GitHub repos** (per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)):
+
+- **The Ledger** (`<firm-slug>-ledger`) — operational state: Excel files, audit logs, output logs. Mutated by Routines.
+- **The Firm Brain** (`<firm-slug>-brain`) — synthesized firm IP: theses, decisions, ADRs, partner profiles, prompts. A Curator Shared Brain instance, populated by partners pushing from their personal Curators and synthesized weekly.
+
+Both need branch protection. Plan-tier choice applies to both.
+
 Three valid configurations:
 
 | Config | Cost | Branch protection enforced? | Suitable for |
 |---|---|---|---|
-| **GitHub Team** | $4/user/month | ✓ YES | Any firm taking R6 audit trail seriously, or 3+ committers, or holding customer data. **Recommended default.** |
+| **GitHub Team** | $4/user/month per repo seat | ✓ YES | Any firm taking R6 audit trail seriously, or 3+ committers, or holding customer data. **Recommended default.** |
+| **GitHub Enterprise Cloud + EU residency** | ~$21/user/month | ✓ YES + EU storage | **EU firms with GDPR data-residency requirements.** Required today for EU residency on the Firm Brain; Curator v3.1's Cloudflare R2 backend will offer a cheaper EU path in the future. |
 | **GitHub Public repo** | Free | ✓ YES | Fully-open-source orgs only. Your firm's operational data (X1 partner output, X2 reward species declarations including salaries, customer references in Output Specs) becomes publicly readable. **Almost never the right choice for a real firm.** |
-| **GitHub Free + private** | Free | ✗ NO (advisory only) | Solo founders or 2-person shops who trust each other. **Acceptable for v1 pilot.** Upgrade to Team before adding the 3rd committer. |
+| **GitHub Free + private** | Free | ✗ NO (advisory only) | Solo founders or 2-person shops who trust each other. **Acceptable for v1 pilot on the Ledger only.** Avoid for the Firm Brain — Curator Provenance + Article 17 erasure assume audit-trail integrity. Upgrade to Team before adding the 3rd committer. |
 
-If you're a solo founder doing a pilot: Free is fine for now. Plan to upgrade to Team within 90 days or before adding a third committer, whichever comes first.
+If you're a solo founder doing a pilot: Free is acceptable on the Ledger only. Use Team for the Firm Brain from day 1 if you'll have any second contributor (advisor, contractor) within 90 days. Plan to upgrade everything to Team before adding the 3rd committer, whichever comes first.
 
 ### 7. Anthropic plan — Pro vs Max
 
@@ -107,6 +115,19 @@ Steady-state Day-1 daily-routine cost: R1 daily + R6 daily + R2/R5 weekly ≈ 2.
 ### 8. Spreadsheet app
 
 Microsoft Excel (desktop or web), **LibreOffice** (free, open-source, https://www.libreoffice.org/), Apple Numbers (preinstalled on macOS), WPS Office, OnlyOffice — all read native `.xlsx` and work with the framework. Pick one you're comfortable with. **Do not use Google Sheets** as the canonical store — round-trips lose openpyxl-generated formulas and the framework's design (ADR-001) treats `.xlsx` in your GitHub repo as the source of truth.
+
+### 9. Firm Brain IP mode
+
+Your **Firm Brain** is a Curator Shared Brain (v3.0.0-beta+) — the synthesized firm IP layer, populated by partners pushing from their personal Curator and merged weekly. The IP mode you choose at setup is **locked once you distribute invite tokens to partners**, so decide now:
+
+| Mode | What it means | When to pick |
+|---|---|---|
+| **`organisational`** (recommended for ØØT firms) | Copyright in pages contributed to the Firm Brain is assigned to the Firm. Each contributor consents via Curator's wizard. | **Default for full-time partners** who sign the standard Partner Charter (§8.1) with its IP-assignment clause. Standard for any operating LLC. |
+| **`contributor_retains`** | Copyright stays with the contributor; the Firm owns only the synthesized output. | **For advisors, contractors, outside collaborators** who explicitly retain their own IP. If your firm is heavily advisor/contractor-driven, this may be your firm-wide default. |
+
+You set the mode once at admin setup. Mixed-mode is not directly supported — to onboard an advisor under `contributor_retains` while partners are `organisational`, the firm needs either a side-letter or a second Shared Brain instance for the advisor cohort. For Day-1 solo founders / typical multi-partner operating firms, pick **`organisational`**.
+
+**Attribution flags:** both `allow_name_attribution` (firm-side) and `attribute_by_name` (contributor-side) default to **false** — UUID-pseudonymous attribution. Surface real names only if both you and the contributor explicitly enable it. Most firms keep it pseudonymous; the safe baseline.
 
 ### Now run the readiness diagnostic
 
@@ -254,16 +275,31 @@ Expected: Claude calls `list_domains` MCP tool and returns a list (might be empt
 
 This is the most procedural part of the install. Take your time; nothing here is reversible without effort.
 
-### Step 1 — Create the Ledger on GitHub.com (web UI)
+### Step 1 — Create the two firm GitHub repos (web UI)
 
+Your firm needs **two** GitHub repos per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md):
+
+**1a. Create the Ledger:**
 1. Open https://github.com/new in your browser.
-2. **Repository name**: `<firm-slug>-brain` (e.g. `acme-studio-brain`).
-3. **Description**: `ØØT framework Ledger for <firm name>`.
+2. **Repository name**: `<firm-slug>-ledger` (e.g. `acme-studio-ledger`).
+3. **Description**: `ØØT framework Ledger for <firm name> — operational state (Excel + audit logs)`.
 4. **Visibility**: **Private** (or Public if you chose `public` in §6 of "decisions").
 5. **Initialize this repository with**: ☐ DO NOT add a README, .gitignore, or licence — leave all three checkboxes UNCHECKED. We need an empty repo so we can push our scaffold without a merge conflict.
 6. Click **Create repository**.
 
-Note the URL — looks like `https://github.com/<you>/<firm-slug>-brain.git`. You'll use it in Step 2.
+Note the URL — looks like `https://github.com/<you>/<firm-slug>-ledger.git`. You'll use it in Step 2 as `<LEDGER_REPO_URL>`.
+
+**1b. Create the Firm Brain:**
+1. Open https://github.com/new again.
+2. **Repository name**: `<firm-slug>-brain` (e.g. `acme-studio-brain`).
+3. **Description**: `ØØT Firm Brain for <firm name> — Curator Shared Brain (synthesized firm IP)`.
+4. **Visibility**: **Private**. Always private (the Firm Brain typically holds decision rationale, customer-aware ADRs, strategic theses — not for public consumption).
+5. **Initialize this repository with**: ☐ leave all unchecked.
+6. Click **Create repository**.
+
+Note this URL too — `https://github.com/<you>/<firm-slug>-brain.git`. You'll use it in Step 8b when running Curator's Shared Brain admin wizard.
+
+> **Migrating from a pre-v1.0.1 install?** If you already have a `<firm-slug>-brain` repo holding the *Ledger* (the pre-v1.0.1 name), you have two options: (a) rename it to `<firm-slug>-ledger` via GitHub Settings → General (renames are transparent to clones with a redirect) and create a fresh `<firm-slug>-brain` for the Firm Brain; or (b) keep the existing name as-is (both `<firm-slug>-brain` and `<firm-slug>-ledger` remain valid Ledger names per GLOSSARY) and pick a different name for the Firm Brain, e.g. `<firm-slug>-firm-brain`. Option (a) is cleaner; option (b) skips a rename.
 
 ### Step 2 — Create the local firm folder + initial scaffold
 
@@ -415,7 +451,13 @@ Click **Create**.
 
 > ⚠️ **Free-plan caveat (Finding 16):** if you're on GitHub Free and the repo is private, you'll see a yellow banner: *"Your protected branch rules for your branch won't be enforced on this private repository until you move to a GitHub Team or Enterprise organization account."* The rule is structurally correct but **not enforced** — anyone with push access can still push unsigned commits or force-push. This is acceptable for solo / 2-person Day-1 pilot; upgrade to Team ($4/user/month) before adding a third committer or before R6's audit-trail claim is load-bearing.
 
-### Step 8 — Set up the Curator domain
+### Step 7b — Configure branch protection on the Firm Brain (web UI)
+
+Repeat Step 7 for the Firm Brain repo: open `<FIRM_BRAIN_REPO_URL>/settings/branches` and apply the *same* checkbox configuration. The Firm Brain's `main` branch carries Curator's synthesized output + Provenance attribution; force-push or unsigned-commit would compromise the Article 17 audit-trail claim.
+
+Same Free-plan caveat applies — the rule is advisory only on Free private repos. **Strongly recommend GitHub Team minimum for the Firm Brain repo from day 1** if any second contributor will join within 90 days. Curator's Provenance attribution + Article 17 revoke endpoint only carry meaningful guarantees when branch protection is *enforced*.
+
+### Step 8 — Set up the Curator domain (personal Second Brain)
 
 If you chose **Configuration A** in §5 of decisions (existing Curator + separate vault):
 
@@ -429,6 +471,35 @@ If you chose **Configuration A** in §5 of decisions (existing Curator + separat
   The new domain should appear.
 
 If you chose **Configuration B** (firm folder IS the vault root) — already done in Saturday afternoon Step 5; skip ahead.
+
+This domain is your personal `firm` domain in your own Second Brain — it's the one that will be *opted-in* to contribute to the Firm Brain (Shared Brain) in the next step.
+
+### Step 8b — Initialize the Firm Brain (Curator Shared Brain admin wizard)
+
+You're now wiring your personal Second Brain to push contributions into the firm-level Firm Brain repo you created in Step 1b. **You are the admin** (you set this firm up; you're the founder).
+
+1. In the Curator desktop app, navigate to **Shared Brain → Admin Setup** (v3.0.0-beta+ required — see [docs/ECOSYSTEM.md](ECOSYSTEM.md) for version check).
+2. Paste the **Firm Brain repo URL** (`https://github.com/<you>/<firm-slug>-brain.git`).
+3. **Brain name:** `<firm name>` (human-readable; appears in everyone's mirror domain label).
+4. **Data-handling terms (IP mode):** select per §9 of "decisions" — `organisational` for typical ØØT firms; `contributor_retains` for advisor-heavy firms.
+5. **Attribution flags:** leave **both unchecked** (UUID-pseudonymous attribution is the safe default). You can enable them later via a side-agreement if specific contributors want their real name surfaced in Provenance.
+6. **Admin token:** Curator generates a 32+ character random `admin_token`. **Copy it now and store it in your Bitwarden founders collection** (per [governance/SECRETS-POLICY.md](../governance/SECRETS-POLICY.md)). This token gates GDPR Article 17 revocations — losing it means you cannot remove a departing contributor without rotating.
+7. **Invite token (sbi_…):** Curator generates the invite token. **You will share this with each partner** when they onboard — they paste it into Curator's contributor wizard to connect. It contains no credentials; safe to share via Slack, dChat, email. **Save it now** in your Bitwarden founders collection — you'll need it for future partners.
+8. Now run your own **contributor wizard** for the same Firm Brain (you contribute too, as the founder):
+   - Curator's six-step wizard: paste invite token → verify GitHub access → create a fine-grained PAT scoped to the Firm Brain repo (Contents read+write, Metadata read) → select your **opted-in domain** (the `<firm-slug>` domain you created in Step 8) → consent to the IP-mode terms → save.
+   - **Store the PAT** in Bitwarden under your per-partner collection (it's a per-contributor secret, not firm-wide).
+9. Curator shows a **connection card** with Push and Pull buttons. You're now wired.
+
+**Push your first contribution:** add a single placeholder page to your `<firm-slug>` domain (e.g., `concepts/theses.md` with a one-line first thesis), then click **Push**. Curator preprocesses it into a `DeltaSummary` and uploads to `contributions/<your_uuid>/` in the Firm Brain repo. Verify on GitHub: `<FIRM_BRAIN_REPO_URL>/tree/main/contributions/`. You should see one JSON file.
+
+**Run Synthesize once** (admin-only action — you):
+- Click **Synthesize** in Curator's admin panel (or run `curator sharedbrain synthesize` in Terminal).
+- Curator reads contributions, runs the merge logic, writes synthesized pages to `collective/<firm-domain>/wiki/`, signed-commits, pushes.
+- Verify on GitHub: `<FIRM_BRAIN_REPO_URL>/tree/main/collective/`. You should see your placeholder page in synthesized form with a Provenance block (UUID attribution).
+
+**Run Pull:** Curator downloads the synthesized result into your local `~/curator/shared-<firm-slug>/` domain (read-only). Verify in Claude Desktop: `Use my-curator. List domains.` — your new `shared-<firm-slug>/` mirror should appear alongside your personal domains.
+
+**That's the full Shared Brain loop:** Push (you author) → Synthesize (admin merges) → Pull (everyone reads). For solo founders, you're all three roles. When partners join (Weekend Two onwards), they run the contributor wizard with your invite token — they only Push and Pull; you stay the admin for Synthesize.
 
 ### Step 9 — First ingest
 
@@ -488,8 +559,15 @@ Install order:
 3. **Reward Species Declaration.** Open `firm/excel/reward-species-declaration.xlsx` in your spreadsheet app. The partner fills in their sheet. Both sign. Generate signed PDF; commit to Brain at `firm/partners/<id>/legal/reward-species-<DATE>.pdf`.
 4. **Two Worlds of Code self-identification.** [`skills/code-qa/SKILL.md`](../skills/code-qa/SKILL.md) §4.9 has the 5-question assessment.
 5. **Output Spec for the first piece of work.** Together, draft using [`templates/output-spec.md`](../templates/output-spec.md). Commit to `firm/partners/<id>/output-specs/<DATE>--<slug>.md`.
-6. **Partner Charter signed.** Use [`templates/partner-charter.md`](../templates/partner-charter.md). Both parties sign.
+6. **Partner Charter signed.** Use [`templates/partner-charter.md`](../templates/partner-charter.md). Both parties sign. **Pay attention to §8 (IP clause):** the Charter binds the Partner to the Firm Brain's `data_handling_terms` you selected in §9 of "decisions" (`organisational` for typical full-time partners). The Partner needs to read and consent before completing the Curator contributor wizard in step 8 below.
 7. **Tools provisioned.** Run [`templates/partner-onboarding/provisioning-script.sh <partner_id>`](../templates/partner-onboarding/provisioning-script.sh).
+8. **Firm Brain contributor wizard (Curator Shared Brain onboarding).** 15 minutes.
+   - You (the admin) send the Partner the **invite token** (`sbi_…`) you saved in Bitwarden during Step 8b. Slack DM / email — token contains no credentials.
+   - You add the Partner as a GitHub collaborator on the `<firm-slug>-brain` repo (GitHub web UI: `<FIRM_BRAIN_REPO_URL>/settings/access`). The Partner accepts the invitation email.
+   - On the Partner's machine: open Curator → **Shared Brain → Join Brain** → paste the invite token → six-step wizard runs: verify access → create fine-grained PAT (Contents r/w on the Firm Brain repo only) → select opted-in domain (`<firm-slug>` — they need to have already created it as a domain in their own Second Brain; do this together if it's their first ØØT setup) → consent to the IP-mode terms (the partner reads the on-screen disclosure that mirrors Charter §8.1) → save.
+   - The Partner stores their PAT in Bitwarden under their per-partner collection.
+   - **Verify the wire-up:** the Partner authors a one-line page in their personal `<firm-slug>` domain (e.g., a wiki entry for themselves at `entities/partners/<their-id>`) → click Push → on your machine, you see a new `contributions/<partner_uuid>/...` JSON file in the Firm Brain repo.
+   - The Partner's contribution will appear in the synthesized output on your next Sunday Synthesize run.
 
 ---
 
@@ -498,19 +576,22 @@ Install order:
 1. **Daily ledger updates** start (Routine R1). Verify the partner's output appears in `firm/excel/partner-output-ledger.xlsx` Output_Log via signed commits on `main`.
 2. **Friday Business Review** (Routine R2 generates the agenda; meeting is 30 minutes; recorded as a markdown summary committed to the Ledger). Use [`docs/walkthroughs/W4-running-the-friday-business-review.md`](walkthroughs/W4-running-the-friday-business-review.md) for the 30-minute structure.
 3. **First Klarna Test** (when relevant — typically not week one). Walk through [`governance/KLARNA-TEST.md`](../governance/KLARNA-TEST.md) together so the team knows the process before they need it.
+4. **First weekly Synthesize (R9).** Sunday evening, you run Curator's Synthesize via the admin panel or `curator sharedbrain synthesize` CLI. It merges your + the partner's contributions, signed-commits to the Firm Brain repo. Cost: typically <$0.01. Post to firm comms: *"Firm Brain synthesized for week of YYYY-MM-DD; N contributions merged."* Everyone runs Pull at their leisure to refresh their local mirror.
 
-By end of weekend two: a running ØØT instance with one partner onboarded, daily output capture writing to your Ledger as signed commits, weekly review cadence, and the Brain compounding.
+By end of weekend two: a running ØØT instance with one partner onboarded, daily output capture writing to your Ledger as signed commits, weekly review cadence, the Firm Brain receiving its first multi-contributor synthesis, and the personal Second Brains compounding.
 
 ---
 
 ## What success looks like
 
-- The Brain has 10–30 ingested documents, no broken wikilinks, weekly health check running.
-- One partner onboarded with signed Reward Species Declaration, signed Partner Charter, first Output Spec drafted.
-- Daily output capture writing to `firm/excel/partner-output-ledger.xlsx` via signed commits on `main`.
+- The personal Second Brain has 10–30 ingested documents, no broken wikilinks, weekly health check running.
+- The Firm Brain (Curator Shared Brain) has had its first weekly Synthesize; the `<firm-slug>-brain` repo's `collective/<firm-slug>/wiki/` shows synthesized pages with UUID Provenance.
+- One partner onboarded with signed Reward Species Declaration, signed Partner Charter, first Output Spec drafted, **and their Firm Brain contributor wizard completed**.
+- Daily output capture writing to `firm/excel/partner-output-ledger.xlsx` via signed commits on the Ledger's `main`.
 - Friday Business Review held; agenda was generated by R2; outcomes committed to the Ledger.
-- (EU founders) `firm/excel/eu-ai-act-mapping.xlsx` started; daily R6 audit trail running with green Verified badges on every commit.
-- Branch protection enforced (or, if on Free private, advisory but you have a plan to upgrade to Team within 90 days).
+- (EU founders) `firm/excel/eu-ai-act-mapping.xlsx` started; daily R6 audit trail running with green Verified badges on every commit on the Ledger.
+- Branch protection enforced on **both** repos (Ledger + Firm Brain), or, if on Free private, advisory but you have a plan to upgrade to Team within 90 days.
+- `admin_token` and invite token (`sbi_…`) safely stored in your Bitwarden founders collection.
 
 You are now operating ØØT Generation 1.
 

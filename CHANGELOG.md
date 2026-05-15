@@ -2,6 +2,39 @@
 
 ØØT follows [Semantic Versioning](https://semver.org). The framework's version is independent of Generation: v1.x is the Gen-1 release line; Gen-2 will open the v2.x line; Gen-3 will open v3.x.
 
+## v1.2.0 — 2026-05-15
+
+**Tier 3: user-facing surface aligned with the v1.1.0 Firm Brain primitive.** Where v1.1.0 rebuilt the framework's internal specs (ADR-002, ontology, skills, governance, routines/SPEC, partner-charter) around the three-primitive split (Ledger / Firm Brain / Second Brain), v1.2.0 carries that alignment through to the docs and tools founders actually touch on Sunday morning of Weekend One.
+
+**Quickstarts ([`docs/00-quickstart-cloud.md`](docs/00-quickstart-cloud.md), [`docs/00-quickstart-privacy.md`](docs/00-quickstart-privacy.md)):**
+- §6 (GitHub plan-tier) restated for **two protected repos** per firm (Ledger + Firm Brain), with new GitHub Enterprise Cloud + EU residency tier surfaced for EU privacy-mandate firms.
+- New §9 "Firm Brain IP mode" — `organisational` vs `contributor_retains` decision before installs; both attribution flags default false → UUID-pseudonymous baseline.
+- Sunday-morning Step 1 fixed: Ledger is now `<firm-slug>-ledger` (post-v1.0.1 canonical); new Step 1b creates `<firm-slug>-brain` (Firm Brain) alongside.
+- New Step 7b — branch protection on the Firm Brain repo.
+- New Step 8b — Curator Shared Brain admin wizard end-to-end (IP-mode selection, admin_token + invite token generation + Bitwarden save, founder's own contributor wizard, Push → Synthesize → Pull verification).
+- Weekend Two onboard-first-partner adds the Firm Brain contributor wizard substep + Sunday R9 Synthesize.
+
+**Install plans ([`installer/agent-assisted/cloud-install-plan.md`](installer/agent-assisted/cloud-install-plan.md), [`installer/agent-assisted/privacy-install-plan.md`](installer/agent-assisted/privacy-install-plan.md)):**
+- Step 3 (plan-tier choice) extended for two repos + EU residency option.
+- Step 5 (now "Create GitHub Ledger + Firm Brain repos + initial scaffold") creates both repos with `gh` automation where available; migration note for pre-v1.0.1 installs.
+- Step 7 (branch protection) now does both repos with handling for empty Firm Brain (defer to Step 8.5).
+- **New Step 8.5** — full Firm Brain admin wizard with IP-mode, tokens, Bitwarden save, founder contributor wizard, end-to-end verification.
+- Privacy install plan delegates to cloud Step 8.5 with privacy-specific deltas (R9 cron on the always-on machine; `contributor_retains` often preferred for self-sovereign partners).
+
+**Wizard (Path B, [`installer/wizard.py`](installer/wizard.py) v1.2.0):**
+- `WIZARD_VERSION` bumped 1.1.0 → 1.2.0.
+- `step_08_brain_repo` extended to a 5-substep flow: creates Ledger AND Firm Brain repos. Default Ledger repo name corrected to `<firm-slug>-ledger` (was `-brain` pre-v1.0.1); Firm Brain repo `<firm-slug>-brain`. `gh` automation for both; web-UI fallback; collision detection if user proposes the same name.
+- `step_10_branch_protection` applies branch protection to both repos; gracefully defers the Firm Brain pass if `main` doesn't exist yet (Curator admin wizard creates the first commit).
+- `step_11_curator` extended with a new Step 11b — Curator Shared Brain admin wizard sub-flow: IP-mode pick, admin_token + invite-token generation guidance, Bitwarden-save confirmation, founder contributor wizard, Push → Synthesize → Pull end-to-end verification, deferred Firm Brain branch protection reapply.
+- `step_15_summary` displays both repo URLs + Firm Brain IP mode + token-save flags.
+
+**Other docs:**
+- [`docs/02-installing-routines.md`](docs/02-installing-routines.md) — R9 (Firm Brain Synthesize) added to the "Other Routines" section with the privacy-track cron line and a clear note that R9 does NOT count against Claude Code Routine per-day plan limits. Per-Routine repo-access matrix tabulated.
+- [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) — Curator entry bumped to v3.0.0-beta.1; Shared Brain capability + version requirement + Gen-1 cloud-LLM gap + v3.1 forward path.
+- [`examples/small-org/README.md`](examples/small-org/README.md), [`examples/medium-org/README.md`](examples/medium-org/README.md), [`examples/regulated-eu-org/README.md`](examples/regulated-eu-org/README.md) — each reference org now names its two repos, IP mode (incl. mixed-mode handling via side-letter for Solunar Studio's contractor), attribution-flag posture, Synthesize cadence, and (for AdriaLex) Article 17 revoke rehearsal.
+
+**Compatibility note.** Existing v1.0 installs with `<firm-slug>-brain` as the Ledger repo continue to work — both names remain valid per the GLOSSARY. Migration is offered (rename to `<firm-slug>-ledger`) but not required.
+
 ## v1.1.0 — 2026-05-15
 
 **The Firm Brain — Curator Shared Brain integration ([ADR-002](docs/internal/ADR-002-firm-brain-curator-shared-brain.md)).** The framework's "firm IP" layer is now a first-class Curator Shared Brain instance (v3.0.0-beta+), distinct from the Ledger and from each partner's personal Second Brain. Three named primitives:

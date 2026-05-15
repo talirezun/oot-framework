@@ -278,19 +278,21 @@ Apply this logic to recommend the module set:
 
 ## Step 3 — GitHub plan-tier choice (CRITICAL)
 
-**What you're about to do (tell the user):** "The framework's audit-trail discipline requires GitHub branch protection to actually be *enforced*. On GitHub Free + private repos, branch protection rules are advisory only — anyone with push access can force-push or push unsigned commits. This affects how robust your firm's audit trail is. ~3 minutes to choose."
+**What you're about to do (tell the user):** "The framework's audit-trail discipline requires GitHub branch protection to actually be *enforced*. On GitHub Free + private repos, branch protection rules are advisory only — anyone with push access can force-push or push unsigned commits. This affects how robust your firm's audit trail is. Per [ADR-002](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-002-firm-brain-curator-shared-brain.md) your firm provisions **two protected GitHub repos**: the Ledger (operational state) and the Firm Brain (Curator Shared Brain — synthesized firm IP). Plan-tier choice applies to both. ~3 minutes to choose."
 
 ### 3.1 — Explain the trade-off
 
-🟡 **ASK USER:** "Three valid configurations:
+🟡 **ASK USER:** "Three valid configurations (the choice applies to both your Ledger and Firm Brain repos):
 
-1. **GitHub Team plan** ($4/user/month) — branch protection enforces on private repos. Recommended for any firm taking R6 (EU AI Act audit trail) seriously, or that holds customer data. Cost: $48/year/user.
+1. **GitHub Team plan** ($4/user/month per repo seat) — branch protection enforces on private repos. Recommended for any firm taking R6 (EU AI Act audit trail) seriously, or that holds customer data. Cost: ~$48/year/user × 2 repo seats. **Required for the Firm Brain repo as soon as any second contributor joins** (Curator Provenance + Article 17 erasure guarantees depend on enforced branch protection).
 
-2. **GitHub Public repo + Free plan** — branch protection enforces on personal Free, but your firm's operational data (X1 partner output, X2 reward species declarations including salaries, customer references in Output Specs) is publicly visible to anyone on the internet. Acceptable only for fully-open-source orgs. Cost: free, but typically wrong fit.
+2. **GitHub Enterprise Cloud + EU residency** (~$21/user/month) — required for EU firms with GDPR data-residency requirements. GitHub Free/Pro/Team is US-only storage; the Firm Brain holds firm IP that for EU firms must reside in the EU. Curator v3.1's Cloudflare R2 backend will offer a cheaper EU-residency path.
 
-3. **GitHub Free + private repo + procedural discipline** — branch protection rule is created but advisory only; honour-system enforcement. Acceptable for solo founders or 2-person shops who trust each other; not acceptable once you have 3+ committers or hold customer data. Cost: free.
+3. **GitHub Public repo + Free plan** — branch protection enforces on personal Free, but your firm's operational data (X1 partner output, X2 reward species declarations including salaries, customer references in Output Specs) is publicly visible to anyone on the internet. Acceptable only for fully-open-source orgs. Cost: free, but typically wrong fit.
 
-Which? (team / public / free)"
+4. **GitHub Free + private repo + procedural discipline** — branch protection rule is created but advisory only; honour-system enforcement. Acceptable for solo founders or 2-person shops on the Ledger; **avoid for the Firm Brain repo** (Article 17 audit-trail claim doesn't hold without enforced protection). Cost: free.
+
+Which? (team / enterprise-eu / public / free)"
 
 Capture as `firm_profile.github_plan_tier`. If `team`: surface that the user needs to upgrade their GitHub plan (https://github.com/settings/billing/plans) before Step 7 (branch protection configuration).
 
@@ -326,27 +328,47 @@ If `claude` CLI missing:
 
 ---
 
-## Step 5 — Create GitHub Ledger + initial scaffold
+## Step 5 — Create GitHub Ledger + Firm Brain repos + initial scaffold
 
-**What you're about to do (tell the user):** "I'll create the firm's Ledger GitHub repo, scaffold the local folder structure, and copy the framework's Excel templates as the initial state. The repo will be private. About 10 minutes."
+**What you're about to do (tell the user):** "Per [ADR-002](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-002-firm-brain-curator-shared-brain.md) your firm needs two GitHub repos — the **Ledger** (operational state: Excel + audit logs) and the **Firm Brain** (Curator Shared Brain: synthesized firm IP). I'll create both, then scaffold the local Ledger folder. About 15 minutes."
 
-### 5.1 — Create the repo on GitHub.com (web UI — primary path)
+### 5.1a — Create the Ledger repo on GitHub.com (web UI)
 
-🟡 **ASK USER:** "Open https://github.com/new in your browser and create the repo. I'll give you exact settings:
+🟡 **ASK USER:** "Open https://github.com/new in your browser and create the Ledger repo. I'll give you exact settings:
 
-- **Repository name:** `<firm-slug>-brain` (e.g. `acme-studio-brain`). Or whatever you'd prefer — but keep it descriptive.
-- **Description:** `ØØT framework Ledger for <firm name>`
+- **Repository name:** `<firm-slug>-ledger` (e.g. `acme-studio-ledger`).
+- **Description:** `ØØT framework Ledger for <firm name> — operational state (Excel + audit logs)`
 - **Visibility:** **Private** (or Public if you chose Configuration `public` at Step 3)
 - **Initialize this repository with:** ☐ DO NOT add a README, .gitignore, or licence — leave all three checkboxes UNCHECKED. We need an empty repo to push our scaffold into.
 
-Click **Create repository**. Tell me the URL of the new repo (looks like `https://github.com/<you>/<repo-name>.git`)."
+Click **Create repository**. Tell me the URL of the new repo (looks like `https://github.com/<you>/<firm-slug>-ledger.git`)."
 
 **(Optional accelerator if user has `gh auth status` working):**
 ```bash
-gh repo create <user>/<repo-name> --private --description "ØØT Ledger for <firm>" 2>&1
+gh repo create <user>/<firm-slug>-ledger --private --description "ØØT Ledger for <firm>" 2>&1
 ```
 
 Persist as `LEDGER_REPO_URL`. If user provided HTTPS URL, that's what we'll use for cloning.
+
+### 5.1b — Create the Firm Brain repo on GitHub.com (web UI)
+
+🟡 **ASK USER:** "Open https://github.com/new in your browser again and create the Firm Brain repo:
+
+- **Repository name:** `<firm-slug>-brain` (e.g. `acme-studio-brain`). This holds the firm's Curator Shared Brain — synthesized firm IP populated by partners' contributions.
+- **Description:** `ØØT Firm Brain for <firm name> — Curator Shared Brain (synthesized firm IP)`
+- **Visibility:** **Private**. Always private for the Firm Brain (it typically holds decision rationale, customer-aware ADRs, strategic theses).
+- **Initialize this repository with:** ☐ leave all unchecked.
+
+Click **Create repository**. Tell me the URL."
+
+**(Optional accelerator if user has `gh auth status` working):**
+```bash
+gh repo create <user>/<firm-slug>-brain --private --description "ØØT Firm Brain for <firm>" 2>&1
+```
+
+Persist as `FIRM_BRAIN_REPO_URL`.
+
+> **Migrating from a pre-v1.0.1 install?** If the user already has a `<firm-slug>-brain` repo holding the *Ledger* (pre-v1.0.1 default name), ask which approach they prefer: (a) rename the existing repo to `<firm-slug>-ledger` via GitHub Settings → General (renames are transparent to clones via redirect) and create a fresh `<firm-slug>-brain` as the Firm Brain; or (b) keep the existing name and pick a different name for the new Firm Brain repo, e.g. `<firm-slug>-firm-brain`. Option (a) is cleaner long-term.
 
 ### 5.2 — Create the local firm folder
 
@@ -422,7 +444,9 @@ git push -u origin main
 
 🟡 **ASK USER:** "Open <LEDGER_REPO_URL> in your browser. You should see the README + the `firm/` folder with 9 .xlsx files. Confirm?"
 
-`step_5_brain_repo: done`. Persist `LEDGER_REPO_URL`, `BRAIN_REPO_PATH` in state file.
+Also verify the Firm Brain repo exists at <FIRM_BRAIN_REPO_URL> (empty — Curator's admin wizard at Step 8 populates it).
+
+`step_5_repos: done`. Persist `LEDGER_REPO_URL`, `FIRM_BRAIN_REPO_URL`, `BRAIN_REPO_PATH` (Ledger local clone path) in state file.
 
 ---
 
@@ -521,9 +545,9 @@ If you see a yellow `Unverified` or no badge: the email on the GPG key doesn't m
 
 ---
 
-## Step 7 — Branch protection (web UI)
+## Step 7 — Branch protection on both repos (web UI)
 
-**What you're about to do (tell the user):** "I'll walk you through configuring branch protection on the Ledger. This is what enforces 'no unsigned commits, no force-pushes, no branch deletion' — the discipline R6's audit-trail relies on. About 5 minutes."
+**What you're about to do (tell the user):** "I'll walk you through configuring branch protection on **both** the Ledger and the Firm Brain. This enforces 'no unsigned commits, no force-pushes, no branch deletion' — the discipline R6's audit-trail and Curator's Article 17 revoke both rely on. About 10 minutes total (same checkbox configuration on each repo)."
 
 ### 7.1 — Surface the GitHub-Free caveat (Finding 16)
 
@@ -581,7 +605,15 @@ git config --local commit.gpgsign true
 
 If push is accepted: surface to user that branch protection is NOT enforcing, even though the rule is set. Possible cause: GitHub Free private. Repeat Finding 16 caveat.
 
-### 7.4 — Mark step done
+### 7.4 — Repeat for the Firm Brain repo
+
+🟡 **ASK USER:** "Now do the exact same thing for the Firm Brain repo. Open `<FIRM_BRAIN_REPO_URL>/settings/branches`, add a classic branch protection rule for `main` with the identical checkbox configuration (Require signed commits ☑, Allow force pushes ☐, Allow deletions ☐, others as in the table above). Tell me `done` when saved.
+
+The Firm Brain repo carries Curator's synthesized output + UUID Provenance attribution + Article 17 revocation audit log. Branch protection here is what makes those guarantees actually load-bearing."
+
+The same Finding-16 caveat applies on GitHub Free — surface again if `github_plan_tier == free` and ask if the user wants to upgrade specifically the Firm Brain repo to Team-or-higher (Article 17 erasure claim only holds with enforced protection).
+
+### 7.5 — Mark step done
 
 `step_7_branch_protection: done`. Persist `branch_protection_enforced: <yes|no>` in state file.
 
@@ -700,6 +732,75 @@ Tell me what Claude responds."
 ### 8.x — Mark step done
 
 `step_8_curator: done`. Persist `curator_config` and `curator_domain` if not already set.
+
+---
+
+## Step 8.5 — Firm Brain admin wizard (Curator Shared Brain initialization)
+
+**What you're about to do (tell the user):** "Per [ADR-002](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-002-firm-brain-curator-shared-brain.md), your firm's collective knowledge — theses, decisions, ADRs, partner profiles, prompts — lives in the **Firm Brain** (a Curator Shared Brain instance in the `<firm-slug>-brain` repo you created at Step 5.1b). I'll walk you through initializing it. You become the admin (founder). About 15 minutes."
+
+### 8.5.1 — IP mode decision
+
+🟡 **ASK USER:** "Curator's Shared Brain has a `data_handling_terms` field that locks once you distribute invite tokens. Pick the IP mode:
+
+- **`organisational`** (recommended) — copyright in pages contributed to the Firm Brain assigns to the firm. Each contributor consents via Curator's wizard. Standard for ØØT firms with full-time partners signing the Partner Charter's §8.1 IP-assignment clause.
+- **`contributor_retains`** — copyright stays with each contributor; firm owns only the synthesized output. Best fit for advisor- or contractor-heavy firms, or firms that want to honour self-sovereign IP from day one.
+
+Which? (organisational / contributor_retains)"
+
+Persist as `firm_profile.firm_brain_ip_mode`.
+
+### 8.5.2 — Run Curator admin wizard
+
+🟡 **ASK USER:** "Open the Curator desktop app → **Shared Brain → Admin Setup** (requires Curator v3.0.0-beta+).
+
+Configure:
+- **GitHub repo URL:** `<FIRM_BRAIN_REPO_URL>`
+- **Brain name:** `<firm name>` (this is what appears in everyone's mirror-domain label after Pull)
+- **Data-handling terms:** `<firm_brain_ip_mode>` (from §8.5.1)
+- **Attribution flags:** leave both `allow_name_attribution` and `attribute_by_name` UNCHECKED (UUID-pseudonymous attribution is the safe default; surface real names only by explicit opt-in from both sides later)
+
+Click **Generate admin token + invite token**. The Curator displays two things:
+1. An `admin_token` (32+ random characters) — this gates GDPR Article 17 revoke endpoint.
+2. An invite token (`sbi_...`) — this is what each partner will paste into their own contributor wizard.
+
+Tell me when you see both values."
+
+🟡 **ASK USER:** "**Now save both tokens immediately.** Open Bitwarden:
+1. Create a new entry in the **founders** collection named `<firm-slug> — Curator Shared Brain admin_token`. Paste the `admin_token` into the password field.
+2. Create another entry in **founders** named `<firm-slug> — Firm Brain invite token (sbi_)`. Paste the invite token. You'll share this with each partner during their onboarding.
+
+Tell me `done` when saved."
+
+Persist (state file): `firm_brain_admin_token_saved: true` (do NOT persist the token value itself; only persist that it was saved).
+
+### 8.5.3 — Run your own contributor wizard
+
+🟡 **ASK USER:** "Now run Curator's **contributor wizard** for yourself (founders contribute to the Firm Brain too):
+
+- Curator's six-step wizard guides you: paste invite token → verify GitHub collaborator access (you already have it as the repo owner) → create a fine-grained PAT scoped to `<FIRM_BRAIN_REPO_URL>` with Contents read+write + Metadata read → select your opted-in domain (`<curator_domain>` — the one we set up at Step 8) → consent to the IP-mode terms → save.
+
+Tell me `done` when the connection card appears with Push and Pull buttons."
+
+🟡 **ASK USER:** "Save your fine-grained PAT to Bitwarden under your **per-partner** collection, named `<firm-slug> — Firm Brain contributor PAT (founder)`. This is a per-contributor secret (each partner gets their own); revoke on partner exit. Tell me `done` when saved."
+
+### 8.5.4 — Verify the loop (Push → Synthesize → Pull)
+
+🟡 **ASK USER:** "Let's verify end-to-end with a single placeholder page:
+
+1. In Curator (your `<curator_domain>` opted-in domain), create a new page `concepts/theses.md` with one line of placeholder text (e.g., 'First firm thesis: <something simple>').
+2. Click **Push** in Curator's Shared Brain panel.
+3. Open `<FIRM_BRAIN_REPO_URL>/tree/main/contributions/` in your browser. You should see one JSON file named with your UUID. Tell me the filename (or 'visible' / 'not visible')."
+
+If visible: continue. If not: troubleshoot — most likely the PAT is missing Contents:write, or branch protection is blocking unsigned commits (Curator's Push commits should be signed via the user's GPG key per Curator's setup; verify in Curator → Settings → Signing).
+
+🟡 **ASK USER:** "Now run **Synthesize** (admin-only). In Curator's Shared Brain panel, click **Run Synthesize**. Curator reads contributions, merges, writes synthesized pages to `collective/`, signed-commits, pushes. Tell me when 'Synthesize complete' appears, and confirm by opening `<FIRM_BRAIN_REPO_URL>/tree/main/collective/<curator_domain>/wiki/`. You should see the synthesized `concepts/theses.md` page with a Provenance block at the bottom (UUID-attributed)."
+
+🟡 **ASK USER:** "Finally click **Pull**. Curator downloads the synthesized result into a local read-only domain `shared-<firm-slug>/`. Verify in Claude Desktop: `Use my-curator. List domains.` — you should see both your personal `<curator_domain>` and a new `shared-<firm-slug>/` mirror. Tell me what Claude reports."
+
+### 8.5.5 — Mark step done
+
+`step_8.5_firm_brain: done`. Persist `firm_brain_admin_token_saved`, `firm_brain_invite_token_saved`, `firm_brain_first_synthesize_ok` flags. The actual token values are never written to the state file.
 
 ---
 

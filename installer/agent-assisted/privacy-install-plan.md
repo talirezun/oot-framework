@@ -327,21 +327,24 @@ pollinationx --version
 
 ## Step 7 — GitHub plan-tier choice
 
-(Same as cloud plan Step 3. The privacy track still uses GitHub for the Ledger — Routines push signed commits there. Finding 16 applies identically: GitHub Free private = advisory-only branch protection, doesn't enforce.)
+(Same as cloud plan Step 3. The privacy track still uses GitHub for **two** repos per [ADR-002](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-002-firm-brain-curator-shared-brain.md): the Ledger — Routines push signed commits — and the Firm Brain — Curator Shared Brain. The plan-tier choice applies to both. Finding 16 applies identically: GitHub Free private = advisory-only branch protection, doesn't enforce.
 
-🟡 **ASK USER** the same plan-tier question: team / public / free.
+**Privacy-track-specific note: EU residency.** If your privacy mandate is regulatory (a customer or supervisory authority requires EU storage), GitHub Free / Pro / Team are all US-only. You need **GitHub Enterprise Cloud with the EU data residency option** for the Firm Brain repo (and probably the Ledger too). Curator v3.1's Cloudflare R2 backend will offer a cheaper EU-residency path; for today, Enterprise Cloud is the answer.)
+
+🟡 **ASK USER** the same plan-tier question, extended for privacy track: team / enterprise-eu / public / free.
 
 `step_7_github_plan_choice: done`.
 
 ---
 
-## Step 8 — Create GitHub Ledger + initial scaffold
+## Step 8 — Create GitHub Ledger + Firm Brain repos + initial scaffold
 
-(Same as cloud plan Step 5, with these privacy-track deltas:)
+(Same as cloud plan Step 5, which now creates **both** the Ledger and the Firm Brain repos per [ADR-002](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-002-firm-brain-curator-shared-brain.md), with these privacy-track deltas:)
 
-- The local clone lives **on the always-on machine**, not the daily laptop.
-- The clone path is `<FIRM_FOLDER>` from Step 0.5.1.
+- The local clone of the **Ledger** lives **on the always-on machine**, not the daily laptop. The Firm Brain repo is managed by Curator on the always-on machine — partners' personal Curators on their own laptops Push to it; the admin's Curator on the always-on machine runs weekly Synthesize.
+- The clone path for the Ledger is `<FIRM_FOLDER>` from Step 0.5.1.
 - The framework repo is cloned on the always-on machine too (at `~/oot-framework` typically) so we have access to `templates/excel/` for the initial copy.
+- Persist BOTH `LEDGER_REPO_URL` and `FIRM_BRAIN_REPO_URL` in the privacy-track state file.
 
 ```bash
 # On the always-on machine:
@@ -372,13 +375,13 @@ git push -u origin main
 
 ---
 
-## Step 9 — Signing key + branch protection
+## Step 9 — Signing key + branch protection (both repos)
 
-(Same as cloud plan Steps 6 + 7 — runs on the always-on machine.)
+(Same as cloud plan Steps 6 + 7 — runs on the always-on machine. Cloud plan Step 7 now applies branch protection to **both** the Ledger and the Firm Brain repos; do the same here.)
 
-GPG key generation, public-key upload to GitHub via the web UI (https://github.com/settings/gpg/new), branch-protection rule via web UI (the privacy track also can't escape Finding 16 — same plan-tier caveat).
+GPG key generation, public-key upload to GitHub via the web UI (https://github.com/settings/gpg/new), branch-protection rule via web UI on **both** `<LEDGER_REPO_URL>/settings/branches` and `<FIRM_BRAIN_REPO_URL>/settings/branches` with identical checkbox configuration (the privacy track also can't escape Finding 16 — same plan-tier caveat applies to both repos).
 
-`step_9_signing: done`. `step_9_5_branch_protection: done`.
+`step_9_signing: done`. `step_9_5_branch_protection_ledger: done`. `step_9_5_branch_protection_firm_brain: done`.
 
 ---
 
@@ -438,7 +441,27 @@ Tell me what the model responds."
 
 (Per cloud plan Step 8B.5 — but loaded into LM Studio's persistent system prompt, not Claude Desktop. Or both, if user is using both.)
 
-`step_10_curator: done`.
+### 10.7 — Firm Brain admin wizard (Curator Shared Brain initialization)
+
+(Same as cloud plan Step 8.5 — runs on the always-on machine since that's where the admin's Curator lives on the privacy track.)
+
+🟡 **ASK USER:** "On the always-on machine, open Curator → Shared Brain → Admin Setup. Follow the cloud plan Step 8.5 flow:
+1. Pick IP mode (`organisational` or `contributor_retains`). For privacy-track firms with sovereignty-aligned partners, `contributor_retains` is often preferred — confirm with the partners before locking.
+2. Generate admin token + invite token. Store both in Bitwarden founders collection.
+3. Run your own contributor wizard (select your `<curator_domain>` as the opted-in domain).
+4. Verify Push → Synthesize → Pull loop end-to-end.
+
+Tell me `done` when the loop is verified."
+
+**Privacy-track-specific caveat surfacing:** during the IP-mode choice, remind the user that Curator's weekly Synthesize step still calls a cloud LLM (Gemini Flash Lite in v3.0.0-beta) — partners' MCP interactions on the privacy track are local (LM Studio + Qwen), but the admin's Synthesize step is cloud. This is the same Gen-1 cloud-LLM gap as personal Curator ingest; Curator v3.1 closes it.
+
+**Privacy-track-specific scheduling:** schedule R9 (the weekly Firm Brain Synthesize) via cron on the always-on machine, not as a Claude Code Routine. Add to crontab:
+
+```
+0 19 * * 0 /usr/local/bin/curator sharedbrain synthesize --brain <FIRM_BRAIN_REPO_URL> >> ~/oot/logs/r9.log 2>&1
+```
+
+`step_10_7_firm_brain: done`. `step_10_curator: done`.
 
 ---
 

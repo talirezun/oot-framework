@@ -70,15 +70,31 @@ For most privacy-track founders setting up a fresh always-on machine: Configurat
 
 ### 7. GitHub plan-tier — CRITICAL DECISION ⚠️
 
-**Privacy track still uses GitHub for the Ledger** (Routines push signed commits there for audit trail). Same Finding 16 caveat as cloud:
+**Privacy track still uses GitHub** for both the Ledger (Routines push signed commits there for audit trail) and the Firm Brain (Curator Shared Brain — per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)). Your firm provisions **two GitHub repos**: `<firm-slug>-ledger` + `<firm-slug>-brain`. Branch protection applies to both. Same Finding 16 caveat as cloud:
 
 | Config | Cost | Branch protection enforced? | Suitable for |
 |---|---|---|---|
-| **GitHub Team** | $4/user/month | ✓ YES | **Recommended default** for any firm taking R6 audit trail seriously |
+| **GitHub Team** | $4/user/month per repo seat | ✓ YES | **Recommended default** for any firm taking R6 audit trail + Article 17 erasure seriously |
+| **GitHub Enterprise Cloud + EU residency** | ~$21/user/month | ✓ YES + EU storage | **Required today for EU privacy-mandate firms.** GitHub Free/Pro/Team is US-only storage; the Firm Brain holds firm IP, which for an EU firm must reside in the EU. Curator v3.1's Cloudflare R2 will offer a cheaper EU-residency path. |
 | **GitHub Public repo** | Free | ✓ YES | Open-source orgs only — your operational data becomes public |
-| **GitHub Free + private** | Free | ✗ NO (advisory only) | Solo / 2-person v1 pilot only |
+| **GitHub Free + private** | Free | ✗ NO (advisory only) | Solo / 2-person v1 pilot only — **and not on the Firm Brain repo** (the Article 17 audit-trail claim only holds with enforced branch protection) |
 
-Pilots can start on Free + private with procedural discipline; upgrade to Team before adding a third committer. See [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) §6 of "decisions" for the longer explanation.
+EU privacy-mandate firms typically end up on **GitHub Enterprise Cloud with EU data residency** by necessity. Pilots without EU mandates can start on Free + private with procedural discipline; upgrade to Team before adding a third committer. See [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) §6 of "decisions" for the longer explanation.
+
+### 8. Firm Brain IP mode
+
+Your **Firm Brain** is a Curator Shared Brain — the firm's synthesized IP layer, populated by partners pushing from their personal Curators (running locally on each partner's machine — privacy-track partners with LM Studio + Qwen) and merged weekly by the admin.
+
+The IP mode is locked once you distribute invite tokens, so decide now:
+
+| Mode | When to pick |
+|---|---|
+| **`organisational`** (recommended for ØØT firms) | **Default for full-time partners** signing the standard Partner Charter (§8.1 IP-assignment clause). Standard for operating LLCs. |
+| **`contributor_retains`** | **For advisors, contractors, outside collaborators.** Especially relevant on the privacy track where partners may explicitly value self-custody of their IP — matches S12's discipline. |
+
+**Attribution flags** default to false (UUID-pseudonymous attribution) — strongly aligned with the privacy track's posture. Surface real names only when explicitly opted in by both firm and contributor.
+
+**Privacy-track caveat — the synthesis LLM is still cloud.** Curator v3.0.0-beta uses Gemini Flash Lite at the admin's weekly Synthesize step. Partners' own Curator MCP interactions run locally on LM Studio; only the admin's weekly synthesis step calls a cloud LLM (~$0.01/week for a 100-page brain with 5 contributors). This is the single remaining cloud-LLM dependency in Gen 1 privacy; Curator v3.1 closes it.
 
 ---
 
@@ -145,8 +161,9 @@ For each partner including the founder, ~30-45 min:
 2. **PollinationX storage NFT.** Acquire on the [PollinationX dApp](https://wiki.pollinationx.io/). Sizes: 100GB (small org), 500GB (medium), 1TB+ (regulated). Cost: ~€10-80/month equivalent.
 3. **Per-partner read access** to PollinationX granted: `pollinationx grant-read --nft <storage-nft> --to <partner-wallet>` for each partner.
 4. **GitHub MCP** configured with PAT (stored in Bitwarden under `shared-services`).
-5. **Ledger** cloned to the always-on machine. **Note:** the GitHub-side setup (create repo, generate signing key, configure branch protection, the clean branch-protection checkbox table) is identical to the cloud track — follow [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) "Weekend One — Sunday morning" Steps 1, 4, 5, 6, 7 against the always-on machine. The only differences: the local clone path is `<FIRM_FOLDER>` on the always-on machine (not your laptop), and the GPG key is generated on the always-on machine.
-6. **First Curator domain** created. If Configuration A: add a domain to your existing second-brain. If Configuration B: the Curator's vault root IS `<FIRM_FOLDER>`. First five documents ingested.
+5. **Two GitHub repos created + cloned to the always-on machine.** Per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md), provision both `<firm-slug>-ledger` (operational state) and `<firm-slug>-brain` (Firm Brain / Curator Shared Brain). The GitHub-side setup (create repos, generate signing key, configure branch protection on **both** repos) is identical to the cloud track — follow [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) "Weekend One — Sunday morning" Steps 1, 4, 5, 6, 7, **and 7b** against the always-on machine. Differences from cloud: the local clone paths are under `<FIRM_FOLDER>` on the always-on machine (not your laptop), and the GPG key is generated on the always-on machine.
+6. **First Curator domain** created in your personal Second Brain. If Configuration A: add a domain to your existing second-brain. If Configuration B: the Curator's vault root IS `<FIRM_FOLDER>`. First five documents ingested (LM Studio + Qwen for the local-LLM ingest path on the privacy track once Curator v3.1 ships; cloud-LLM ingest in Gen 1).
+7. **Firm Brain admin wizard.** Identical to cloud-track Step 8b — open Curator → Shared Brain → Admin Setup → paste the `<firm-slug>-brain` repo URL → name the brain → select IP mode per §8 of "decisions" → save `admin_token` to Bitwarden (founders collection) → generate and save the invite token (`sbi_…`) for future partners. Then run your own contributor wizard (the founder is the first contributor) — paste invite token, create a fine-grained PAT scoped to the Firm Brain repo, select your opted-in `<firm-slug>` domain, consent to IP terms. Verify with a Push → admin Synthesize → Pull loop end-to-end before considering the privacy-track stack done.
 
 ---
 
@@ -170,6 +187,7 @@ Same as cloud track ([`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) Wee
 - Comms training: the partner needs to learn dMail and dChat, not Gmail and Slack.
 - Wallet setup: partner already has their own Trezor (issued during pre-week). They create their 4thtech wallet identity if not done already.
 - Storage training: PollinationX for bulk; Ledger (synced via GitHub MCP) for everything else.
+- **Firm Brain contributor wizard** (identical to cloud-track Step 8 of Weekend Two): share the invite token via 4thtech dMail (not Slack — privacy track uses 4thtech for firm comms). Partner accepts GitHub collaborator invite, creates a fine-grained PAT scoped to the `<firm-slug>-brain` repo (stored in their per-partner Bitwarden collection), selects their opted-in `<firm-slug>` domain, consents to the IP-mode terms surfaced in the wizard (which mirror Partner Charter §8.1). The partner's Curator runs locally on their laptop — they author pages via LM Studio + Qwen MCP interactions, then click Push when ready. Verify the wire-up with a first one-line page Push.
 
 The 30-step onboarding checklist at [`templates/partner-onboarding/checklist.md`](../templates/partner-onboarding/checklist.md) applies identically; the [provisioning script](../templates/partner-onboarding/provisioning-script.sh) auto-detects the privacy track from `firm.yaml`.
 
@@ -177,12 +195,16 @@ The 30-step onboarding checklist at [`templates/partner-onboarding/checklist.md`
 
 ## What success looks like
 
-- The Brain has 10–30 ingested documents on the always-on machine.
+- The personal Second Brain has 10–30 ingested documents on the always-on machine.
+- The Firm Brain (Curator Shared Brain) has had its first weekly Synthesize; the `<firm-slug>-brain` repo's `collective/<firm-slug>/wiki/` shows synthesized pages with UUID Provenance.
 - 4thtech dMail / dChat working for the founder + first partner.
 - PollinationX storage configured; first large file uploaded with `[[px:<cid>]]` wikilink in Brain.
 - 4 Day-1 Routines firing on schedule on the always-on machine.
-- Cloud subscriptions scoped down to: Curator ingest only (Gemini Flash Lite or Anthropic). All other operations are sovereign.
-- One partner onboarded with their own Trezor + 4thtech identity + PollinationX read access.
+- **R9 (admin-run Firm Brain Synthesize)** scheduled for Sunday evenings on the always-on machine (cron `0 19 * * 0` invoking `curator sharedbrain synthesize`).
+- Branch protection enforced on **both** GitHub repos (Ledger + Firm Brain), or on EU residency tier if regulatory mandate.
+- Cloud subscriptions scoped down to: Curator personal-Second-Brain ingest (Gemini Flash Lite or Anthropic) + Firm Brain weekly Synthesize (admin-run; same LLM). All other operations are sovereign.
+- One partner onboarded with their own Trezor + 4thtech identity + PollinationX read access + Curator Shared Brain contributor wizard completed.
+- `admin_token` and invite token (`sbi_…`) safely stored in your Bitwarden founders collection.
 
 You are now operating ØØT Generation 1, privacy track.
 
@@ -196,7 +218,8 @@ You are now operating ØØT Generation 1, privacy track.
 4. **Auto-updating LM Studio or local models without testing.** Model behaviour changes affect Routine outputs. New versions go through a 1-week dry-run before cutover.
 5. **Trying to run R3 (Monthly Variable) on Qwen 3 14B without testing.** R3 is high-stakes. Use Llama 3.3 70B for R3 specifically; the framework's authors learned this the hard way.
 6. **Skipping the GitHub plan-tier decision (Finding 16).** Privacy track still uses GitHub for the Ledger. Free + private = advisory branch protection only. Plan to upgrade to Team within 90 days of pilot.
-7. **Forgetting that the Curator app still uses cloud-LLM ingest in Gen 1.** Gemini Flash Lite or Anthropic API calls happen during ingest. The privacy track's local-LLM ingest is Generation 2. For now, your firm's privacy posture is "operational queries are local; document ingest is cloud-LLM with the API key in your name". Make that explicit in your privacy notice if you ingest customer data.
+7. **Forgetting that the Curator app still uses cloud-LLM ingest in Gen 1.** Gemini Flash Lite or Anthropic API calls happen during personal Second Brain ingest AND during the admin's weekly Firm Brain Synthesize. Partners' own MCP read/write interactions with their local Second Brain run on LM Studio (local). The privacy track's *local-LLM* ingest + synthesis is Curator v3.1 / Generation 2. For now, your firm's privacy posture is "operational queries are local; document ingest + admin synthesis are cloud-LLM with the API key in your name". Make that explicit in your privacy notice if you ingest customer data.
+8. **Skipping the second branch-protection step (the Firm Brain repo).** The cloud-quickstart's Step 7b is essential — without enforced branch protection on the Firm Brain, Curator's Provenance attribution and Article 17 revoke endpoint don't carry meaningful guarantees. Don't treat it as optional just because the Ledger's branch protection is the more-discussed piece.
 
 ---
 

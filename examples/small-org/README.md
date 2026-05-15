@@ -8,7 +8,11 @@
   2. **Davor Krznar** — full-time partner, agentic-engineer, SI. Reward species: pure eat-what-you-kill.
   3. **Anya Gorska** — project specialist, vibe-coder, PL. Reward species: hybrid 80/15/5 (project-bound).
 - **Track:** cloud.
-- **Brain status:** Level 4 (Curator + MyCuratorMCP) from day 1.
+- **Brain status:** Level 4 (Curator + MyCuratorMCP) from day 1. **Firm Brain** as a Curator Shared Brain instance per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md).
+- **GitHub repos:** two — `solunar-studio-ledger` (operational state, Routines write) and `solunar-studio-brain` (Curator Shared Brain, partners contribute). Both on GitHub Team ($4/seat/mo × 2 seats — admin + Davor; Anya uses collaborator access as a project-bound contractor).
+- **Firm Brain IP mode:** `organisational` for Mira + Davor (the full-time partners — Partner Charter §8.1 IP-assignment clause). Anya joins under `contributor_retains` (project specialist — her output specs and contributions retain her copyright; firm owns only the synthesized output during her project window). Implementation note: with v3.0.0-beta the brain is single-mode (`organisational`); Anya's `contributor_retains` posture is recorded as a side-letter in her project agreement until v3.x supports per-cohort mode mixing.
+- **Attribution flags:** both `allow_name_attribution` and `attribute_by_name` left at default false — UUID-pseudonymous attribution. Mira opts in to name attribution for her thesis pages by mid-Q2 (the firm wants her name on the public-facing positioning).
+- **Synthesize cadence:** weekly, Sunday evening, Mira runs Curator's `Synthesize` button from her laptop. Typical cost: $0.003-0.008/week.
 - **Legal posture:** Slovenian d.o.o.; counsel engaged; Mira 70% / Davor 30%; Anya is contractor.
 - **EU AI Act exposure:** Limited risk (Lumina-style RAG widget, Code & QA tooling). No high-risk Annex III exposure.
 
