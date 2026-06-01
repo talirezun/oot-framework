@@ -123,7 +123,9 @@ These are stubs in this repo; the full text lives at the source link in each fil
 
 ### Original articles (first-published here)
 
-*(Empty as of v1.0.0. Open a PR to contribute one — see "Library standards" above.)*
+**The ØØT Research Series — the framework's own publication line.** Original articles by the framework's authors, first-published in this repository under CC BY-SA 4.0. Subsequent articles cover specific Skill Packs, case studies, and empirical validation.
+
+- [`2026-05-oot-research-article-1-overview.md`](articles/2026-05-oot-research-article-1-overview.md) — *Building the Organization of Tommorow: An Open-Source Framework and Playbook for Partner-Run, AI-Augmented Organisations*, by Dr. Tali Režun (2026-05-15). **ØØT Research Series — Article 1 (Overview & Foundation).** Accessible, comprehensive overview of the framework's five theses, three-generation architecture, dual deployment tracks, tool ecosystem, knowledge infrastructure (Collecting Brain + Curator), installation pathways, and what founders gain across generations.
 
 ---
 
