@@ -30,7 +30,7 @@ If it exists: open it; summarise to the user; offer to walk them through it befo
 If it doesn't exist by 10:00 Friday:
 - Check `~/oot-framework/logs/r2.log` if privacy track, or the Routine run log on https://claude.ai/code/routines if cloud track.
 - Surface the failure to the user with the actual error.
-- Offer to run R2 manually (manual fire from the Routines dashboard, or `llmster ... r2.prompt.md` on privacy track).
+- Offer to run R2 manually (manual fire from the Routines dashboard on cloud track, or on privacy track: `cd ~/<firm-slug> && opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r2.prompt.md)"`).
 
 After the BR meeting completes (typically signaled by the user editing the page or by the Decisions_Log on X3 getting populated), help the user rename `<date>-pre.md` → `<date>.md` and update the frontmatter `status: active`. This is a small signed commit.
 

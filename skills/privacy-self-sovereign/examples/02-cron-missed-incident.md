@@ -48,19 +48,21 @@ Tomislav lists `firm/output-logs/`. Files present for every day except 2026-04-1
 
 Per §4.7 of S12 "When NOT to invoke" / "Don'ts" #2: *"Routines that miss because the laptop slept = data loss."* The framework's discipline: do not silently fake a Sunday output log. Document the gap.
 
-**Step 1 — backfill the data.**
+**Step 1 — re-run R1 (it catches up automatically).**
 
-Tomislav runs:
+There is **no `--backfill` flag** — R1 catches up on its own. Tomislav simply re-runs the canonical R1 command from the firm's runner directory:
 
 ```
-$ /usr/local/bin/llmster --backfill 2026-04-12 --skill compensation-attribution --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r1.prompt.md
+$ cd ~/adriatic && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"
 ```
 
-The `--backfill` flag tells R1 to capture outputs **for the specified date** rather than today. R1 reads GitHub commits, dChat threads, local filesystem activity for 2026-04-12 (a Sunday — typically light). Outputs land:
+**Why re-running is safe:** R1 dedupes on each output's `output_ref` and scans from its last recorded log entry (the scan-from-last-log + dedupe semantics fixed 2026-07-04). Because Sunday's 18:00 fire never happened, R1's last successful run predates 2026-04-12 — so this fire picks up every output since then, including Sunday's, and the `output_ref` dedupe guarantees nothing already captured is paid twice. A missed day is captured on the next run; it is never double-paid.
+
+R1 reads GitHub commits, dChat threads, local filesystem activity back to its last log point, which now spans 2026-04-12 (a Sunday — typically light). Outputs land:
 - 2 commits from Mira (weekend work).
 - 1 dChat thread tagged `#output` from Davor about a Sunday customer call.
 
-R1 writes `firm/output-logs/2026-04-12.md`. Header notes: *"backfilled on 2026-04-13 due to power outage; original Sunday R1 run failed at 18:00:00 — see [[firm/privacy-track/troubleshooting/2026-04-12-cron-missed-power-outage]]."*
+R1 writes `firm/output-logs/2026-04-12.md`. Header notes: *"captured on 2026-04-13 via catch-up re-run after a power outage; the scheduled Sunday R1 run failed at 18:00:00 — see [[firm/privacy-track/troubleshooting/2026-04-12-cron-missed-power-outage]]."*
 
 **Step 2 — write the troubleshooting Brain page.**
 
@@ -87,7 +89,7 @@ I noticed the missing 4thtech `#output-log` summary Sunday 18:30 evening. Invest
 
 ## Recovery
 
-`llmster --backfill 2026-04-12 ...` captured Sunday's outputs. Daily log now exists at `firm/output-logs/2026-04-12.md` with backfill note.
+Re-ran R1 (`opencode run … r1.prompt.md`); its dedupe + scan-from-last-log caught up Sunday's outputs automatically — no special flag needed, and nothing double-paid. Daily log now exists at `firm/output-logs/2026-04-12.md` with a catch-up note.
 
 ## Prevention
 
@@ -103,10 +105,10 @@ R6 also missed its 23:00 Sunday run. Per §R6 spec (`routines/SPEC.md`), the gap
 
 **Step 3 — append the audit-log gap entry.**
 
-Tomislav runs R6 manually with `--backfill 2026-04-12`:
+R6 has no dedupe-driven auto-catch-up, so Tomislav re-runs it with the target date stated **inline in the prompt** (this is the general pattern for non-R1 Routines — there is no `--backfill` flag):
 
 ```
-$ /usr/local/bin/llmster --backfill 2026-04-12 --skill governance-compliance --prompt-file ~/oot-framework/routines/privacy/r6.prompt.md
+$ cd ~/adriatic && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "Write the audit-trail entry for 2026-04-12. $(cat ~/oot-framework/routines/privacy/r6.prompt.md)"
 ```
 
 R6 writes `firm/audit-logs/2026-04-12.md`:
@@ -138,7 +140,7 @@ Decision lands as a Brain page; R5 (Sunday brain health) confirms next Sunday th
 ## What this example demonstrates
 
 - **The framework's discipline of not faking missed runs.** The Sunday gap is in the Brain audit trail with full provenance. Article 12 record-keeping requires this honesty.
-- **Recovery is mechanical** (`--backfill` flag) but not automatic — a partner has to invoke it.
+- **Recovery is mechanical** (re-run R1 — its dedupe + scan-from-last-log catches up safely; re-run other Routines with the target date stated inline) but not automatic — a partner has to invoke it.
 - **Prevention is structured** — UPS upgrade + `pmset` config + long-term redundancy plan, with owners and deadlines.
 - **Incident → Brain page → BR decision** is the framework's standard incident flow.
 - **Honest framing throughout:** the framework is honest that the privacy track has this trade-off (always-on machine can fail); the discipline is to handle the failures cleanly, not to pretend they don't happen.

@@ -215,7 +215,83 @@ Cloud Routines' laptop-closed scheduling has no free equivalent, so the communit
 
 ---
 
-## (h) Honest status
+## (h) Scheduled / unattended runs (privacy track + community Rung 2)
+
+The **privacy track** and the community track's **Rung 2** run OpenCode from a scheduler with no human present. That changes two things: the invocation form, and the permission model.
+
+### The canonical scheduled invocation
+
+The scheduler (cron / launchd / Task Scheduler) runs `opencode run` non-interactively with the routine prompt piped in from its `r*.prompt.md` file:
+
+```bash
+# cron line (R1 example, daily 18:00). Replace <firm-slug> and the model per routine.
+0 18 * * * cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
+```
+
+- `cd ~/<firm-slug>` first — this is the firm's **runner directory**, where the scoped `opencode.json` lives (below). OpenCode loads the project-level config from its working directory.
+- `--model lmstudio/<model>` — on the privacy track the provider is `lmstudio` (a local LM Studio server); on community Rung 2 it can be any provider you've configured (e.g. `google/gemini-2.5-flash-lite`).
+- `"$(cat …)"` — the prompt body. It begins with an instruction to read the routine's owner SKILL.md file(s) first (this replaces any per-invocation skill flags; the prompt loads its own skills).
+- One-time on the always-on machine: `mkdir -p ~/oot-framework/logs`, and keep the model warm with `lms load <model> --ttl 3600` (LM Studio's `lms` CLI; the `--ttl` avoids a cold-load on every fire).
+
+**launchd (macOS)** can't do the `$(cat …)` shell substitution itself, so wrap the whole command in a login shell — this is the simplest correct form for a plist:
+
+```xml
+<key>ProgramArguments</key>
+<array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd ~/&lt;firm-slug&gt; &amp;&amp; /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"</string>
+</array>
+```
+
+### The unattended permission exception (scoped `opencode.json`)
+
+§d told you to set `"permission": {"*": "ask"}` for the whole install. **Scheduled runs are the documented exception:** cron and launchd cannot answer an interactive "ask" prompt, so an all-`ask` config would deadlock every fire. Instead, the firm's runner directory carries a **scoped** project-level `opencode.json` that pre-authorises exactly the operations a Routine needs and asks for everything else:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "git *": "allow",
+      "python3 *": "allow",
+      "mktemp *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "*": "ask"
+    },
+    "edit": "allow",
+    "webfetch": "ask"
+  },
+  "mcp": {
+    "github-mcp": { "type": "local", "command": ["<github-mcp launch command>"] },
+    "desktop-commander": { "type": "local", "command": ["<desktop-commander launch command>"] },
+    "my-curator": { "type": "local", "command": ["<my-curator launch command>"] }
+  }
+}
+```
+
+- The `bash` allow-list covers the ADR-001 write path (git clone + `python3`/openpyxl + `git commit -S`) and nothing else — everything unlisted stays `ask` (which, unattended, means it will fail loudly rather than run silently).
+- `edit` is scoped to the working directory by virtue of the runner dir being the project root.
+- Add `4thtech` (privacy) or drop MCP servers you don't use.
+
+> ⚠️ **`--auto` is NOT the way to make a scheduled run non-interactive.** Global auto-approve removes the pause on *every* action, machine-wide — the exact thing §d forbids. The scoped allow-list above is the correct, auditable form of the unattended exception: it authorises a known-small set of operations and refuses the rest. Never reach for `--auto` to "just make cron work".
+
+### Keeping MCP servers warm (`opencode serve` + `--attach`)
+
+Each `opencode run` that cold-boots its MCP servers pays a startup cost every fire. To avoid that, run a persistent server and attach to it:
+
+```bash
+opencode serve   # long-running; hosts the MCP servers once
+# then each scheduled fire attaches instead of cold-booting:
+opencode run --attach --model lmstudio/<model> "$(cat …/r<N>.prompt.md)"
+```
+
+On an always-on privacy-track machine, running `opencode serve` as a launchd/systemd unit and having the cron lines `--attach` is the low-latency setup. For a laptop (Rung 2) it's optional — the cold-boot cost is usually fine at ØØT's ~2.3 runs/day.
+
+---
+
+## (i) Honest status
 
 - **Author-verified:** OpenCode installs, loads the my-curator MCP, honours the `"permission": {"*": "ask"}` gate, and follows the install plan's early steps. The naming (`anomalyco/opencode`, formerly `sst/opencode`, npm `opencode-ai`) is confirmed current.
 - **QUEUED:** a full **end-to-end community-track install** on the maintainer's test instance — bundled with the Phase 4 privacy-track e2e run, because both need the maintainer's accounts and cannot be run autonomously. Until that lands, the community track is documented-and-author-verified but not e2e-certified. It will be logged in [`docs/internal/agent-compatibility-log.md`](../../docs/internal/agent-compatibility-log.md) when complete.

@@ -31,19 +31,21 @@ End-to-end walkthrough of standing up a fully sovereign Gen 1 ØØT instance.
    - `qwen2.5-14b-instruct-q4_k_m.gguf` (~9 GB)
    - `meta-llama-3.3-70b-instruct-q4_k_m.gguf` (~40 GB)
    - `qwen2.5-9b-instruct-q4_k_m.gguf` (~5 GB) — fallback
-2. **Headless mode** enabled. `llmster` CLI installed to `/usr/local/bin/llmster`.
-3. **MCP host config** in LM Studio:
+2. **Model server (three-piece stack).** LM Studio run headless by the **`llmster`** daemon (per lmstudio.ai/docs/developer/core/headless), serving on `http://127.0.0.1:1234/v1`; **`lms`** CLI used to keep a model warm (`lms server start && lms load qwen2.5-14b-instruct --ttl 3600`); **OpenCode** installed (`opencode run`) as the agent harness, `lmstudio` provider pointed at that endpoint. LM Studio is the model server only — OpenCode does the skills, MCP, and code execution.
+3. **MCP servers** configured in OpenCode's `opencode.json` (`mcp` block — not in LM Studio):
    ```json
    {
-     "mcpServers": {
-       "my-curator": { "command": "curator-mcp" },
-       "excel-mcp": { "command": "excel-mcp-server", "env": { "EXCEL_MCP_BASE_PATH": "/Users/oot/oot-ledger/firm/excel/" }},
-       "desktop-commander": { "command": "desktop-commander-mcp" },
-       "github-mcp": { "command": "github-mcp", "env": { "GITHUB_TOKEN_FILE": "/Users/oot/.config/oot/github-token" }}
+     "$schema": "https://opencode.ai/config.json",
+     "mcp": {
+       "my-curator": { "type": "local", "command": ["curator-mcp"] },
+       "excel-mcp": { "type": "local", "command": ["excel-mcp-server"] },
+       "desktop-commander": { "type": "local", "command": ["desktop-commander-mcp"] },
+       "github-mcp": { "type": "local", "command": ["github-mcp"] }
      }
    }
    ```
-4. **Self-test** — open Claude Desktop on founder's laptop (paired to LM Studio over Tailscale), run prompt: *"List my-curator domains."* → returns `[firm]` (the Curator's pre-existing domain on the Mac mini).
+   (Excel MCP is optional/human-in-the-loop; Routines write via openpyxl. The `EXCEL_MCP_BASE_PATH` env + GitHub token wiring are set per each server's own docs.)
+4. **Self-test** — from OpenCode on the Mac mini, run prompt: *"Use my-curator; list domains."* → returns `[firm]` (the Curator's pre-existing domain on the Mac mini).
 
 **Afternoon:**
 5. **The Curator desktop app** installed on Mac mini. Cloud-LLM ingest configured (Gemini Flash Lite — Gen 2 will replace with local LLM ingest).

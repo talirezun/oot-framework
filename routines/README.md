@@ -1,6 +1,6 @@
 # Routines
 
-The eight ØØT scheduled Routines, in two flavours: **cloud** ([Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code) — Anthropic's cloud-hosted scheduled-agent product) and **privacy** (OS-native scheduling — cron / launchd / Task Scheduler — hitting headless LM Studio via `llmster`).
+The eight ØØT scheduled Routines, in two flavours: **cloud** ([Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code) — Anthropic's cloud-hosted scheduled-agent product) and **privacy** (OS-native scheduling — cron / launchd / Task Scheduler — invoking **OpenCode headless** (`opencode run`) against a **local LM Studio server**, which the `llmster` daemon hosts).
 
 The substrates differ; **the prompts are functionally identical** so a firm can switch tracks without rewriting Routine logic.
 
@@ -71,9 +71,9 @@ Estimated setup time per Routine: 10-15 minutes. Total for the 4 Day-1 Routines:
 
 For each Routine to install:
 
-1. Confirm the always-on machine is configured (Mac mini / NUC / Pi 5 with FDE + UPS) per Skill Pack S12 §4.2.
-2. Confirm LM Studio MCP host is running with the required servers (per the routine's `mcp_servers` frontmatter).
-3. Place the prompt body at `~/oot-framework/routines/privacy/<r>.prompt.md` (separate file containing the prompt body — extract from `cloud/<R>.md`).
+1. Confirm the always-on machine is configured (Mac mini / NUC / Pi 5 with FDE + UPS) per Skill Pack S12 §4.2, and the model stack is up: LM Studio + the `llmster` daemon serving on `http://127.0.0.1:1234/v1` (kept warm with `lms load <model> --ttl 3600`), plus OpenCode installed with the `lmstudio` provider — see [`../installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md).
+2. Confirm the MCP servers named in the routine's `mcp_servers` frontmatter are wired in the runner directory's `opencode.json` `mcp` block (OpenCode hosts the MCP servers; LM Studio is only the model server).
+3. Extract the prompt body from `cloud/<R>.md` into a standalone `~/oot-framework/routines/privacy/<r>.prompt.md`. **Prepend a first line that tells the agent to read the routine's owner SKILL.md file(s) before doing anything** (this replaces the old per-invocation `--skill` flags — the prompt now loads its own skills).
 4. Install the scheduling configuration:
    - **macOS:** save the launchd plist to `~/Library/LaunchAgents/oot.<r>.plist`; run `launchctl load`.
    - **Linux:** add the cron entry via `crontab -e`.

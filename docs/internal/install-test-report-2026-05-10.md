@@ -4,6 +4,8 @@
 **Sandbox:** `/tmp/oot-test-install/` with a bare local git remote at `/tmp/oot-test-install/oot-brain-remote/` simulating GitHub. Cleaned up after the test.
 **Outcome:** Path A is structurally sound. Pattern C works mechanically. **8 findings**, of which 1 is a real bug in the framework (formula-write gap in R1) and 7 are docs / install-plan refinements that would have tripped a less-technical founder running the plan against a fresh machine.
 
+> **Editorial note (2026-07-04):** this historical report references `llmster` as the privacy-track Routine runner. That invocation pattern was later corrected — `llmster` is LM Studio's headless **daemon** (the local model server), **not** an agent CLI; the agent that runs privacy-track Routines is **OpenCode headless** (`opencode run`). Findings below are preserved as originally written; see [`docs/02-installing-routines-privacy.md`](../02-installing-routines-privacy.md) for the corrected stack.
+
 ---
 
 ## What was tested

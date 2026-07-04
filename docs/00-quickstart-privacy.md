@@ -148,13 +148,16 @@ For each partner including the founder, ~30-45 min:
    - **Qwen 3 9B Instruct** (~5 GB) — fallback for smaller machines.
    - **Llama 3.3 70B Instruct** (~40 GB, 4-bit quantised) — for R3 (Monthly Variable Calc) which is high-stakes.
    - **DeepSeek-V3** — strong on code; pair with Skill Pack S4 if engineering-heavy firm.
-2. **Headless mode** enabled. `llmster` CLI installed to `/usr/local/bin/llmster`.
-3. **MCP host config** in LM Studio. Add:
+2. **Run the model server headless (three-piece stack).** LM Studio is only the model server; the scheduled Routines need three pieces (full detail in [`02-installing-routines-privacy.md`](02-installing-routines-privacy.md) and [`../installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md)):
+   - **`llmster`** — LM Studio's headless daemon (per [lmstudio.ai/docs/developer/core/headless](https://lmstudio.ai/docs/developer/core/headless)); serves the model at `http://127.0.0.1:1234/v1`. Not an agent — it runs no prompts.
+   - **`lms`** — LM Studio's CLI: `lms server start`, then `lms load qwen-3-14b-instruct --ttl 3600` to keep the model warm.
+   - **OpenCode** — the agent harness (`opencode run`) the schedulers invoke; point its `lmstudio` provider at that endpoint.
+3. **MCP servers** configured in OpenCode's `opencode.json` (`mcp` block — not in LM Studio). Add:
    - `my-curator` — Curator MCP.
-   - `excel-mcp` — `haris-musa/excel-mcp-server`. `pip install excel-mcp-server` first.
+   - `excel-mcp` — `haris-musa/excel-mcp-server`. `pip install excel-mcp-server` first (optional — human-in-the-loop only; Routines write via openpyxl).
    - `desktop-commander` — local filesystem MCP.
    - `github-mcp` — cross-machine sync.
-4. **Self-test:** open Claude Desktop on your laptop (paired to LM Studio over Tailscale), or use LM Studio's built-in chat. Ask: *"List the firm domains via my-curator's list_domains tool."* Successful response = MCP host configured.
+4. **Self-test:** from OpenCode on the always-on machine, ask: *"Use my-curator; list the firm domains."* Successful response = the stack is configured.
 5. **The Curator desktop app** installed on the Mac mini. Cloud-LLM ingest configured (Gemini Flash Lite — Gen 2 will replace with local LLM).
 
 ### Sunday afternoon (2-3 hours)

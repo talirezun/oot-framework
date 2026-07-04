@@ -20,7 +20,7 @@ Two execution substrates, identical prompts:
   - **Claude Code CLI** in your terminal: `/schedule` command
   - **Web dashboard:** [claude.ai/code/routines](https://claude.ai/code/routines)
   - **Claude Code desktop app:** "New Remote Task" feature *(this is the Claude Code-specific desktop app, distinct from Claude Desktop chat)*
-- **Privacy track** — cron / launchd / Task Scheduler on your always-on machine, hitting headless LM Studio via `llmster`. **Privacy track is the one that needs a dedicated machine.** That's the structural trade-off vs. cloud track's sovereign-but-laptop-must-be-on cost.
+- **Privacy track** — cron / launchd / Task Scheduler on your always-on machine, where each schedule runs **OpenCode headless** (`opencode run`) against a **local LM Studio server** (hosted by the `llmster` daemon). **Privacy track is the one that needs a dedicated machine.** That's the structural trade-off vs. cloud track's sovereign-but-laptop-must-be-on cost.
 
 ---
 
@@ -295,8 +295,8 @@ flowchart TB
 
     subgraph AlwaysOn["🖥️ Always-on machine (your hardware)"]
         Cron[cron / launchd / Task Scheduler]
-        LLMster[llmster CLI]
-        LMStudio[LM Studio<br/>Qwen 3 14B / Llama 3.3 70B]
+        OpenCode[opencode run<br/>headless agent]
+        LMStudio[LM Studio server<br/>hosted by llmster daemon<br/>Qwen 3 14B / Llama 3.3 70B]
         OpenpyxlP[Python + openpyxl]
         CuratorLocal[Local my-curator MCP]
     end
@@ -309,22 +309,22 @@ flowchart TB
         StatusCheck_p[GitHub status check<br/>oot/klarna-test]
     end
 
-    Cron -->|fires| LLMster
-    LLMster --> LMStudio
-    LMStudio --> CuratorLocal
-    LMStudio --> OpenpyxlP
-    GitHub_p --> LLMster
-    DChat --> LLMster
-    Local --> LLMster
-    BankP --> LLMster
+    Cron -->|fires| OpenCode
+    OpenCode -->|prompts model| LMStudio
+    OpenCode --> CuratorLocal
+    OpenCode --> OpenpyxlP
+    GitHub_p --> OpenCode
+    DChat --> OpenCode
+    Local --> OpenCode
+    BankP --> OpenCode
 
     OpenpyxlP --> BrainXLSX_p
-    LLMster --> BrainMD_p
+    OpenCode --> BrainMD_p
     BrainXLSX_p -.signed commit.-> GitHub_p
     BrainMD_p -.signed commit.-> GitHub_p
-    LLMster --> DMail
-    LLMster --> DChatPost
-    LLMster --> StatusCheck_p
+    OpenCode --> DMail
+    OpenCode --> DChatPost
+    OpenCode --> StatusCheck_p
 
     style AlwaysOn fill:#fff4e1,stroke:#cc5500
     style Outputs_p fill:#e8f5e9,stroke:#2e7d32

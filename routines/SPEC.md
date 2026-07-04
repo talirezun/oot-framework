@@ -1,6 +1,6 @@
 # Routines — SPEC
 
-The eight ØØT scheduled Routines, in two flavours: cloud track (**Claude Code Routines** — Anthropic's cloud-hosted scheduled-agent product, launched 14 April 2026) and privacy track (OS-native scheduling — cron / launchd / Task Scheduler — hitting headless LM Studio via `llmster`). The substrates differ; the prompts are functionally identical so a firm can switch tracks without rewriting Routine logic.
+The eight ØØT scheduled Routines, in two flavours: cloud track (**Claude Code Routines** — Anthropic's cloud-hosted scheduled-agent product, launched 14 April 2026) and privacy track (OS-native scheduling — cron / launchd / Task Scheduler — invoking OpenCode headless against a local LM Studio server, hosted by the `llmster` daemon). The substrates differ; the prompts are functionally identical so a firm can switch tracks without rewriting Routine logic.
 
 Claude Code generates 16 markdown files (8 in `routines/cloud/`, 8 in `routines/privacy/`) from this spec.
 
@@ -82,13 +82,13 @@ Steady-state daily-routine cost on the v1.0 schedule: R1 daily + R6 daily + R2/R
 
 **Trigger:**
 - Cloud: Claude Code Routine, daily 18:00 in the firm's primary timezone.
-- Privacy: cron `0 18 * * *` (Linux/macOS) or Task Scheduler equivalent (Windows), invoking `llmster --skill compensation-attribution --prompt-file routines/privacy/r1.prompt.md`.
+- Privacy: cron `0 18 * * *` (Linux/macOS) or Task Scheduler equivalent (Windows), invoking `opencode run --model lmstudio/<model> "$(cat routines/privacy/r1.prompt.md)"` (the prompt file's read-first line loads the compensation-attribution skill).
 
 **Allowed Skills:** S3 (Compensation & Attribution), S1 (My Curator).
 
 **MCP servers and tools:**
 - Cloud: GitHub connector (Brain-repo clone + signed commit + push). Slack connector (read tracked channels + post `#output-log` and `#ops`). Google Workspace connector (**read-only**, for `{{TRACKED_FOLDERS}}` document discovery). Code execution required (openpyxl writes to X1 in the cloned Ledger).
-- Privacy: same operation locally. GitHub MCP for the commit/push. Local filesystem for the Ledger clone. 4thtech CLI/SDK for dChat thread reads (replaces Slack). No Excel MCP needed — openpyxl is a Python library, used directly by `llmster`.
+- Privacy: same operation locally. GitHub MCP for the commit/push. Local filesystem for the Ledger clone. 4thtech CLI/SDK for dChat thread reads (replaces Slack). No Excel MCP needed — openpyxl is a Python library, run directly by OpenCode's code execution (against the LM Studio server hosted by the `llmster` daemon).
 
 **Prompt body:**
 
@@ -154,7 +154,7 @@ Failure handling: if any source is unreachable, log the failure to the daily sum
 - Sources: GitHub via GitHub MCP, dChat via 4thtech CLI/SDK, local filesystem via Desktop Commander MCP.
 - Excel writes: same openpyxl operation against a local Brain-repo clone — no Excel MCP needed for the Routine path. (Excel MCP remains available as an *optional* tool for ad-hoc human-in-the-loop work, not a Routine dependency.)
 - Posting: dChat to a designated channel.
-- Cron entry: `0 18 * * * /usr/local/bin/llmster --model qwen-3-14b --skill compensation-attribution --skill my-curator --prompt-file ~/oot/routines/privacy/r1.prompt.md >> ~/oot/logs/r1.log 2>&1`
+- Cron entry: `0 18 * * * cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1` (the prompt file's read-first line loads compensation-attribution + my-curator).
 
 ---
 
@@ -325,27 +325,17 @@ Failure handling: if outcome attribution data is missing for an output, flag for
 
 **Allowed Skills:** S1 (My Curator).
 
-**MCP servers and tools:** my-curator MCP (remote-HTTP for cloud, stdio for privacy). Slack / 4thtech connector. GitHub connector / GitHub MCP for the brain-health snapshot commit. No Excel writes; no code-execution requirement beyond what my-curator needs.
+**Two structurally-different variants (the full prompt bodies live in the per-track files, which are authoritative):**
 
-**Prompt body:**
+- **Cloud — the bridge** ([`routines/cloud/R5.md`](cloud/R5.md), authoritative). Cloud Routines run on Anthropic's infrastructure and cannot reach a local stdio MCP, so there is **no my-curator MCP** on the cloud track. R5 clones **two repos** at runtime (the Ledger read-write + the Curator-synced brain repo read-only), does a **file-level** scan of the synced markdown (parse frontmatter, walk `[[wikilinks]]`, git-mtime), and detects broken wikilinks / orphans / stale pages. It **cannot auto-fix** (read-only on the brain repo — it LISTS typo-correctable links) and **cannot run semantic-duplicate detection** (needs the MCP). Report written to `firm/brain-health/YYYY-WW.md` in the Ledger via signed commit; summary posted to Slack `#brain-health`.
 
-```
-You are running the weekly Brain health check for an ØØT organisation.
+- **Privacy — direct MCP** ([`routines/privacy/R5.md`](privacy/R5.md), authoritative). The Routine runs on the **same always-on machine** as the my-curator MCP server, so it reaches the Curator's full 17-tool set directly (stdio). It calls `scan_wiki_health`, **auto-fixes** the narrowly-safe class via `fix_wiki_issue` (a broken wikilink with exactly one existing slug within Levenshtein ≤ 2 — same safe/unsafe decision as cloud, but privacy can act on it), and runs `scan_semantic_duplicates` to surface same-concept-different-slug pages (listed for human review, never auto-merged — merges are destructive). Report written to the same `firm/brain-health/YYYY-WW.md` template in the Ledger via signed commit; the privacy report additionally carries a semantic-duplicates section and an auto-fixed count. Summary posted to 4thtech dChat `#brain-health`.
 
-Your task:
-1. Run my-curator's scan_wiki_health on every domain.
-2. Compile a summary of issues by type: broken wikilinks, orphan pages, semantic duplicates, stale pages (>90 days no update on pages tagged active).
-3. Auto-fix the safe categories (broken wikilinks where the target slug exists with a typo correctable via fix_wiki_issue).
-4. For unsafe categories, post a list to Slack #brain-health (or dChat equivalent) for human review and fix-this-week tagging.
-5. Run scan_semantic_duplicates and post any new duplicate clusters (clusters not previously dismissed).
-6. Update firm/brain-health/YYYY-WW.md with the weekly health snapshot.
+**MCP servers and tools:** cloud — GitHub connector only (no my-curator); code execution for the two-repo clone + scan + snapshot commit. Privacy — my-curator MCP (local stdio) + GitHub MCP for the snapshot commit; code execution for the signed commit. Neither variant mutates any `.xlsx` file.
 
-Failure handling: if Curator is unreachable, retry hourly until 18:00; if still unreachable, escalate to ops.
-```
+**Expected outputs:** Brain health snapshot page at `firm/brain-health/YYYY-WW.md` (Ledger, signed commit); Slack/dChat post if any metric is non-zero. Privacy additionally: single-candidate typo links auto-fixed in the Curator.
 
-**Expected outputs:** Brain health snapshot page; Slack/dChat post; auto-fixes applied.
-
-**Privacy-track delta:** dChat instead of Slack.
+**Failure handling:** Curator/brain-repo unreachable → retry once, then write a flagged "unreachable" report (so the gap is audit-trailed), commit it, escalate to `#ops`. Ledger push failure → retry, escalate to `#ops`, never downgrade to an unsigned commit.
 
 ---
 
@@ -357,7 +347,7 @@ Failure handling: if Curator is unreachable, retry hourly until 18:00; if still 
 
 **Allowed Skills:** S7 (Governance & Compliance).
 
-**MCP servers and tools:** my-curator MCP (read agent-decision data). GitHub connector / GitHub MCP (signed commit + push of the daily audit log). Code execution required (openpyxl writes X7 Audit_Log_Index after the audit-log markdown is committed).
+**MCP servers and tools:** GitHub connector / GitHub MCP (Ledger clone + signed commit + push of the daily audit log). **No my-curator MCP** — R6 reads other Routines' decisions from their **Ledger writebacks** (the markdown pages under `firm/output-logs/`, `firm/business-reviews/`, etc.), not from the Curator graph; the Second Brain bridge is not used here (matches cloud R6 v1.1.1's frontmatter). Code execution required (openpyxl writes X7 Audit_Log_Index; both artifacts land in one commit).
 
 **Prompt body:**
 
@@ -365,7 +355,7 @@ Failure handling: if Curator is unreachable, retry hourly until 18:00; if still 
 You are appending today's audit trail to the EU AI Act Article 12 record for an ØØT organisation. Today is {{TODAY}}.
 
 Your task:
-1. Read all agent decisions logged today across all firm Routines (R1, R2, R3, R4, R5, R7, R8) and any ad-hoc Skill invocations that produced an output affecting partners or customers.
+1. Clone {{LEDGER_REPO_URL}} and read all agent decisions logged today across all firm Routines (R1, R2, R3, R4, R5, R7, R8) and any ad-hoc Skill invocations that produced an output affecting partners or customers. Each Routine writes its decisions as markdown in the Ledger — read today's files under `firm/output-logs/` (R1), `firm/business-reviews/` (R2), `firm/partners/*/variable-statements/` (R3), `firm/brain-health/` (R5), `firm/klarna-tests/` (R7), and `firm/audit-logs/` itself (yesterday's entries, for continuity). R6's source-of-truth is the Ledger, not the Curator graph.
 2. For each decision, capture: timestamp, AI system identifier (which model + Skill), decision context (sanitised input summary), output, human reviewer if any, related use_case_id from eu-ai-act-mapping.xlsx.
 3. Append to firm/audit-logs/YYYY-MM-DD.md following the template at templates/brain/audit-log-day.md.
 4. Update eu-ai-act-mapping.xlsx Audit_Log_Index sheet with today's entry count and any anomalies flagged.
@@ -376,7 +366,7 @@ Failure handling: if any source unreachable, append from available sources and f
 
 **Expected outputs:** Daily audit log Brain page; X7 Audit_Log_Index updated; **signed** git commit on the protected branch.
 
-**Privacy-track delta:** All git operations via GitHub MCP. The audit log discipline is identical. Signing key is stored in a Trezor or YubiKey-backed slot, never in plaintext on the always-on machine.
+**Privacy-track delta:** The prompt body is identical (same Pattern-C git-CLI single signed-commit carrying both the audit-log markdown and the X7 update; same Ledger-writeback source, no my-curator). The audit-log discipline is identical. The signing key is stored in a Trezor or YubiKey-backed slot on the always-on machine, never in plaintext.
 
 **Setup pre-requisite (one-time):** The firm must configure GitHub branch protection on `main` (or the audit branch) with: force-push disabled, deletion disabled, "Require signed commits" enabled. The cloud installer (Phase 9) and the Code & QA SKILL.md (S4) document this configuration. Without these protections the Article 12 retention claim does not hold.
 
@@ -386,7 +376,7 @@ Failure handling: if any source unreachable, append from available sources and f
 
 **Trigger:**
 - Cloud: Claude Code Routine fired by GitHub event (PR labelled `ai-replaces-human`). Optionally also: manual trigger from a partner via Slack slash command.
-- Privacy: GitHub webhook polled by a local listener (every 5 minutes) hitting llmster.
+- Privacy: GitHub webhook polled by a local listener (every 5 minutes) that invokes OpenCode (`opencode run`) against the local LM Studio server.
 
 **Allowed Skills:** S6 (Change Management), S4 (Code & QA).
 

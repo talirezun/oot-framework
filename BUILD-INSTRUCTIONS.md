@@ -264,7 +264,7 @@ oot-framework/
 1. Read `routines/SPEC.md`.
 2. For each of the 8 Routines (R1–R8):
    - Generate `routines/cloud/<routine-id>.md` — the Anthropic Remote Routine prompt, including trigger configuration, prompt body, expected outputs.
-   - Generate `routines/privacy/<routine-id>.md` — the equivalent for OS-native scheduling: cron / launchd / Task Scheduler invocation, `llmster` command line, prompt body for headless LM Studio.
+   - Generate `routines/privacy/<routine-id>.md` — the equivalent for OS-native scheduling: cron / launchd / Task Scheduler invocation of **OpenCode headless** (`opencode run`) against a **local LM Studio server** (hosted by the `llmster` daemon — the model server, not the agent), prompt body included.
 3. Add a `routines/README.md` summarising the 16 files and the install procedure for each track.
 
 **Acceptance criteria:** 16 Routine markdown files + README committed.

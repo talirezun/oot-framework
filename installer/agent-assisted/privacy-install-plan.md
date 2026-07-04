@@ -13,7 +13,7 @@ If you (the human) are reading this directly, see [`START-HERE.md`](START-HERE.m
 The privacy-track install differs from cloud in three fundamental ways:
 
 1. **You're installing on an always-on machine, not the user's daily laptop.** "The machine" in this plan means a Mac mini / NUC / Raspberry Pi 5 with FDE + UPS that the user has acquired and set up. Many steps run on the always-on machine; some run on the user's daily laptop (e.g. Claude Desktop's MCP wiring on the laptop talks to Curator running on the always-on machine via Tailscale).
-2. **Routines run via OS-native scheduling** (cron / launchd / Task Scheduler) hitting headless LM Studio via `llmster`, not via Claude Code Routines on Anthropic's infrastructure.
+2. **Routines run via OS-native scheduling** (cron / launchd / Task Scheduler) that invoke **OpenCode headless** (`opencode run`) against a **local LM Studio server** (hosted by the `llmster` daemon), not via Claude Code Routines on Anthropic's infrastructure. OpenCode is the agent (skills, MCP, code execution); LM Studio + `llmster` are only the model server.
 3. **Per-partner Trezors are Day-1**, not Gen-2-deferred — they're how 4thtech wallet identities work.
 
 Same ground rules from the [cloud plan preamble](cloud-install-plan.md#agent-read-this-preamble-first) apply: pause and confirm before consequential actions; web-UI primary; never silently downgrade; honest failure reporting; resume from state; don't invent inputs; translate technical for the user; read before write; clipboard sandbox caveat (don't rely on `pbcopy`/`xclip`).
@@ -272,31 +272,41 @@ If yes, write the passphrase on a SEPARATE paper card from the seed; store separ
 
 Total: ~55-95 GB. Download time: 1-3 hours depending on connection. Tell me `done`."
 
-### 4.3 — Headless mode + llmster
+### 4.3 — Headless model server (llmster daemon + lms CLI)
 
-🟡 **ASK USER:** "In LM Studio, enable headless / server mode. Then install the `llmster` CLI:
+> **Reality check:** the model server on the privacy track is **LM Studio ≥0.3.5 run headless by the `llmster` daemon**, managed with LM Studio's own **`lms`** CLI. `llmster` is not an agent CLI — it has no `--skill` / `--prompt-file` / `--backfill` flags; it only *hosts* models on an OpenAI-compatible server. The agent that runs skills, clones the Ledger, and calls MCP tools is **OpenCode** (installed at Step 4.5).
 
-- macOS: `brew install llmster` (if available) or per LM Studio docs
-- Linux: `pip install llmster` or per LM Studio docs
+🟡 **ASK USER:** "In LM Studio, start headless / server mode. LM Studio ships the `lms` CLI and the `llmster` headless daemon (see lmstudio.ai/docs/developer/core/headless). Run:
 
-Verify: `llmster --version`. Tell me what you see."
+```
+lms server start
+lms load qwen-3-14b-instruct --ttl 3600
+lms ls          # confirm the model is loaded
+```
 
-### 4.4 — Smoke test
+The `--ttl 3600` keeps the model warm for an hour so scheduled Routines don't pay a cold-load each fire. Confirm the server is up at `http://127.0.0.1:1234/v1`. Tell me what you see."
 
-🟡 **ASK USER:** "Run: `llmster --model qwen-3-14b --prompt 'Say hello in one word.'`
+### 4.4 — Smoke test the model server
 
-Tell me what you see. Expected: a one-word response from Qwen."
+🟡 **ASK USER:** "Confirm the OpenAI-compatible endpoint answers:
 
-### 4.5 — MCP host config
+```
+curl -s http://127.0.0.1:1234/v1/models
+```
 
-🟡 **ASK USER:** "In LM Studio: Settings → MCPs → Add MCP. Add these as we configure them through later steps:
+Expected: a JSON list including the model you loaded. Tell me what you see."
 
-- `my-curator` (configured at Step 9)
-- `github-mcp` (configured at Step 8)
-- `desktop-commander` for local filesystem (configured at Step 9)
-- `4thtech` for dChat / dMail (configured at Step 5)
+### 4.5 — OpenCode harness + provider + MCP config
 
-For now: just confirm the MCPs panel is reachable in LM Studio. Tell me `done`."
+🟡 **ASK USER:** "Install **OpenCode** (the agent harness) per [`OPENCODE-SETUP.md`](OPENCODE-SETUP.md). Then, in the firm runner directory's `opencode.json`, configure the LM Studio provider and the MCP servers — MCP servers live in `opencode.json`, **not** in LM Studio:
+
+- provider `lmstudio` → OpenAI-compatible endpoint `http://127.0.0.1:1234/v1`
+- `mcp.my-curator` (configured at Step 9)
+- `mcp.github-mcp` (configured at Step 8)
+- `mcp.desktop-commander` for local filesystem (configured at Step 9)
+- `mcp.4thtech` for dChat / dMail (configured at Step 5)
+
+For now: install OpenCode, set the `lmstudio` provider, and confirm `opencode run --model lmstudio/qwen-3-14b-instruct 'Say hello in one word.'` returns a word. Tell me what you see."
 
 `step_4_lm_studio: done`.
 
@@ -475,12 +485,19 @@ Tell me `done` when the loop is verified."
 
 ## Step 12 — Configure Day-1 Routines (privacy variant)
 
-**What you're about to do (tell the user):** "I'll install the four Day-1 Routines as cron entries / launchd plists / Task Scheduler tasks on the always-on machine. Each Routine fires `llmster` against the local LM Studio model. About 30 minutes."
+**What you're about to do (tell the user):** "I'll install the four Day-1 Routines as cron entries / launchd plists / Task Scheduler tasks on the always-on machine. Each Routine fires **OpenCode** (`opencode run`) against the **local LM Studio model server**. About 30 minutes."
 
 For each Routine (R5 first, then R6, R1, R2):
 
-1. Place the prompt body at `~/oot-framework/routines/privacy/r<n>.prompt.md` (extracting from the cloud routine's "Prompt body" section in `routines/cloud/R<n>.md`).
-2. Install the platform-specific scheduling configuration:
+1. Place the prompt body at `~/oot-framework/routines/privacy/r<n>.prompt.md` (extracting from the cloud routine's "Prompt body" section in `routines/cloud/R<n>.md`). **Prepend a first line telling the agent to read the routine's owner SKILL.md file(s) first** — this replaces the old `--skill` flags; the prompt now loads its own skills.
+2. Ensure the logs directory exists (launchd/cron do **not** create it):
+
+```bash
+mkdir -p ~/oot-framework/logs
+```
+
+3. **Create the scoped unattended `opencode.json` in the firm runner directory** (see 12.a below) — the schedules `cd` into that directory so OpenCode picks it up.
+4. Install the platform-specific scheduling configuration:
 
 **macOS (launchd):**
 
@@ -494,13 +511,9 @@ For each Routine (R5 first, then R6, R1, R2):
     <string>oot.r5</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/llmster</string>
-        <string>--model</string>
-        <string>qwen-3-14b</string>
-        <string>--skill</string>
-        <string>my-curator</string>
-        <string>--prompt-file</string>
-        <string>/Users/&lt;oot-user&gt;/oot-framework/routines/privacy/r5.prompt.md</string>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>cd ~/&lt;firm-slug&gt; &amp;&amp; /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)"</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
@@ -526,11 +539,11 @@ launchctl load ~/Library/LaunchAgents/oot.r5.plist
 **Linux (cron):**
 
 ```cron
-# ~/oot-framework/routines/privacy/cron.txt
-0 9 * * 0 /usr/local/bin/llmster --model qwen-3-14b --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r5.prompt.md >> ~/oot-framework/logs/r5.log 2>&1
-0 18 * * * /usr/local/bin/llmster --model qwen-3-14b --skill compensation-attribution --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r1.prompt.md >> ~/oot-framework/logs/r1.log 2>&1
-0 23 * * * /usr/local/bin/llmster --model qwen-3-14b --skill governance-compliance --prompt-file ~/oot-framework/routines/privacy/r6.prompt.md >> ~/oot-framework/logs/r6.log 2>&1
-0 8 * * 5 /usr/local/bin/llmster --model qwen-3-14b --skill reporting-business-review --prompt-file ~/oot-framework/routines/privacy/r2.prompt.md >> ~/oot-framework/logs/r2.log 2>&1
+# ~/oot-framework/routines/privacy/cron.txt   (replace <firm-slug> with the firm runner dir)
+0 9 * * 0 cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)" >> ~/oot-framework/logs/r5.log 2>&1
+0 18 * * * cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
+0 23 * * * cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r6.prompt.md)" >> ~/oot-framework/logs/r6.log 2>&1
+0 8 * * 5 cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r2.prompt.md)" >> ~/oot-framework/logs/r2.log 2>&1
 ```
 
 ```bash
@@ -548,6 +561,51 @@ If you're certain the crontab is empty (a fresh always-on machine), the direct
 above is always safe.
 
 **Windows (Task Scheduler):** XML import — see `routines/privacy/r5-task.xml` template.
+
+### 12.a — Scoped unattended `opencode.json` (the unattended exception)
+
+The install-time rule everywhere else is **ask before every consequential action**. Scheduled Routines break that rule out of necessity: cron / launchd cannot answer an interactive "ask" prompt. The **documented exception** is a *scoped* project-level `opencode.json` in the firm runner directory that pre-authorises exactly the operations a Routine needs and asks for everything else. The schedules `cd ~/<firm-slug>` so OpenCode loads this file.
+
+> ⚠️ **Do NOT use OpenCode's global `--auto` (auto-approve-everything).** That is the wrong tool — it removes the pause on *all* actions machine-wide. The scoped `permission` allow-list below is the correct, auditable form.
+
+🟡 **ASK USER:** "In the firm runner directory (`~/<firm-slug>`), create `opencode.json` with this content (I'll fill the paths):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "lmstudio": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": { "baseURL": "http://127.0.0.1:1234/v1" },
+      "models": {
+        "qwen-3-14b-instruct": {},
+        "llama-3.3-70b-instruct": {}
+      }
+    }
+  },
+  "permission": {
+    "bash": {
+      "git *": "allow",
+      "python3 *": "allow",
+      "mktemp *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "*": "ask"
+    },
+    "edit": "allow",
+    "webfetch": "ask"
+  },
+  "mcp": {
+    "github-mcp": { "type": "local", "command": ["<github-mcp launch command>"] },
+    "desktop-commander": { "type": "local", "command": ["<desktop-commander launch command>"] },
+    "my-curator": { "type": "local", "command": ["<my-curator launch command>"] }
+  }
+}
+```
+
+`edit` is scoped to this working directory by virtue of the runner dir being the project root — OpenCode's `edit` permission applies to files under the project. `git`/`python3`/`mktemp` cover the ADR-001 clone + openpyxl + signed-commit path; everything else stays `ask`. Add `4thtech` to the `mcp` block once its CLI is configured (Step 5). Tell me `done`."
+
+`step_12a_opencode_scoped_config: done`.
 
 ### 12.x — Manual test fire + verify
 
@@ -579,7 +637,7 @@ Tell me what you see for R5 and R6."
 
 ## Step 14 — Smoke test
 
-(Privacy variant of cloud plan Step 12. Same Pattern C openpyxl test, but run on the always-on machine via `llmster` rather than via the agent's Python venv. Plus privacy-specific checks: dChat post arrived; PollinationX read access works; Trezor still recognised by 4thtech; LM Studio is responsive.)
+(Privacy variant of cloud plan Step 12. Same Pattern C openpyxl test, but driven by **OpenCode** (`opencode run`) against the **local LM Studio model server** on the always-on machine rather than via the agent's Python venv. Plus privacy-specific checks: dChat post arrived; PollinationX read access works; Trezor still recognised by 4thtech; the LM Studio server is responsive (`curl -s http://127.0.0.1:1234/v1/models`).)
 
 `step_14_smoke_test: done`.
 

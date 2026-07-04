@@ -1,71 +1,59 @@
 #!/usr/bin/env bash
-# Privacy-track fallback installer for users who refuse the wizard.
+# ØØT privacy-track installer — thin pointer.
+#
+# The step-by-step v1.0 scaffold that used to live here is retired: it hard-coded
+# a stale order (and named a `llmster` CLI that does not exist as an agent). The
+# real, maintained install paths are below. This script just preflights a few
+# tools and points you at them.
 
 set -euo pipefail
 
 cat <<'EOF'
-ØØT Privacy-Track Fallback Installer
+ØØT — Privacy Track
+===================
 
-This script does NOT teach. It assumes:
-  1. You've read docs/00-quickstart-privacy.md and skills/privacy-self-sovereign/SKILL.md.
-  2. You have an always-on machine, per-partner Trezors, UPS.
-  3. You've ordered hardware and waited for delivery.
+Pick one of the three maintained install paths:
 
-For a guided setup, run:
-  python3 installer/wizard.py
+  Path A — Agent-assisted (recommended). An AI agent drives the install with you,
+           pausing to confirm each consequential step:
+             installer/agent-assisted/START-HERE.md
+             installer/agent-assisted/privacy-install-plan.md
+
+  Path B — Guided wizard (interactive, self-serve):
+             bash installer/bootstrap.sh --track=privacy
+           (or: python3 installer/wizard.py)
+
+  Path C — Do-it-yourself from the quickstart docs:
+             docs/00-quickstart-privacy.md
+             docs/02-installing-routines-privacy.md
+
+Privacy-track model + automation stack (what the docs set up):
+  * LM Studio >= 0.3.5 run headless by the `llmster` daemon = the local MODEL SERVER
+    (OpenAI-compatible endpoint at http://127.0.0.1:1234/v1), managed with the
+    `lms` CLI (`lms server start`, `lms load <model> --ttl 3600`).
+  * OpenCode (`opencode run`) = the AGENT that loads skills, clones the Ledger,
+    runs openpyxl, and calls MCP servers. See installer/agent-assisted/OPENCODE-SETUP.md.
+  * `llmster` is only the model host — it does NOT run skills or agentic work.
+  * Scheduled Routines = cron / launchd / Task Scheduler firing `opencode run`
+    from the firm runner directory (which carries a scoped opencode.json).
 
 EOF
 
-read -rp "Proceed with non-interactive privacy install? [y/N] " confirm
-[[ "$confirm" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 1; }
+echo "Preflight (privacy track needs an always-on machine; these are the local tools):"
+for tool in git python3 gpg; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    printf '  [ok]      %s\n' "$tool"
+  else
+    printf '  [missing] %s — install it before continuing\n' "$tool"
+  fi
+done
+for tool in opencode lms; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    printf '  [ok]      %s\n' "$tool"
+  else
+    printf '  [todo]    %s — installed later per OPENCODE-SETUP.md / lmstudio.ai\n' "$tool"
+  fi
+done
 
-cat <<'EOF'
-
---- v1.0 minimal scaffold ---
-
-Step 1: Always-on machine OS setup.
-  - macOS: enable FileVault; create dedicated 'oot' user; disable iCloud Documents/Desktop sync.
-  - Linux: LUKS FDE at install; SSH key auth only.
-  - Windows: BitLocker; Yubikey + password 2FA.
-
-Step 2: LM Studio + models.
-  - Install from https://lmstudio.ai/
-  - Download Qwen 3 14B (default), Qwen 3 9B (fallback), Llama 3.3 70B (for R3).
-  - Enable headless mode + llmster CLI.
-
-Step 3: Per-partner Trezors.
-  - Order from https://trezor.io/ (one per partner; never second-hand).
-  - Initialise offline. Seed on paper, fireproof safe, separate from device.
-
-Step 4: 4thtech firm setup.
-  - Install 4thtech client.
-  - Acquire firm dMail domain (~€50/year).
-  - Configure dChat workspace.
-
-Step 5: PollinationX storage.
-  - Acquire storage NFT via PollinationX dApp.
-  - Install client + grant per-partner read access.
-
-Step 6: MCP servers.
-  - pip install excel-mcp-server
-  - Install Desktop Commander MCP and GitHub MCP per upstream docs.
-  - Configure LM Studio's MCP host with all 4 (my-curator, excel-mcp,
-    desktop-commander, github-mcp).
-
-Step 7: GitHub branch protection.
-  - Same as cloud track step 2 (skills/code-qa/SKILL.md §4.0).
-  - Plus: configure GPG signing key on the always-on machine for R6.
-
-Step 8: Routines (cron / launchd / Task Scheduler).
-  - Install R5 (Sunday 09:00), R6 (daily 23:00), R1 (daily 18:00), R2 (Friday 08:00).
-  - See routines/privacy/<R>.md for the canonical plist / cron entries.
-
-Step 9: Onboard first partner.
-  - Each partner gets their own Trezor + 4thtech wallet.
-  - templates/partner-onboarding/provisioning-script.sh handles the rest.
-
-Manual setup time: 2-3 weeks (hardware delivery + 2 weekends + first-partner onboarding).
-
-For a fully-guided experience, the wizard at installer/wizard.py walks you through
-each step with prompts and explanations.
-EOF
+echo
+echo "Then follow Path A, B, or C above. This script performs no install steps itself."

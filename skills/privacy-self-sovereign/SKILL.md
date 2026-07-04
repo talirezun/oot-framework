@@ -70,7 +70,7 @@ The reference table from `SPEC.md` Layer 2:
 | Comms — internal | Slack | 4thtech dChat (W2W, on-chain, E2E encrypted) |
 | Comms — external | Email, Slack | 4thtech dMail |
 | File transfer | Drive | 4thtech on-chain + PollinationX bulk storage |
-| Automation | Claude Code Routines (laptop closed) | OS-native scheduling + headless LM Studio (laptop on) |
+| Automation | Claude Code Routines (laptop closed) | OS-native scheduling → OpenCode headless against a local LM Studio server (laptop on) |
 | Compensation rails | FIAT (Gen 1 default) | FIAT → Stablecoin upgrade (Gen 2) |
 | Governance | GitHub + EU AI Act Skill Pack | GitHub + EU AI Act Skill Pack (+ Cotrugli Ledger Gen 3) |
 
@@ -100,13 +100,16 @@ The reference table from `SPEC.md` Layer 2:
    - **Qwen 3 9B Instruct** (~5 GB) — fallback.
    - **Llama 3.3 70B Instruct** (~40 GB) — higher-stakes; 32-64 GB RAM.
    - **DeepSeek-V3** — strong on code; pair with S4.
-3. Enable headless mode (LM Studio ≥0.3.10 supports `llmster` CLI).
-4. Configure MCP host (LM Studio ≥0.3.17 native MCP):
+3. Run the model server headless. The privacy-track scheduled stack has **three pieces**, and LM Studio is only the model server:
+   - **`llmster`** — LM Studio's headless **daemon** (per [lmstudio.ai/docs/developer/core/headless](https://lmstudio.ai/docs/developer/core/headless)). It *hosts* the local model on an OpenAI-compatible server at `http://127.0.0.1:1234/v1`. It is **not** an agent: no `--skill` / `--prompt-file` flags; it runs no prompts.
+   - **`lms`** — LM Studio's own CLI (`lms server start`; keep a model warm with `lms load qwen-3-14b-instruct --ttl 3600`).
+   - **OpenCode** — the agent harness (`opencode run`) that actually loads skills, clones the Ledger, runs openpyxl, and calls the MCP servers, pointing its `lmstudio` provider at the server above. See [`../../installer/agent-assisted/OPENCODE-SETUP.md`](../../installer/agent-assisted/OPENCODE-SETUP.md) → "Scheduled / unattended runs".
+4. Configure MCP servers in OpenCode's runner-directory `opencode.json` `mcp` block (**not** in LM Studio):
    - `my-curator` — Curator MCP.
-   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with Ledger path.
+   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with Ledger path (optional — human-in-the-loop only; Routines use openpyxl directly).
    - `desktop-commander` — local filesystem.
    - `github-mcp` — cross-machine sync; PAT from Bitwarden.
-5. Self-test: ask the loaded model `"list the firm's domains via my-curator's list_domains tool"`. Successful response = configured.
+5. Self-test: from OpenCode, ask `"use my-curator; list the firm's domains"`. Successful response = configured.
 
 ### 4.4 Trezor setup for 4thtech wallet identity (per partner)
 
@@ -189,6 +192,8 @@ The 8 cloud Routines have privacy-track equivalents per `routines/SPEC.md`. The 
 
 > **The `routines/privacy/r*.prompt.md` files referenced in the schedules below are extracted at install time from the corresponding `routines/cloud/R*.md` prompt bodies** (per [`routines/README.md`](../../routines/README.md) privacy-track install, step 3) — the repo does **not** ship pre-built `r*.prompt.md` files. During privacy-track setup, copy each Routine's prompt body out of `cloud/<R>.md` into a `privacy/<r>.prompt.md` file that the scheduler points at.
 
+The scheduler invokes **OpenCode headless** (`opencode run`) against the local LM Studio server; each `r*.prompt.md` **begins with a read-the-owner-SKILL.md-first line** (this replaces the old per-invocation `--skill` flags — the prompt loads its own skills). Run each command from the firm's runner directory (`~/{{FIRM_SLUG}}`) so OpenCode picks up that directory's scoped `opencode.json` (provider + MCP + the unattended allow-list). See [`../../installer/agent-assisted/OPENCODE-SETUP.md`](../../installer/agent-assisted/OPENCODE-SETUP.md) → "Scheduled / unattended runs".
+
 **macOS (launchd) — R1 example:**
 
 ```xml
@@ -200,12 +205,9 @@ The 8 cloud Routines have privacy-track equivalents per `routines/SPEC.md`. The 
     <key>Label</key><string>oot.r1.daily-output-capture</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/llmster</string>
-        <string>--model</string><string>qwen-3-14b-instruct</string>
-        <string>--skill</string><string>compensation-attribution</string>
-        <string>--skill</string><string>my-curator</string>
-        <string>--prompt-file</string>
-        <string>/Users/<user>/oot-framework/routines/privacy/r1.prompt.md</string>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
@@ -217,20 +219,20 @@ The 8 cloud Routines have privacy-track equivalents per `routines/SPEC.md`. The 
 
 Install: `launchctl load ~/Library/LaunchAgents/oot.r1.plist`. Verify: `launchctl list | grep oot.r1`.
 
-**Linux (cron):**
+**Linux (cron)** — each line's model is per-routine (R2/R5 use the daily driver; R6's governance work can too; R3 wants the larger model). The routine's skill mapping lives in its prompt file's read-first line, not on the command:
 
 ```cron
-# R1 daily 18:00
-0 18 * * * /usr/local/bin/llmster --model qwen-3-14b-instruct --skill compensation-attribution --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r1.prompt.md >> ~/oot-framework/logs/r1.log 2>&1
+# R1 daily 18:00 (compensation-attribution + my-curator, per r1.prompt.md's read-first line)
+0 18 * * * cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
 
-# R2 Friday 08:00
-0 8 * * 5 /usr/local/bin/llmster --skill reporting-business-review --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r2.prompt.md >> ~/oot-framework/logs/r2.log 2>&1
+# R2 Friday 08:00 (reporting-business-review + my-curator)
+0 8 * * 5 cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r2.prompt.md)" >> ~/oot-framework/logs/r2.log 2>&1
 
-# R5 Sunday 09:00
-0 9 * * 0 /usr/local/bin/llmster --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r5.prompt.md >> ~/oot-framework/logs/r5.log 2>&1
+# R5 Sunday 09:00 (my-curator)
+0 9 * * 0 cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)" >> ~/oot-framework/logs/r5.log 2>&1
 
-# R6 daily 23:00 (audit log; signed via gpg-agent)
-0 23 * * * /usr/local/bin/llmster --skill governance-compliance --prompt-file ~/oot-framework/routines/privacy/r6.prompt.md >> ~/oot-framework/logs/r6.log 2>&1
+# R6 daily 23:00 (governance-compliance; audit log signed via gpg-agent)
+0 23 * * * cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r6.prompt.md)" >> ~/oot-framework/logs/r6.log 2>&1
 ```
 
 **Windows (Task Scheduler):** XML templates ship in `examples/task-scheduler/`. Install via `schtasks /create /xml "r1.xml" /tn "ØØT R1 Daily Output Capture"`.

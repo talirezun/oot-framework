@@ -112,7 +112,9 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 **Excel MCP.** The MCP server (`haris-musa/excel-mcp-server`, MIT-licensed) that lets local LLMs read and write Excel files. The piece that gives the privacy track full Gen 1 automation parity.
 
-**llmster.** A headless LM Studio CLI. Lets a privacy-track machine run local models without keeping a GUI open. Used by the privacy-track equivalents of cloud Routines.
+**llmster.** LM Studio's **headless daemon** — it *hosts* local models on LM Studio's OpenAI-compatible server (`http://127.0.0.1:1234/v1`) without keeping the GUI open. It is a model server, not an agent: it does not load skills, clone repos, or call MCP tools. On the privacy track the agent harness that does all that is **OpenCode** (`opencode run`), which uses the llmster-hosted model.
+
+**lms.** LM Studio's command-line tool (ships with LM Studio). Manages the model server and loaded models: `lms server start`, `lms load <model> --ttl <seconds>` (keeps a model warm so scheduled Routines skip the cold-load), `lms unload`, `lms ls`.
 
 **Desktop Commander MCP.** Local filesystem MCP server. Privacy-track replacement for the Google Drive Claude connector.
 

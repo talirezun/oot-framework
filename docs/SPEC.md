@@ -144,7 +144,7 @@ Recommended install order: R5 first (no dependencies), then R6, R1, R2, R3, R7, 
 
 **Audience:** Privacy-track founder.
 
-**Purpose:** Privacy-track equivalents — cron / launchd / Task Scheduler invocations hitting headless LM Studio (`llmster`).
+**Purpose:** Privacy-track equivalents — cron / launchd / Task Scheduler invocations of **OpenCode headless** (`opencode run`) against a **local LM Studio server** (hosted by the `llmster` daemon — the model server, not the agent).
 
 **Required sections:** Mirror cloud with platform-specific instructions:
 

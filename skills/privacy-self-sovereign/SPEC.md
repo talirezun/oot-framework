@@ -30,7 +30,7 @@ The privacy track achieves **full Generation 1 operational parity** with the clo
 - Excel MCP (`haris-musa/excel-mcp-server`) installation and configuration in LM Studio.
 - Desktop Commander MCP for local filesystem.
 - GitHub MCP for cross-machine Brain sync.
-- **OS-native scheduling** (cron / launchd / Task Scheduler) hitting headless LM Studio (`llmster` CLI).
+- **OS-native scheduling** (cron / launchd / Task Scheduler) running **OpenCode headless** (`opencode run`) against a **local LM Studio server** (hosted by the `llmster` headless daemon; LM Studio is the model server only, not the agent).
 - The trade-off vs. cloud track and how to mitigate it (always-on machine — Mac mini / NUC / Pi 5).
 - Privacy-track secret management additions (4thtech keys on Trezor; never in Bitwarden).
 - **Cloud → privacy migration runbook** (4-week structured path).
@@ -52,7 +52,9 @@ The privacy track achieves **full Generation 1 operational parity** with the clo
 - **Desktop Commander MCP**.
 - **GitHub MCP**.
 - **Trezor** (hardware wallet — for 4thtech wallet identity per partner).
-- **`llmster`** — headless LM Studio CLI for cron-driven Routines.
+- **`llmster`** — LM Studio's headless **daemon** (hosts the local model on an OpenAI-compatible server; not an agent CLI).
+- **`lms`** — LM Studio's CLI (server + model management, e.g. `lms load … --ttl`).
+- **OpenCode** — the agent harness (`opencode run`) that drives cron-invoked Routines against the LM Studio server.
 
 ---
 
@@ -123,13 +125,16 @@ The reference table from `SPEC.md` Layer 2, reproduced here:
    - **Qwen 3 9B Instruct** (~5 GB). Fallback for resource-constrained machines.
    - **Llama 3.3 70B Instruct** (~40 GB, 4-bit quantised). For higher-stakes work; requires 32-64 GB RAM.
    - **DeepSeek-V3** (varies). Strong on code tasks; the framework recommends running it specifically for S4 (Code & QA) work.
-3. **Enable headless mode** (LM Studio ≥0.3.10 supports `llmster` CLI). This is what cron jobs invoke.
-4. **Configure MCP host** (LM Studio ≥0.3.17 native MCP support). In LM Studio settings → MCP Servers, add:
+3. **Run the model server headless.** LM Studio is only the model server; the scheduled stack is three pieces:
+   - **`llmster`** — LM Studio's headless daemon (per [lmstudio.ai/docs/developer/core/headless](https://lmstudio.ai/docs/developer/core/headless)); hosts the model on `http://127.0.0.1:1234/v1`. It runs no prompts and has no `--skill`/`--prompt-file` flags.
+   - **`lms`** — LM Studio's CLI: `lms server start`, then `lms load qwen-3-14b-instruct --ttl 3600` to keep the model warm.
+   - **OpenCode** — the agent harness (`opencode run`) cron invokes; its `lmstudio` provider points at the server above. This is what cron jobs actually run.
+4. **Configure MCP servers in OpenCode's runner-directory `opencode.json`** (`mcp` block — not in LM Studio):
    - `my-curator` — the Curator MCP (per Curator install instructions).
-   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with the Ledger path.
+   - `excel-mcp` — `haris-musa/excel-mcp-server`; configure with the Ledger path (optional — human-in-the-loop only).
    - `desktop-commander` — for local filesystem operations.
    - `github-mcp` — for cross-machine sync; PAT stored in Bitwarden, retrieved at MCP startup.
-5. Run a self-test: ask the loaded model "list the firm's domains via my-curator's list_domains tool". Successful response = MCP host is configured.
+5. Run a self-test: from OpenCode ask "use my-curator; list the firm's domains". Successful response = the stack is configured.
 
 ### 4.4 Trezor setup for 4thtech wallet identity (per partner)
 
@@ -216,7 +221,7 @@ The partner's local machine and the always-on machine both have GitHub MCP confi
 
 ### 4.10 OS-native scheduling — cron / launchd / Task Scheduler equivalents of cloud Routines
 
-The eight cloud Routines have privacy-track equivalents per `routines/SPEC.md`. The pack provides the OS-native scheduling templates:
+The eight cloud Routines have privacy-track equivalents per `routines/SPEC.md`. The scheduler invokes **OpenCode headless** (`opencode run`) against the local LM Studio server, run from the firm's runner directory (`~/{{FIRM_SLUG}}`) so it loads that directory's scoped `opencode.json`. Each `r*.prompt.md` **begins with a read-the-owner-SKILL.md-first line** — that replaces the old per-invocation `--skill` flags (the prompt loads its own skills). The pack provides the scheduling templates:
 
 **macOS (launchd) — example for R1 daily output capture:**
 
@@ -229,12 +234,9 @@ The eight cloud Routines have privacy-track equivalents per `routines/SPEC.md`. 
     <key>Label</key><string>oot.r1.daily-output-capture</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/llmster</string>
-        <string>--model</string><string>qwen-3-14b-instruct</string>
-        <string>--skill</string><string>compensation-attribution</string>
-        <string>--skill</string><string>my-curator</string>
-        <string>--prompt-file</string>
-        <string>/Users/<user>/oot-framework/routines/privacy/r1.prompt.md</string>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
@@ -246,21 +248,21 @@ The eight cloud Routines have privacy-track equivalents per `routines/SPEC.md`. 
 
 Install: `launchctl load ~/Library/LaunchAgents/oot.r1.plist`. Verify: `launchctl list | grep oot.r1`.
 
-**Linux (cron) — equivalent:**
+**Linux (cron) — equivalent** (per-routine skills live in each prompt file's read-first line, not on the command):
 
 ```cron
 # ~/.crontab additions for ØØT privacy-track Routines
 # R1 daily 18:00
-0 18 * * * /usr/local/bin/llmster --model qwen-3-14b-instruct --skill compensation-attribution --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r1.prompt.md >> ~/oot-framework/logs/r1.log 2>&1
+0 18 * * * cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
 
 # R2 Friday 08:00
-0 8 * * 5 /usr/local/bin/llmster --model qwen-3-14b-instruct --skill reporting-business-review --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r2.prompt.md >> ~/oot-framework/logs/r2.log 2>&1
+0 8 * * 5 cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r2.prompt.md)" >> ~/oot-framework/logs/r2.log 2>&1
 
 # R5 Sunday 09:00
-0 9 * * 0 /usr/local/bin/llmster --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r5.prompt.md >> ~/oot-framework/logs/r5.log 2>&1
+0 9 * * 0 cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)" >> ~/oot-framework/logs/r5.log 2>&1
 
 # R6 daily 23:00 (audit log; uses signed commits via gpg-agent)
-0 23 * * * /usr/local/bin/llmster --skill governance-compliance --prompt-file ~/oot-framework/routines/privacy/r6.prompt.md >> ~/oot-framework/logs/r6.log 2>&1
+0 23 * * * cd ~/{{FIRM_SLUG}} && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r6.prompt.md)" >> ~/oot-framework/logs/r6.log 2>&1
 ```
 
 Install: `crontab -e`; paste; save. Verify: `crontab -l`.
@@ -361,7 +363,7 @@ The pack provides the privacy-track substrate for all 8 cloud Routines. The exec
 
 2. **An existing cloud-track firm migrating to privacy track over 4 weeks.** The example follows the migration runbook (§4.11) week-by-week, including the awkward week-2-to-3 transition where Routines run in both modes and the framework's pack reconciles them. Shows the actual `firm/privacy-track/migration-runbook.md` evolving over the 4 weeks.
 
-3. **A privacy-track incident: cron missed a day.** R1 fails to run because the always-on machine's UPS battery died after a 6-hour outage. The Routine has not run for that day. The pack walks through: detection (the next morning's R1 run notices the gap via its own state file), recovery (`llmster --backfill 2026-04-12 --skill compensation-attribution`), audit-log honesty (the gap is documented as a "no agent activity" entry in R6's audit log per the framework's discipline), and prevention (the firm upgrades to a UPS with longer battery life). The full Brain incident log is shown.
+3. **A privacy-track incident: cron missed a day.** R1 fails to run because the always-on machine's UPS battery died after a 6-hour outage. The Routine has not run for that day. The pack walks through: detection (the next scheduled R1 run notices the gap), recovery (**there is no `--backfill` flag** — you re-run R1 with the canonical `opencode run` command; R1's `output_ref` dedupe + scan-from-last-log catches up the missed date automatically and never double-pays, which is why re-running is safe), audit-log honesty (R6 is re-run with the target date stated inline — "write the audit entry for 2026-04-12" — and the gap is documented as a "no agent activity" entry per the framework's discipline), and prevention (the firm upgrades to a UPS with longer battery life). The full Brain incident log is shown.
 
 ---
 

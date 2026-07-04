@@ -2,7 +2,7 @@
 
 **Audience:** Privacy-track founder.
 **Time:** ~3 hours for the 4 Day-1 Routines.
-**You will end with:** the framework's automation engine running on your always-on machine via cron / launchd / Task Scheduler hitting headless LM Studio.
+**You will end with:** the framework's automation engine running on your always-on machine via cron / launchd / Task Scheduler, each schedule firing **OpenCode headless** (`opencode run`) against a **local LM Studio server**.
 
 > 📖 **Reference:** [`routines/README.md`](../routines/README.md) and per-Routine privacy files at `routines/privacy/<R>.md`.
 
@@ -13,9 +13,28 @@
 The privacy track replaces Anthropic's [Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code) with **OS-native scheduling** on the always-on machine. The Routine prompts are functionally identical to the cloud versions; only the execution substrate differs:
 
 - **Cloud:** Claude Code → `/schedule` → Anthropic infrastructure runs the Routine.
-- **Privacy:** cron / launchd / Task Scheduler → your always-on machine runs `llmster --skill <pack> --prompt-file <path>` against headless LM Studio.
+- **Privacy:** cron / launchd / Task Scheduler → your always-on machine runs `opencode run --model lmstudio/<model> "$(cat <prompt-file>)"` against a **local LM Studio server**.
 
-In both tracks, Excel writeback follows Pattern C (clone Ledger → openpyxl → signed commit → push) per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](internal/ADR-001-cloud-routine-excel-writeback.md). The privacy track does this against a local Brain-repo clone; the cloud track against a fresh clone created on Anthropic's infrastructure for each Routine fire.
+The agent that clones the Ledger, runs openpyxl, and calls the MCP servers is **OpenCode** (open-source terminal agent, non-interactive `opencode run` mode). The **model** it uses is served locally by **LM Studio**, which the **`llmster` headless daemon** hosts on LM Studio's OpenAI-compatible server (`http://127.0.0.1:1234/v1`). LM Studio is *only* the model server — it does not run skills, clone repos, or call MCP tools; OpenCode does all of that.
+
+### How the pieces fit
+
+```
+cron / launchd / Task Scheduler   (the schedule — fires on time, only while the machine is on)
+        │
+        ▼
+opencode run --model lmstudio/<model> "$(cat r<N>.prompt.md)"
+   run from the firm's runner dir (~/<firm-slug>) so it picks up the scoped opencode.json
+        │
+        ├─▶ LM Studio server  ─── the model (hosted headless by the llmster daemon; kept warm via `lms load … --ttl`)
+        ├─▶ MCP servers       ─── github-mcp, desktop-commander, 4thtech, my-curator (declared in opencode.json → mcp)
+        └─▶ code execution    ─── git clone + openpyxl + signed commit (ADR-001 Pattern C)
+                                        │
+                                        ▼
+                                  the firm's Ledger repo on GitHub
+```
+
+In both tracks, Excel writeback follows Pattern C (clone Ledger → openpyxl → signed commit → push) per [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](internal/ADR-001-cloud-routine-excel-writeback.md). The privacy track does this against a local Ledger-repo clone; the cloud track against a fresh clone created on Anthropic's infrastructure for each Routine fire.
 
 The trade-off: cloud Routines fire while your laptop is closed; privacy-track Routines fire only while the always-on machine is on. **UPS strongly recommended.**
 
@@ -23,12 +42,17 @@ The trade-off: cloud Routines fire while your laptop is closed; privacy-track Ro
 
 ## Pre-requisites
 
+The privacy track's scheduled Routines run on a **three-piece stack**. Install all three before wiring any Routine:
+
+1. **LM Studio ≥0.3.5 + the `llmster` daemon** — the model server. Download Qwen 3 14B (or larger) inside LM Studio, then run the headless daemon per [lmstudio.ai/docs/developer/core/headless](https://lmstudio.ai/docs/developer/core/headless). It serves an OpenAI-compatible endpoint at `http://127.0.0.1:1234/v1`.
+2. **The `lms` CLI** — LM Studio's own command-line tool (ships with LM Studio). Use it to manage the server and keep a model warm: `lms server start`, then `lms load qwen-3-14b-instruct --ttl 3600`. (The `--ttl` keeps the model resident so a cron fire doesn't pay a cold-load every run.)
+3. **OpenCode** — the agent harness (`opencode run`). Install per [`../installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md), configure an OpenAI-compatible provider named `lmstudio` pointing at `http://127.0.0.1:1234/v1`, wire the MCP servers (`my-curator`, `desktop-commander`, `github-mcp`, `4thtech`) in `opencode.json` → `mcp`, and drop the **scoped unattended `opencode.json`** into the firm's runner directory (see OPENCODE-SETUP.md → "Scheduled / unattended runs").
+
+Plus:
+
 - Always-on machine configured (per [docs/00-quickstart-privacy.md](00-quickstart-privacy.md) Weekend One).
-- LM Studio installed; Qwen 3 14B (or larger) downloaded.
-- `llmster` headless CLI installed at `/usr/local/bin/llmster`.
-- LM Studio MCP host running with the required servers (`my-curator`, `excel-mcp`, `desktop-commander`, `github-mcp`).
 - Partner Trezors provisioned and 4thtech identities live (per Skill Pack S12).
-- Ledger cloned to the always-on machine.
+- Ledger cloned to the always-on machine, under the firm's runner directory `~/<firm-slug>`.
 
 ---
 
@@ -68,9 +92,9 @@ Paste the Routine's cron line from the privacy-track file. Save.
 crontab -l
 ```
 
-**Manual test fire:** run the command directly (without cron):
+**Manual test fire:** run the command directly (without cron), from the firm runner directory so the scoped `opencode.json` applies:
 ```bash
-/usr/local/bin/llmster --model qwen-3-14b-instruct --skill compensation-attribution --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r1.prompt.md
+cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"
 ```
 
 ### Windows — Task Scheduler
@@ -138,12 +162,13 @@ Install per [`routines/privacy/R2.md`](../routines/privacy/R2.md). Manual fire. 
 
 **1. Cron job doesn't fire.**
 - Cause 1: machine was off / sleeping. Check `pmset -g log | head` (macOS) or `last reboot` (Linux).
-- Cause 2: cron can't find `llmster`. Use the absolute path `/usr/local/bin/llmster`, not `llmster`.
-- Cause 3: cron user doesn't have the env vars LM Studio needs. Set `MODELS_DIR` etc. in the crontab itself or wrap in a shell script that sources `~/.bashrc`.
+- Cause 2: cron can't find `opencode`. Use the absolute path `/usr/local/bin/opencode` (or wherever `which opencode` reports), not bare `opencode` — cron's `PATH` is minimal.
+- Cause 3: the fire runs but OpenCode can't find its config. The cron line must `cd ~/<firm-slug>` first so OpenCode loads that directory's project-level `opencode.json` (provider + MCP + the scoped allow-list). A fire from the wrong directory falls back to global config and will hit permission prompts it can't answer.
+- Cause 4: cron user doesn't have the env vars the tools need. Set them in the crontab itself, or wrap the command in `/bin/bash -lc '…'` so a login shell sources your profile (this is also why the launchd plists use `/bin/bash -lc`).
 
-**2. `llmster` errors: "MCP host unreachable".**
-- Cause: LM Studio isn't running in headless mode.
-- Fix: start LM Studio's headless server: LM Studio → Settings → Local Server → "Start". Add to startup: macOS launchd, Linux systemd unit.
+**2. OpenCode hangs or errors: model / MCP unreachable.**
+- Cause A — model server down: OpenCode's `lmstudio` provider can't reach `http://127.0.0.1:1234/v1`. Fix: start the LM Studio server via the `llmster` daemon and load a model — `lms server start && lms load qwen-3-14b-instruct --ttl 3600`. Add the daemon to startup (macOS launchd, Linux systemd unit). LM Studio here is **only** the model server.
+- Cause B — MCP server missing: the MCP servers now live in the runner directory's `opencode.json` `mcp` block, **not** in LM Studio. If a Routine reports a missing tool (e.g. `github-mcp`), check that block and that the server's binary/command is installed. Tip: use `opencode serve` + `--attach` (see OPENCODE-SETUP.md) to keep MCP servers warm and avoid a cold-boot on every fire.
 
 **3. R6 push fails: "secret key not found".**
 - Cause: cron's environment doesn't see `gpg-agent`.
@@ -170,7 +195,7 @@ Install per [`routines/privacy/R2.md`](../routines/privacy/R2.md). Manual fire. 
 
 ## When to escalate
 
-- A Routine missed a day: backfill via `llmster --backfill <YYYY-MM-DD> --skill ... --prompt-file ...`. Document the gap in `firm/privacy-track/troubleshooting/`. Per the framework's discipline, never silently fake a missed day.
+- A Routine missed a day: **there is no `--backfill` flag** — you catch up by re-running the prompt. For **R1**, just run it again: R1 dedupes and scans from its last recorded `log_id` (fixed 2026-07-04), so the next fire automatically captures whatever it missed, never double-paying. For the **other Routines**, re-run the prompt with the target date stated inline — e.g. `cd ~/<firm-slug> && opencode run --model lmstudio/qwen-3-14b-instruct "Process the R6 audit trail for 2026-04-12. $(cat ~/oot-framework/routines/privacy/r6.prompt.md)"`. Document the gap in `firm/privacy-track/troubleshooting/`. Per the framework's discipline, never silently fake a missed day.
 - LM Studio crashes repeatedly: check `~/.lmstudio/logs/`; common cause is RAM exhaustion when running multiple models simultaneously.
 - 4thtech / PollinationX outage: dChat / dMail are decentralised; outages are rare and usually self-resolve. If persistent, see [wiki.4thtech.io](https://wiki.4thtech.io/).
 

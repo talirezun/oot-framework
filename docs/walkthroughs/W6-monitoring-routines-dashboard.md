@@ -83,8 +83,8 @@ tail -f ~/oot-framework/logs/r1.log
 
 ```
 2026-04-15 17:59:58 — startup OK
-2026-04-15 18:00:00 — connecting to LM Studio MCP host (localhost:1234)
-2026-04-15 18:00:01 — connected. Loaded skills: compensation-attribution, my-curator
+2026-04-15 18:00:00 — connecting to LM Studio server (127.0.0.1:1234/v1)
+2026-04-15 18:00:01 — OpenCode ready; prompt loaded skills: compensation-attribution, my-curator
 2026-04-15 18:00:02 — reading GitHub commits past 24h via github-mcp
 2026-04-15 18:00:08 — found 14 commits across 3 partners
 2026-04-15 18:00:10 — reading 4thtech dChat past 24h
@@ -100,7 +100,7 @@ tail -f ~/oot-framework/logs/r1.log
 
 ```
 2026-04-12 17:59:58 — startup OK
-2026-04-12 18:00:00 — connecting to LM Studio MCP host (localhost:1234)
+2026-04-12 18:00:00 — connecting to LM Studio server (127.0.0.1:1234/v1)
 2026-04-12 18:00:00 — ERROR: connection refused
 2026-04-12 18:00:30 — retry 1/3 failed: connection refused
 2026-04-12 18:01:00 — retry 2/3 failed: connection refused
@@ -128,7 +128,7 @@ tail -f ~/oot-framework/logs/r1.log
 
 **Recovery:**
 - Cloud: re-fire from dashboard ("Run now"). The Routine is idempotent (keyed on date).
-- Privacy: `llmster --backfill 2026-04-12 --skill compensation-attribution --skill my-curator --prompt-file ~/oot-framework/routines/privacy/r1.prompt.md`.
+- Privacy: **there is no `--backfill` flag** — just re-run R1 from the firm folder: `cd ~/<firm-slug> && opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"`. R1's `output_ref` dedupe + scan-from-last-log catches up the missed date automatically and never double-pays.
 
 **Document the gap:** create `firm/privacy-track/troubleshooting/<date>-r1-missed.md` (privacy track) or `firm/decisions/D-...-r1-incident.md` (cloud track) with: cause, recovery action, prevention.
 
@@ -137,7 +137,7 @@ tail -f ~/oot-framework/logs/r1.log
 **Symptom:** no `firm/audit-logs/<yesterday>.md`. The Article 12 record-keeping has a hole.
 
 **Recovery:**
-- Backfill via the same pattern: `llmster --backfill <date> --skill governance-compliance ...`.
+- R6 has no auto-catch-up, so re-run it with the target date stated **inline** in the prompt (again, no `--backfill` flag exists): `cd ~/<firm-slug> && opencode run --model lmstudio/qwen-3-14b-instruct "Write the audit-trail entry for <date>. $(cat ~/oot-framework/routines/privacy/r6.prompt.md)"`.
 - The R6 prompt's discipline: an empty day is a *noted "no agent activity"* entry, not a missing day. R6 produces this automatically when no decisions were logged.
 
 **This failure is more serious than R1** because the audit trail is the EU AI Act compliance evidence. Document the gap in the Ledger immediately.
@@ -172,7 +172,7 @@ tail -f ~/oot-framework/logs/r1.log
 **Level 1 (you can fix it):**
 - Re-fire a Routine.
 - Backfill a missed day.
-- Restart the LM Studio MCP host.
+- Restart the LM Studio server (the `llmster` daemon) and/or OpenCode's MCP servers.
 
 **Level 2 (founder + ops partner together):**
 - Repeated failures (a Routine misses 3 days in a row).
