@@ -23,8 +23,11 @@ node_modules/
 *.swp
 *~
 
-# Claude Code local settings (per-developer, not committed)
-.claude/settings.local.json
+# Claude Code local state (per-developer, not committed)
+.claude/
+
+# Session working plan (local cross-session memory, never committed)
+IMPROVEMENT-PLAN.md
 
 # Excel lock / temp files
 ~$*.xlsx

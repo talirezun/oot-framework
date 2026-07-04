@@ -19,7 +19,7 @@ oot_status: scaffold
 oot_dependencies: [S1, S2, S3, S6]
 oot_provides_to: []
 oot_klarna_test: false
-last_updated: 2026-05-08
+last_updated: 2026-05-15
 ---
 
 # Governance & Compliance

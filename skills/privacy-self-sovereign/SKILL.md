@@ -23,7 +23,7 @@ oot_status: hardened
 oot_dependencies: [S1]
 oot_provides_to: [S2, S3, S4, S5, S6, S7, S8, S9, S10, S11]
 oot_klarna_test: false
-last_updated: 2026-05-08
+last_updated: 2026-05-15
 ---
 
 # Privacy / Self-Sovereign Stack

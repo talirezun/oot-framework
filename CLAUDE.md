@@ -2,7 +2,7 @@
 
 This file orients Claude Code (and any other agentic coding assistant) when working in the ØØT framework repository.
 
-> **Status: v1.0.0 released 2026-05-09.** All 10 build phases complete. Tagged at `v1.0.0`. Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework).
+> **Status: v1.2.0 released 2026-05-15** (tags on `main`: `v1.0.0` · `v1.0.1` · `v1.1.0` · `v1.2.0`). All 10 build phases complete; Gen 1 operational. An audit-driven improvement effort is in flight — see "Active conversations" below and the gitignored `IMPROVEMENT-PLAN.md`. Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework).
 
 ---
 
@@ -18,7 +18,7 @@ This file orients Claude Code (and any other agentic coding assistant) when work
 
 ## Current state — what shipped in v1.0.0
 
-**165 files; ~70,000 words; 17 phase-numbered commits.**
+**At v1.0.0: 165 files; ~70,000 words; 17 phase-numbered commits.** (The repo has since grown — as of v1.2.0 it is ~188 tracked files / ~218,000 words of markdown. This section describes the v1.0.0 baseline; see `CHANGELOG.md` for v1.0.1/v1.1.0/v1.2.0.)
 
 Verified at release:
 - ✅ All 12 SKILL.md files pass frontmatter validation (`scripts/validate_skills.py`).
@@ -261,7 +261,7 @@ The user is **Dr. Tali Režun** (initiator) or a collaborator. Treat questions a
 ## Where to start in a fresh session
 
 1. Read this file (CLAUDE.md) — the post-v1.0 orientation.
-2. Read `CHANGELOG.md` — what shipped at v1.0.0.
+2. Read `CHANGELOG.md` — what shipped in each release (latest: v1.2.0).
 3. Read `MANIFESTO.md` — the framework's intellectual core.
 4. Read `BUILD-INSTRUCTIONS.md` — the build script (now historical; useful for understanding rationale of any phase).
 5. Read `GENERATIONS.md` — what's deferred to v1.x / Gen 2 / Gen 3.
@@ -280,81 +280,26 @@ Then identify what the user wants to do:
 
 This section is intended for ephemeral state across sessions.
 
-**As of 2026-05-15 (Shared Brain integration in flight):**
+**As of 2026-07-03 (post-v1.2.0 — audit + improvement effort in flight):**
 
-**Curator v3.0.0-beta Shared Brain integration started 2026-05-15.** ADR-002 ratified ([`docs/internal/ADR-002-firm-brain-curator-shared-brain.md`](docs/internal/ADR-002-firm-brain-curator-shared-brain.md)): the Firm Brain is a Curator Shared Brain instance in a separate GitHub repo from the Ledger; three distinct primitives (Ledger / Firm Brain / Second Brain) with three distinct write models. Decisions #14–#16 landed in this file. Tier 1 done — GLOSSARY terminology lock + GENERATIONS reclassification. **Tier 2 pending** — spec rewrites: `templates/brain/` (FIRM-ONTOLOGY + SPEC recast as Curator-Shared-Brain-native), `skills/my-curator/SKILL.md` (mirror semantics + onboarding), `skills/privacy-self-sovereign/SKILL.md` (map `contributor_retains` + UUID attribution to S12), `skills/governance-compliance/SKILL.md` + `governance/EU-AI-ACT.md` + `governance/SECRETS-POLICY.md` (admin_token / PAT lifecycle / revoke runbook), `routines/SPEC.md` (classify each Routine as Ledger-writing vs Firm-Brain-pushing; new R9 weekly Synthesize), `templates/partner-charter.md` (verify IP-assignment clause for `organisational` mode). **Tier 3 pending** — onboarding: install plans + wizard.py + cloud/privacy quickstarts + ECOSYSTEM + examples scaffolds.
+**Release state reconciled 2026-07-03.** The Shared Brain branch was merged to `main` (fast-forward); tags `v1.1.0` + `v1.2.0` now live on main. `v1.0.1` was tagged retroactively at the bridge-complete commit (`c59595e`) so the many "v1.0.1" references across the docs resolve to a real release. CHANGELOG restructured into v1.0.1 / v1.1.0 / v1.2.0 sections. Stale worktree branches deleted.
 
-**Resolved 2026-05-15: `<firm>-secondbrain` retired as a framework concept.** Three reasons drove the call: (1) the old pattern pushed each partner's *entire* vault to a firm repo (privacy leak on non-firm domains); (2) there was no canonical merge layer — N partners had N copies of `wiki/<firm-curator-domain>/`; (3) Shared Brain already provides a synthesized `collective/<firm-domain>/wiki/` that is strictly better as Routine context. **Framework provisions exactly two firm repos per firm: Ledger + Firm Brain.** Personal Curator backup-to-GitHub is a personal-tooling choice (Curator's built-in two-way sync handles it independently from the framework). Existing v1.0 `<firm>-secondbrain` repos may be kept as personal backup, archived, or deleted at firm discretion — no forced migration. Resolution baked into ADR-002.
+**Full-repo audit completed 2026-07-03** (five parallel deep reviews: installer, routines/Excel layer, docs/user journey, skills/governance, CI/examples). A phased improvement effort is now being executed. **The working plan lives in `IMPROVEMENT-PLAN.md` at the repo root — LOCAL ONLY, gitignored, the cross-session memory for this effort. Read it first in any session continuing this work.** Phases: 0 release-state untangle (DONE 2026-07-03), 1 trust-critical bug fixes (installer state machine, klarna-gate workflow, R1 dedupe, real CI tests), 2 doc-truth sweep (Second Brain bridge into Path C, contradiction kill-list), 3 OpenCode as first-class harness + no-subscription track (ADR-003), 4 privacy-track verification, 5 structural hardening (X4 status column, X2 partner join key, appended-row formula contracts).
 
-**Install-path overhaul in flight.** Three install paths are being upgraded for less-technical founders:
+**Known open items (deliberate, tracked in IMPROVEMENT-PLAN.md):**
 
-- **Path A — coding-agent-assisted install — DONE 2026-05-10.** Built at `installer/agent-assisted/{README.md, AGENT-CAPABILITY-SPEC.md, cloud-install-plan.md, privacy-install-plan.md}`. LLM-agnostic capability spec; known-compatible agents include Claude Code (reference), Augment Code, Aider, OpenCode, Cline, Continue.dev.
+- **Legacy secondbrain bridge half-retired.** ADR-002 retired `<firm>-secondbrain` as a framework primitive, but `routines/cloud/R5.md`, `installer/wizard.py` (`step_12_secondbrain_sync`), `docs/AUTOMATION-PIPELINE.md`, and cloud-install-plan Step 9b still implement the legacy bridge. Migration-note banners added 2026-07-03 in all four (new installs: point the bridge at the Firm Brain repo, scan `collective/<firm-domain>/wiki/`). Full rewrite to the Firm Brain read-path targets v1.3.
+- **R9 collision fixed 2026-07-03**: `routines/README.md` had reserved R9 for a Gen-2 semantic-duplicate scan while v1.1.0 introduced R9 Firm Brain Synthesize. Gen-2 scan renumbered to R10; Cotrugli anchoring to R11.
+- **The Klarna gate workflow (`.github/workflows/klarna-gate.yml`) is known-broken** — it reads a formula string instead of the computed total (can never pass) and deadlocks all unlabeled PRs if `oot/klarna-test` is made a required check. Fix scheduled in Phase 1. Until it lands, do NOT instruct firms to enable the required status check.
+- **Privacy track likely never executed end-to-end** — it depends on a `llmster` CLI that appears not to exist (LM Studio's real CLI is `lms`). Verification + rename is Phase 4.
 
-- **Step 4 — sandbox + LIVE install test — DONE 2026-05-10.** Drove the cloud install plan against a sandbox at `/tmp/oot-test-install/` then against a real persistent test instance at `/Users/talirezun/00T-test-company/` + GitHub repo `talirezun/oot-test-company` (private). 18 findings recorded in [`docs/internal/install-test-report-2026-05-10.md`](docs/internal/install-test-report-2026-05-10.md). Pattern C verified live (signed commit `8bae769` lands on main with green Verified badge on GitHub). my-curator MCP integration confirmed against existing second-brain at `/Users/talirezun/second-brain/`. Test instance is **persistent** — Tali plans to use it for LM Studio testing.
+Test instance preserved for e2e work:
+- GitHub: `talirezun/oot-test-company` (private)
+- Local: `/Users/talirezun/00T-test-company/`
+- GPG key: `oot-test-bot <blocklabstech@gmail.com>` (FF2AE322B7F4C193)
+- Curator domain: `00t-test-company` in `/Users/talirezun/second-brain/`
 
-  Sandbox-phase findings 1-8 fixed in commit [5ff1c55](https://github.com/talirezun/oot-framework/commit/5ff1c55):
-  - **Finding 6 (CRITICAL):** R1 was not writing K (`value_envelope`) and L (`computed_variable`) formulas on appended rows → silent zero-pay bug. Fixed in `templates/excel/SPEC.md` X1 §Formulas, `routines/SPEC.md` R1 implementation, `routines/cloud/R1.md` prompt body.
-  - **Finding 7:** `ws.max_row + 1` is wrong on Output_Log (the value_envelope_table at O1:P5 inflates max_row). R1 must find next empty row via column A. Fixed.
-  - **Findings 1, 3, 4, 5:** install plan Step 0.1 + new Step 0.4 — Python version fallback (3.13/3.12/3.11/3 in order), per-OS install one-liners for gpg/gh/jq, and venv setup at `~/.oot/venv` to handle PEP 668.
-  - **Finding 8:** install plan Step 10.1 referenced `build_excel.py --check` which doesn't exist; replaced with inline openpyxl smoke check.
-  - **Finding 2:** Python ≥3.11 / 3.13-recommended canonicalised in CLAUDE.md.
-  Live-phase findings 9-18 (NOT yet fixed in install plan — that's Step 5):
-  - **#16 (CRITICAL):** GitHub Free private repos do not enforce branch protection. ADR-001's audit-trail-immutability claim does not hold without GitHub Team ($4/u/mo) or upgraded plan. Install plan must surface plan-tier choice as a structural decision.
-  - **#13/14:** install plan's reliance on `gh` CLI is too high; web-UI fallback for repo creation, GPG upload, branch protection must be canonical for less-technical founders.
-  - **#9/18:** install plan must handle (a) existing-Curator users + (b) Configuration A (separate vault and firm repo) vs. Configuration B (unified root) choice.
-  - **#11/15/17:** Node preflight, clipboard sandbox issue, branch-protection instruction clarity.
-  - Other findings 10/12: macOS file permissions; noreply email vs GPG email mismatch.
-
-  Test instance preserved for follow-up:
-  - GitHub: `talirezun/oot-test-company` (private)
-  - Local: `/Users/talirezun/00T-test-company/`
-  - GPG key: `oot-test-bot <blocklabstech@gmail.com>` (FF2AE322B7F4C193)
-  - Curator domain: `00t-test-company` in `/Users/talirezun/second-brain/`
-
-- **Step 5a — install-plan rewrite — DONE 2026-05-10.** Cloud install plan rewritten end-to-end (v1.0 → v1.1) with all 18 sandbox + live findings folded in:
-  - New `installer/agent-assisted/START-HERE.md` — copy-paste prompt for any coding agent (LLM-agnostic).
-  - New `installer/agent-assisted/cloud-install-plan.md` (v1.1.0): 14 steps. Adds **Step 0.5 (folder + Curator-vault location choice — Configuration A vs B per Finding 18)**, **Step 3 (GitHub plan-tier choice — Finding 16 critical)**, **Step 8 with Branch 8A (existing Curator) vs Branch 8B (greenfield) — Finding 9**. Web-UI is now the canonical user-facing path for repo creation, GPG upload, branch protection (Findings 13/14). Clipboard sandbox issue addressed (Finding 15) via print-in-chat or `open <file>`. Branch-protection instructions are now an unambiguous checkbox table (Finding 17). State-file format extended for the new dimensions.
-  - The plan now also addresses Tali's meta-asks: explicit folder-selection step, plan-tier guidance up-front before any account creation, framework-script auto-install via venv (Step 0.3), Node preflight (Finding 11), email-vs-GPG-mismatch handling (Finding 12), macOS file permissions (Finding 10).
-  - Privacy install plan and the wizard (Path B) and manual docs (Path C) need parallel updates → Step 5c/d remaining.
-
-- **Step 5c — Path C / manual quickstarts polished — DONE 2026-05-10.** `docs/00-quickstart-cloud.md` rewritten end-to-end with:
-  - **Non-technical primer** at the top (terminal, JSON, GitHub, MCP, signed commit, branch protection — defined in plain English).
-  - **8-decision section** before any installs: cloud/privacy, EU exposure, firm folder location, existing-Curator yes/no, Configuration A vs B, **GitHub plan-tier (Finding 16 prominently surfaced as a CRITICAL decision)**, Anthropic Pro vs Max, spreadsheet app.
-  - Sunday morning expanded from bullet points into a 10-step procedural walkthrough with **explicit web-UI guidance** (URLs and click sequences) for: GitHub repo creation, GPG key generation + upload, branch protection (with the clean Finding 17 checkbox table), Curator domain setup with Configuration A/B branch.
-  - Per-OS install commands for `gnupg`, `node`, `python3.13` (macOS / Linux / Windows-WSL).
-  - Python venv setup explained (PEP 668 fix per Finding 5).
-  - macOS file-permissions step (Finding 10).
-  - Email-vs-GPG-mismatch troubleshooting (Finding 12) inline with verification step.
-  - "Open file in TextEdit, Cmd+A, Cmd+C" pattern for the GPG public key (Finding 15 — replaces `pbcopy` reliance).
-  - Common pitfalls expanded with 3 new entries from the live-test findings.
-  - File grew from ~170 lines to ~370 lines; this is hand-holding for less-technical founders, by design.
-
-  `docs/00-quickstart-privacy.md` updated with a 7-point decisions section mirroring cloud's, plus a privacy-specific GitHub plan-tier callout (Finding 16 applies to privacy track too — it still uses GitHub for the Ledger). Common pitfalls expanded with 2 new entries (plan-tier + cloud-LLM-ingest-still-happens-in-Gen-1).
-
-- **Step 5b — privacy install plan rewrite — DONE 2026-05-10.** `installer/agent-assisted/privacy-install-plan.md` rewritten to v1.1.0. Folds the same 18 findings as the cloud plan (where applicable) plus privacy-track-specific structure: hardware acquisition pre-week (Trezor, Mac mini / NUC / Pi 5, UPS, Yubikey), always-on machine OS setup (FDE, dedicated user, network hardening), per-partner Trezors (Day-1 not Gen-2), LM Studio + Qwen 3 14B / Llama 3.3 70B / DeepSeek-V3, 4thtech firm domain + dChat workspace, PollinationX storage NFT, OS-native scheduling (cron / launchd / Task Scheduler) instead of Claude Code Routines. Includes "agent runs on daily laptop, install target is always-on machine" handling — agent walks user through manual commands on the remote machine OR through SSH if user opts in. Same plan-tier guidance for GitHub branch protection (Finding 16 applies identically — privacy track still uses GitHub for the Ledger).
-- **Step 5d — wizard implementation — DONE 2026-05-10.** `installer/wizard.py` rewritten v1.0 → v1.1.0. Now a complete 14-step interactive wizard mirroring the agent-runnable plan's structure. Programmatic where safe (folder/git/GPG/file operations); web-UI walkthrough where user must approve third-party actions. State at `~/.oot/wizard-state.yaml`; resumable via `--resume`; dry-run via `--dry-run`. Uses `questionary` + `rich` if installed, falls back to plain `input()`/`print()` if not. Implements all the Step 5a-5c findings: 8-decision flow before any installs, GitHub plan-tier choice (Finding 16), Configuration A vs B for Curator vault (Finding 18), existing-Curator detection (Finding 9), explicit branch-protection web-UI walkthrough with the clean checkbox table (Finding 17), email-vs-GPG-mismatch handling (Finding 12), `open <file>` pattern for GPG key copy (Finding 15), per-OS install commands for missing tools (Finding 3), Python venv setup at `~/.oot/venv/` (Findings 4/5).
-
-- **Path B — wizard (`installer/wizard.py`)**: now a complete 14-step interactive wizard. (Was: scaffold with 1-4 functional, 5-12 stubbed in v1.0.)
-- **Path C — manual (docs)**: `docs/MODULES.md` shipped (Step 2 of overhaul). Cloud + privacy quickstarts updated to point at Path A first. Bitwarden/Trezor/Yubikey re-tiered as recommended-but-optional. Plan-tier guidance (Pro vs Max) shipped throughout.
-
-**Excel writeback resolved (Pattern C, ADR-001) — DONE 2026-05-10.** Cloud Routines mutate `.xlsx` files in the firm's Ledger GitHub repo via openpyxl + signed commits — not via Google Sheets. Same operation on cloud and privacy. Implemented across:
-- `docs/internal/ADR-001-cloud-routine-excel-writeback.md` (the design-of-record).
-- `routines/SPEC.md` (rewritten preamble + R1-R8 mcp_servers + prompt bodies).
-- All `routines/cloud/R*.md` (frontmatter v1.1.0, ledger_repo_access + code_execution keys, prompt-body Pattern C blocks).
-- All `routines/privacy/R*.md` (per-track delta updated from "Excel MCP" to "openpyxl on local Brain-repo clone").
-- `templates/excel/SPEC.md` (new "Excel files in operation" section + spreadsheet-viewer guidance).
-- `docs/00-quickstart-cloud.md`, `docs/02-installing-routines.md` (Pattern C taught to founders + plan-tier guidance + Bitwarden/Trezor/Yubikey re-tiered).
-- 17 other files renamed "Anthropic Remote Routines" → "Claude Code Routines" + plan-tier nuance + spreadsheet-app-agnostic language.
-
-**Verified (2026-05-10):** `python3 scripts/validate_skills.py` → 12/12 pass; `lychee --offline` → 0 errors / 277 excluded; `python3 scripts/build_excel.py` → all 9 templates regenerate cleanly.
-
-**Bitwarden / Trezor / Yubikey re-tiered as optional for Gen 1.** See decision #13. Quickstart docs will be updated to make these optional rather than gating, with explicit "skip until you grow" affordances.
-
-**Routines plan-tier guidance.** Pro plan ≤2 partners + no R7; Max for everyone else. Decision #12.
-
-**Spreadsheet-viewer support.** Microsoft Excel, LibreOffice (free, open-source), Apple Numbers, Excel-for-Web, Google Sheets via "Open with" — all supported. Don't recommend any single paid app.
-
-**Real-world adoption.** Tali plans to adopt the framework for his own firms (4thtech, PollinationX) as the first real-world test. Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework). 18 commits on `main`. Tag `v1.0.0`.
+**Real-world adoption.** Tali plans to adopt the framework for his own firms (4thtech, PollinationX) as the first real-world test. Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework).
 
 > Future sessions: update this section with what's currently in flight. Stale items get pruned at v1.x release boundaries.
 

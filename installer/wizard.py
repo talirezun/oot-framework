@@ -2135,6 +2135,12 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     built-in two-way sync to a private GitHub repo — once that's running, cloud
     Routines clone the synced repo at execution time and read company-context
     knowledge from plain markdown files. See docs/AUTOMATION-PIPELINE.md.
+
+    Migration note (ADR-002, v1.1.0+): the standalone <firm>-secondbrain repo is
+    retired as a framework primitive. When the firm has a Firm Brain repo
+    (<firm>-brain, created at step 8), prefer pointing the bridge at that repo
+    (scan path: collective/<firm-domain>/wiki/) instead of provisioning a
+    separate secondbrain repo. Full retirement of this step lands in v1.3.
     """
     if is_step_done(state, "step_12_secondbrain_sync"):
         return

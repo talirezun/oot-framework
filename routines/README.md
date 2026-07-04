@@ -21,6 +21,8 @@ The substrates differ; **the prompts are functionally identical** so a firm can 
 | R7 — Klarna Test Trigger | [cloud/R7.md](cloud/R7.md) | [privacy/R7.md](privacy/R7.md) | GitHub event: PR labelled `ai-replaces-human` | S6, S4, S3 | No |
 | R8 — Treasury Runway Update | [cloud/R8.md](cloud/R8.md) | [privacy/R8.md](privacy/R8.md) | Monday 08:00 | S10 | **OPTIONAL** — only orgs adopting Unit Fund |
 
+> **R9 — Firm Brain Synthesize (v1.1.0+) has no file here by design.** It is an admin-run weekly Curator operation (CLI or wizard) on the admin's own machine, not a Claude Code Routine — so it does not count against per-day Routine plan limits and ships no `cloud/R9.md` / `privacy/R9.md`. Spec: [`SPEC.md`](SPEC.md) §R9; install: [`docs/02-installing-routines.md`](../docs/02-installing-routines.md).
+
 ---
 
 ## Recommended install order
@@ -107,7 +109,9 @@ The v1.0 Routines are the framework's operational core. v1.x will add (per `GENE
 
 - **R3 stablecoin payment execution** (Gen 2) — extends R3 with automated USDC/EURC payroll via Rise/Circle after founder approval.
 - **R4 smart-contract long-tail** (Gen 2) — replaces the Excel-tracked Long_Tail_Schedule with on-chain percentage entitlements that auto-pay quarterly.
-- **R9 Brain semantic-duplicate scan** (Gen 2) — separate Routine running monthly on top of R5's weekly health check.
-- **R10 Cotrugli Ledger anchoring** (Gen 3) — anchor R6's audit-log SHA-256s to the Cotrugli Ledger.
+- **R10 Brain semantic-duplicate scan** (Gen 2) — separate Routine running monthly on top of R5's weekly health check.
+- **R11 Cotrugli Ledger anchoring** (Gen 3) — anchor R6's audit-log SHA-256s to the Cotrugli Ledger.
+
+(R9 is taken: since v1.1.0 it is the **Firm Brain Synthesize** operation — see below.)
 
 These are out of scope for v1.0; the existing 8 Routines remain stable.

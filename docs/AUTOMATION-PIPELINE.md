@@ -484,6 +484,8 @@ This is what the wizard's **Step 12 — Second Brain bridge** configures, and wh
 - **Auto-fix capability:** R5 on cloud track can *list* typo-correctable broken wikilinks but cannot auto-fix them (the Second Brain repo is read-only from cloud — fixes must go through the Curator app, which then syncs back to GitHub). Privacy-track R5 keeps the auto-fix behaviour.
 - **Sync freshness:** the Second Brain on GitHub is as fresh as the user's last "Sync Up" in the Curator app. R5's report includes the latest-sync timestamp so this is visible.
 
+> **Migration note (ADR-002, v1.1.0+):** the standalone `<firm>-secondbrain` repo is retired as a framework primitive. In v1.2.x R5 still reads the legacy Curator-sync bridge repo as described here; from v1.3 the bridge targets the **Firm Brain** repo's `collective/<firm-domain>/wiki/` instead. New installs may point the bridge at the Firm Brain repo now — the mechanics (read-only clone at execution time) are identical.
+
 **Three founder paths from here:**
 
 1. **Recommended (Gen-1 cloud-track default):** Enable Curator GitHub sync at wizard Step 12, install R5. Works for ~95% of founders without an always-on machine.

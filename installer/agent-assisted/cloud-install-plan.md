@@ -837,6 +837,8 @@ Expected: clean report. Walk through `fix_wiki_issue` for any broken wikilinks."
 
 **Why this step exists (background — keep brief in chat):** R5 (Brain Health Check) needs to read the firm's Second Brain (the Curator semantic graph). The Curator's MCP is local-stdio only. The Curator already supports two-way GitHub sync — Routines clone that synced repo at execution time and scan markdown files directly. The trade-off: cloud Routines lose the 17 MCP tools, but R5's broken-wikilink / orphan / stale scans are file-level operations that work fine without them. See [`docs/AUTOMATION-PIPELINE.md`](../../docs/AUTOMATION-PIPELINE.md) § "How the bridge works".
 
+> **Migration note (ADR-002, v1.1.0+):** the standalone `<FIRM_SLUG>-secondbrain` repo below is the legacy bridge target, retired as a framework primitive. If the firm created a **Firm Brain** repo (`<FIRM_SLUG>-brain`, Step 5), point the bridge at that repo instead and scope R5's scan to `collective/<firm-domain>/wiki/` — do NOT provision a separate secondbrain repo. The steps below otherwise apply unchanged (same fine-grained read-only PAT pattern).
+
 🟡 **ASK USER:** "In the Curator app, open Settings → Sync (or Preferences → Sync). Create a NEW private GitHub repository called `<FIRM_SLUG>-secondbrain` (or pick an existing private repo if you have one). Generate a PAT with `repo` scope, paste into Curator, click Enable Sync. Then click 'Sync Up' to do the initial push. Once that's done, paste me the HTTPS URL of the Second Brain repo."
 
 Save as `SECOND_BRAIN_REPO_URL` in state. Parse to extract `SECOND_BRAIN_OWNER` and `SECOND_BRAIN_NAME`.

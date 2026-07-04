@@ -65,9 +65,18 @@
 
 **Versioning & release process.** Added a version badge in the README. CHANGELOG now opens with the semver-and-generation policy.
 
-### Second Brain bridge — closes the v1.0 cloud Routines reachability gap (2026-05-12)
+## v1.0.1 — 2026-05-13
 
-(Landed before the Shared Brain integration; included in v1.1.0 release.)
+Patch release covering everything that shipped between v1.0.0 and the Firm Brain work: the Second Brain bridge, the Ledger naming pass, ADR-001 doc-alignment, and the three-path installer overhaul. *(Tag created retroactively on 2026-07-03 — these changes were on `main` by 2026-05-13 and were already referenced as "v1.0.1" throughout the docs.)*
+
+**Installer overhaul (all three paths, driven by the 18 sandbox + live install-test findings of 2026-05-10):**
+- **Path A (agent-assisted)** — new `installer/agent-assisted/` with `START-HERE.md` copy-paste prompt, LLM-agnostic `AGENT-CAPABILITY-SPEC.md`, and cloud + privacy install plans (v1.1.0, 14+ steps incl. plan-tier choice, Configuration A vs B, existing-Curator branch).
+- **Path B (wizard)** — `installer/wizard.py` rewritten from a 4-step scaffold to a complete interactive wizard with resume, dry-run, back-navigation, `gh` automation, and a one-line bootstrap (`installer/bootstrap.sh`).
+- **Path C (manual)** — both quickstarts rewritten end-to-end with a non-technical primer, an 8-decision section, and explicit web-UI walkthroughs.
+- Agent-as-daily-UI: `DAILY-OPS.md` / `WEEKLY-OPS.md` / `MONTHLY-OPS.md` runnable playbooks for non-technical founders.
+- New `docs/MODULES.md` (module-dependency map + Day-N progression) and `docs/AUTOMATION-PIPELINE.md` (cloud + privacy pipeline diagrams); README redesigned for install discoverability.
+
+### Second Brain bridge — closes the v1.0 cloud Routines reachability gap (2026-05-12)
 
 - Cloud Routines can now reach the firm's Second Brain (the Curator semantic graph) via Curator's existing two-way GitHub sync, without an always-on machine. Solves the gap that previously made R5 effectively broken on cloud track.
 - Mechanism: Curator's Sync tab mirrors the entire local vault to a private GitHub repo. Cloud Routines (specifically R5 in v1.0.1; R2/R8 candidates for Gen-2 enrichment) clone that repo at execution time, scoped to `wiki/<firm-curator-domain>/`, and operate on plain markdown files via Pattern C (ADR-001).
@@ -77,18 +86,16 @@
 - `installer/agent-assisted/cloud-install-plan.md` gets a new Step 9b mirroring the wizard step.
 - Migration shim in `installer/wizard.py` `_migrate_state_keys()` promotes pre-rename step keys AND resets `step_13_routines` if the new bridge step isn't done, so mid-install users re-configure Routines with the second connector.
 
-**Note on the bridge under ADR-002.** The bridge work above remains operational for *personal* Second Brain backup. For *firm* context, post-v1.1.0 Routines should prefer reading the Firm Brain's `collective/<firm-domain>/wiki/` per ADR-002 — the bridge's per-partner secondbrain repo is no longer the canonical firm-context source. Tier-3 updates (installer rewrites, quickstart docs) land in v1.2.0.
+**Note on the bridge under ADR-002 (added in v1.1.0).** The bridge work above remains operational for *personal* Second Brain backup. For *firm* context, post-v1.1.0 Routines should prefer reading the Firm Brain's `collective/<firm-domain>/wiki/` per ADR-002 — the bridge's per-partner secondbrain repo is no longer the canonical firm-context source. Tier-3 updates (installer rewrites, quickstart docs) landed in v1.2.0; full retirement of the legacy bridge target lands in v1.3.
 
 ### Naming cleanup: "Brain repo" → "Ledger"; introduce "Second Brain" as canonical (2026-05-12)
-
-(Landed before the Shared Brain integration; included in v1.1.0 release.)
 
 - "The Brain" had six distinct meanings across the framework. Rename pass: GitHub operational repo (which holds Excel files + audit logs + Routine writebacks) is now consistently called the **Ledger** / **operational Ledger**. The Curator's semantic knowledge graph keeps its name as **the Brain** / **Second Brain** (the PKM term users will recognise). Distinct from **Cotrugli Ledger** (Gen-3 accounting/governance backbone) — first-mention disambiguators added wherever both terms appear.
 - New GLOSSARY.md entries: **Ledger**, **Second Brain repo**.
 - 51 files changed; ~280 line-level renames across user-facing docs (GLOSSARY, README, QUICKSTART, GENERATIONS, all of `docs/`, all 16 Routine prompts) plus internal specs (CLAUDE.md, SPEC.md, BUILD-INSTRUCTIONS.md, ADR-001, PROVISIONING-SPEC.md). State-variable renames in `installer/wizard.py` (`brain_repo_url` → `ledger_repo_url`, etc.) with a backward-compat migration shim so existing wizard state files don't lose progress.
 - Kept as-is: `templates/brain/` folder (these are Curator-graph page templates), MANIFESTO.md Thesis 4 references (philosophical), Routine names like "R5 Brain Health Check" (proper names), Skill Pack S1 my-curator references (Curator-graph context).
 
-### Other v1.1.0 items (also landed post-v1.0.0)
+### Other v1.0.1 items
 
 **Documentation alignment with the actual Anthropic product surface:**
 - "Anthropic Remote Routines" renamed to "Claude Code Routines" repo-wide (the actual product name; Anthropic launched the feature 14 April 2026). Old name preserved in v1.0.0 release notes for historical accuracy.

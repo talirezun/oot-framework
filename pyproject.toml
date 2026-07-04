@@ -1,6 +1,6 @@
 [project]
 name = "oot-framework"
-version = "1.0.0"
+version = "1.2.0"
 description = "ØØT — Organisation of Tomorrow framework. Markdown-first framework for partner-run, AI-augmented organisations."
 readme = "README.md"
 requires-python = ">=3.11"
