@@ -90,6 +90,12 @@ readonly BRAIN_REPO="$(grep '^brain_repo:' "$FIRM_CONFIG" | cut -d'"' -f2)"
 readonly TRACK_DEFAULT="$(grep '^track:' "$FIRM_CONFIG" | cut -d'"' -f2)"
 readonly TRACK="${TRACK_OVERRIDE:-$TRACK_DEFAULT}"
 
+# Firm slug (used for the default Ledger clone path <firm-slug>-ledger); falls back
+# to the GitHub org name if firm_slug isn't set in firm.yaml.
+FIRM_SLUG="$(grep '^firm_slug:' "$FIRM_CONFIG" | cut -d'"' -f2)"
+[[ -n "$FIRM_SLUG" ]] || FIRM_SLUG="$GITHUB_ORG"
+readonly FIRM_SLUG
+
 [[ "$TRACK" =~ ^(cloud|privacy)$ ]] || fatal "Invalid track: $TRACK"
 
 log "Provisioning partner '$PARTNER_ID' for firm '$FIRM_NAME' (track: $TRACK)"
@@ -250,10 +256,13 @@ step_5_brain() {
     if step_completed 5; then log "Step 5 already completed; skipping."; return; fi
     if $DRY_RUN; then log "[dry-run] Would create Brain folder stub for $PARTNER_ID."; mark_step_done 5; return; fi
 
-    BRAIN_REPO_PATH="${BRAIN_REPO_PATH:-$HOME/oot-brain}"
-    [[ -d "$BRAIN_REPO_PATH" ]] || fatal "Ledger not found at $BRAIN_REPO_PATH (set BRAIN_REPO_PATH env var)"
+    # The partner's firm/partners/<id>/ tree is operational state — it lives in the
+    # Ledger repo (<firm-slug>-ledger), not the Firm Brain. Default clone path derived
+    # from the firm slug; override with LEDGER_REPO_PATH.
+    LEDGER_REPO_PATH="${LEDGER_REPO_PATH:-$HOME/${FIRM_SLUG:-firm}-ledger}"
+    [[ -d "$LEDGER_REPO_PATH" ]] || fatal "Ledger not found at $LEDGER_REPO_PATH (set LEDGER_REPO_PATH env var)"
 
-    cd "$BRAIN_REPO_PATH"
+    cd "$LEDGER_REPO_PATH"
     git checkout -b "onboarding/$PARTNER_ID"
 
     mkdir -p "firm/partners/$PARTNER_ID"/{output-specs,variable-statements,long-tail-statements,private,legal,onboarding}
@@ -334,7 +343,7 @@ step_6_reward_species() {
     if $DRY_RUN; then log "[dry-run] Would populate X2 + generate signed PDF."; mark_step_done 6; return; fi
 
     log "  Manual steps required (Gen 1):"
-    log "    1. Open templates/excel/reward-species-declaration.xlsx in Excel/Sheets."
+    log "    1. Open the firm's Ledger copy firm/excel/reward-species-declaration.xlsx (X2) in your spreadsheet viewer."
     log "    2. Add a sheet named '$PARTNER_ID' (or per-partner workbook for >20 partners)."
     log "    3. Populate Partner_Profile + Base_Variable_Split per the on-screen agreement."
     log "    4. Validate: variable weights sum to 1.0; bonus splits sum to 1.0."

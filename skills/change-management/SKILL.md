@@ -185,6 +185,8 @@ MIT NANDA: most failed pilots failed because the team quit after pilot disappoin
 
 ## 6. Excel interaction protocol
 
+> **On the `mcp__excel__*` tools in this pack's frontmatter (ADR-001):** Excel writes go through **openpyxl in code execution on the Ledger clone on BOTH tracks** — cloud and privacy Routines perform the identical operation, then signed-commit + push; there is no Google Sheets path. The `mcp__excel__*` tools are **optional, human-in-the-loop only** (a founder inspecting or hand-patching a workbook at their workstation) and are never the Routine write path. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md).
+
 | File | Sheet | Operation | Trigger |
 |---|---|---|---|
 | X5 metr-baseline.xlsx | Baseline_Metrics | Write | Pre-rollout |

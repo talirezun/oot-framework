@@ -40,7 +40,7 @@ The Partner is engaged to **produce output**, not to work hours. The Firm does n
 
 - A merged code commit, a signed contract, a closed deal, a published article, a delivered design, a substantive code review, a drafted Output Spec — anything that lands and ships.
 
-Output is captured daily by Routine R1 to `templates/excel/partner-output-ledger.xlsx`. Each output is classified by value tier (S/M/L/XS) per §4.10 of Skill Pack S3. Variable pay is calculated monthly (Routine R3); long-tail entitlements settle quarterly (Routine R4).
+Output is captured daily by Routine R1 to the firm's Ledger copy `firm/excel/partner-output-ledger.xlsx` (X1). Each output is classified by value tier (S/M/L/XS) per §4.10 of Skill Pack S3. Variable pay is calculated monthly (Routine R3); long-tail entitlements settle quarterly (Routine R4).
 
 ## 4. The seven-layer compensation picture
 
@@ -151,7 +151,7 @@ The Partner acknowledges:
 - They have read `MANIFESTO.md` (the framework's intellectual core).
 - They have read `governance/KLARNA-TEST.md` and accepted the discipline.
 - They have read `governance/DECISION-RIGHTS.md` and accepted the three-tier dispute path.
-- They have signed the Reward Species Declaration in `templates/excel/reward-species-declaration.xlsx`.
+- They have signed the Reward Species Declaration in the firm's Ledger copy `firm/excel/reward-species-declaration.xlsx` (X2).
 - They have a personal device to access the Firm's tools and have completed onboarding per `docs/03-onboarding-a-partner.md`.
 
 The Firm acknowledges:

@@ -1,5 +1,7 @@
 # Skill Pack S6 — Change Management / Resistance: SPEC
 
+> **Historical build spec (pre-v1.0.1 in places). Where this file and SKILL.md disagree, SKILL.md is authoritative.**
+
 **ID:** S6
 **Name:** Change Management / Resistance
 **Tier:** 1
@@ -39,7 +41,7 @@ This pack is what stops an ØØT firm from joining the 95% of MIT NANDA's pilots
 ## Allowed tools / dependencies
 
 - **Curator MCP** — read pilot history, write pilot summaries, AI Champion designations, resistance observations.
-- **Excel MCP / Google Sheets** — write to X5 (METR baseline).
+- **openpyxl in code execution on the Ledger clone (both tracks, per [ADR-001](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md))** — write to X5 (METR baseline), then signed-commit + push; no Google Sheets. Excel MCP is an optional human-in-the-loop inspection tool only.
 - **Slack MCP / 4thtech** — rollout communication.
 - **The Klarna Test interaction** (R7 trigger via S3 integration).
 - **DORA / SPACE / DX Core 4 measurement tooling** — the firm chooses (LinearB, Jellyfish, in-house scripts); the pack is tool-neutral.

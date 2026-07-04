@@ -10,7 +10,7 @@
 
 This document is the **manual path** (Path C) — every step is something you type yourself.
 
-> ⚠️ The privacy track requires an **always-on machine** (Mac mini / NUC / Pi 5) and **per-partner Trezors**. Total one-time cost ~€2,400 + ~€110/year for a 5-partner firm. If the cost is prohibitive or you don't yet have sovereignty mandate, start with the [cloud track](00-quickstart-cloud.md).
+> ⚠️ The privacy track requires an **always-on machine** (Mac mini / NUC / Pi 5) and **per-partner Trezors**. For a 5-partner firm: roughly €2,460 one-time + €45–115/month — see the canonical [cost summary](ECOSYSTEM.md#cost-summary). If the cost is prohibitive or you don't yet have a sovereignty mandate, start with the [cloud track](00-quickstart-cloud.md).
 
 ---
 

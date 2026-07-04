@@ -15,7 +15,7 @@ A solo founder on cloud track can run a usable ØØT instance with **five module
 1. **Anthropic account** (Pro plan minimum; Max recommended once you have 3+ partners or the Klarna gate is firing). Powers Claude Desktop, Claude Code, and Claude Code Routines.
 2. **GitHub Ledger** — your firm's private repo. Holds the markdown wiki + the `.xlsx` operational state files (`firm/excel/X1...X9.xlsx`). This is your firm's most valuable IP by month six.
 3. **Curator desktop app + my-curator MCP** — the Brain interface. Skill Pack S1 is its canonical SKILL.md. Without this, no other Skill Pack works at full strength.
-4. **Routine R5 (Brain Health Check)** — runs Sunday 09:00; verifies your Brain is intact week-on-week. R5 has no dependencies and is the smoke-test that confirms everything else is wired correctly.
+4. **Routine R5 (Brain Health Check)** — runs Sunday 09:00; verifies your Brain is intact week-on-week. R5 has no dependencies on other Routines and is the smoke-test that confirms everything else is wired correctly. On the **cloud track** it does require the Second Brain bridge (Curator GitHub sync + a fine-grained read-only PAT — see [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) Step 8c); privacy-track R5 talks to the local my-curator MCP directly.
 5. **A spreadsheet app** to view the `.xlsx` files. User choice: Microsoft Excel, **LibreOffice (free, open-source)**, Apple Numbers (built into macOS), Excel for Web, WPS, OnlyOffice. The framework writes native `.xlsx` and is app-agnostic.
 
 That's the floor. With those five, you have: a Brain that grows, a weekly self-check that proves it's growing, a stack of `.xlsx` templates ready to be filled in, and a path to add everything else as the firm matures.
@@ -161,7 +161,7 @@ See [`routines/README.md`](../routines/README.md) for the canonical install orde
 
 | # | When | Required? |
 |---|---|---|
-| R5 | Day-1 | Yes — no dependencies; smoke-test |
+| R5 | Day-1 | Yes — no Routine dependencies; smoke-test. Cloud track needs the Second Brain bridge (read-only PAT); privacy track uses the local my-curator MCP. |
 | R6 | Day-1 (EU founders) / Day-7 (everyone else) | Yes for EU; recommended for all |
 | R1 | Day-7 (after first partner onboards with X2) | Yes |
 | R2 | Day-14 (after R1 has 7+ days) | Yes |

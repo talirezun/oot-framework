@@ -179,4 +179,4 @@ For each of the three reference orgs:
 - Every Brain page passes the Curator's `scan_wiki_health` check.
 - Every Klarna Test entry has a corresponding `firm/klarna-tests/KT-...md` page and a corresponding row in `klarna-test.xlsx`, and the two agree on every field.
 - The reference org's `firm/README.md` (or top-level README in `examples/<id>/`) explains the awkward edges so a reader can find them quickly.
-- The validator from Phase 8 (`scripts/validate-skills.py` and the Excel validation workflow) passes against the example.
+- The validator from Phase 8 (`scripts/validate_skills.py` and the Excel validation workflow) passes against the example.

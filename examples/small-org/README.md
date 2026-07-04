@@ -31,4 +31,4 @@
 
 ## v1.0 scaffold status
 
-This reference org ships as a scaffold in v1.0. The directory structure is complete; representative Brain pages are in place. Full 60-day operational data (X1 ledger rows, R1 daily logs, weekly BRs, R6 audit logs) lands in v1.x.
+This reference org ships as a scaffold in v1.0. The directory structure is specified in this README (and in [`examples/SPEC.md`](../SPEC.md)); population lands in v1.x. Two representative Brain pages are in place today (`firm/klarna-tests/KT-2026-001.md`, `firm/partners/index.md`). The full 60-day operational data (X1 ledger rows, R1 daily logs, weekly BRs, R6 audit logs) — and all the `firm/...` paths referenced in the awkward-edges list above, which are **(v1.x)** — land in v1.x.

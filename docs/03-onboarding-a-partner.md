@@ -18,14 +18,14 @@ Onboarding a partner is the framework's most important per-partner ritual. It es
 - **Partner Charter:** the partnership-style agreement (not an employment contract).
 - **Tools provisioning:** Bitwarden, GitHub, Slack/dChat, Drive/PollinationX, Brain folder.
 
-The 30-step checklist at [`templates/partner-onboarding/checklist.md`](../templates/partner-onboarding/checklist.md) is the canonical sequence. Steps 1-15 happen in the 90-minute session; steps 16-25 are the partner's first week; steps 26-30 are the 30-day check-in.
+The 30-step checklist at [`templates/partner-onboarding/checklist.md`](../templates/partner-onboarding/checklist.md) is the canonical sequence. Steps 1-15 happen in the 90-minute session; steps 16-17 (Curator self-test + welcome announcement) complete end-of-day right after the session; steps 18-25 are the partner's first week; steps 26-30 are the 30-day check-in.
 
 ---
 
 ## Pre-requisites
 
 - Counsel sign-off on Partner Charter for the partner's jurisdiction (per [`docs/06-when-to-call-a-lawyer.md`](06-when-to-call-a-lawyer.md)).
-- Bitwarden organisation set up (per `governance/SECRETS-POLICY.md`).
+- Bitwarden organisation set up (recommended; skip if you're solo or a 2-admin firm — see `governance/SECRETS-POLICY.md` Gen-1 tiering. A personal Bitwarden vault is enough until you have 2+ admins sharing firm credentials).
 - GitHub organisation + Ledger with the 5 setup pre-requisites configured (per Skill Pack S4 §4.0).
 - Slack workspace (cloud) or 4thtech firm domain + dChat workspace (privacy).
 - The provisioning script at `templates/partner-onboarding/provisioning-script.sh` works — test it with a throwaway `partner_id` like `test-onboard-2026-05-01`.
@@ -54,7 +54,7 @@ If the partner cannot articulate the Klarna Test framing back to you in their ow
 
 ### 0:30 — 1:00 — Reward Species Declaration
 
-1. Open `templates/excel/reward-species-declaration.xlsx`.
+1. Open the firm's Ledger copy `firm/excel/reward-species-declaration.xlsx` (X2) — the framework's `templates/excel/` copy is a pristine master; the firm works on its own copy in the Ledger.
 2. Add a sheet for the new partner (or use a per-partner workbook for orgs >20 partners).
 3. Walk through every column:
    - **Partner_Profile:** cohort, jurisdiction, base_currency, stablecoin_upgrade_pref (Gen 2), unit_fund_interest (Gen 2), two_worlds_self_id.
@@ -128,7 +128,7 @@ The provisioning script's step 8 posts the welcome announcement to `#general` (c
 
 ---
 
-## First week (steps 16-25)
+## First week (steps 18-25)
 
 The partner alone:
 

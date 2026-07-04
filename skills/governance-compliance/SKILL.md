@@ -36,45 +36,45 @@ This pack is **mandatory for EU-operating organisations** before 2 August 2026 (
 
 ## 2. When to invoke this pack
 
-1. <!-- TODO: harden in v1.x — when a new AI use case is identified and needs Annex III risk mapping. -->
-2. <!-- TODO: harden in v1.x — when R6 produces an audit-trail anomaly that needs investigation. -->
-3. <!-- TODO: harden in v1.x — quarterly compliance review preparation. -->
-4. <!-- TODO: harden in v1.x — counsel review preparation (annual or per-engagement). -->
-5. <!-- TODO: harden in v1.x — GDPR Article 22 data-subject escalation response. -->
-6. <!-- TODO: harden in v1.x — Italian Law 132/2025 compliance check (for orgs operating in Italy). -->
+1. **TODO (v1.x):** when a new AI use case is identified and needs Annex III risk mapping.
+2. **TODO (v1.x):** when R6 produces an audit-trail anomaly that needs investigation.
+3. **TODO (v1.x):** quarterly compliance review preparation.
+4. **TODO (v1.x):** counsel review preparation (annual or per-engagement).
+5. **TODO (v1.x):** GDPR Article 22 data-subject escalation response.
+6. **TODO (v1.x):** Italian Law 132/2025 compliance check (for orgs operating in Italy).
 
 ## 3. When NOT to invoke this pack
 
-1. <!-- TODO: harden — for routine ledger entries that don't touch high-risk use cases. -->
-2. <!-- TODO: harden — for non-AI-driven decisions (e.g., a purely human-judgement contract clause). -->
+1. **TODO (v1.x):** for routine ledger entries that don't touch high-risk use cases.
+2. **TODO (v1.x):** for non-AI-driven decisions (e.g., a purely human-judgement contract clause).
 
 ## 4. Operational instructions
 
-<!-- TODO: harden in v1.x — full operational instructions per the canonical SKILL.md structure. The Tier-1 packs in v1.0 (S1–S6, S12) provide the template; this pack will follow the same structure. -->
+> **TODO (v1.x):** full operational instructions per the canonical SKILL.md structure. The Tier-1 packs in v1.0 (S1–S6, S12) provide the template; this pack will follow the same structure.
 
 ### 4.1 Use-case classification (Annex III mapping)
 
-<!-- TODO: harden — step-by-step procedure for classifying a use case against the EU AI Act's risk tiers. References the conservative-baseline tier table from `governance/EU-AI-ACT.md`. -->
+> **TODO (v1.x):** step-by-step procedure for classifying a use case against the EU AI Act's risk tiers. References the conservative-baseline tier table from `governance/EU-AI-ACT.md`.
 
 ### 4.2 Article 9 risk-management system
 
-<!-- TODO: harden — populate X7 Risk Register; quarterly review; founder sign-off on residual risks. -->
+> **TODO (v1.x):** populate X7 Risk Register; quarterly review; founder sign-off on residual risks.
 
 ### 4.3 Article 12 audit-trail (R6 invocation)
 
-<!-- TODO: harden — daily 23:00 R6 audit log writes; signed commits; branch protection; retention. -->
+> **TODO (v1.x):** daily 23:00 R6 audit log writes; signed commits; branch protection; retention.
 
 ### 4.4 Article 13 transparency
 
-<!-- TODO: harden — every Skill Pack's "limitations" section is the Article 13 mechanism; pack ensures coverage per use case. -->
+> **TODO (v1.x):** every Skill Pack's "limitations" section is the Article 13 mechanism; pack ensures coverage per use case.
 
 ### 4.5 Article 14 human oversight
 
-<!-- TODO: harden — every high-risk use case has a documented human-oversight mechanism; pack ensures coverage. -->
+> **TODO (v1.x):** every high-risk use case has a documented human-oversight mechanism; pack ensures coverage.
 
 ### 4.6 GDPR Article 22
 
-<!-- TODO: harden — verify no Routine makes a final decision affecting partners/customers without human sign-off. -->
+> **TODO (v1.x):** verify no Routine makes a final decision affecting partners/customers without human sign-off.
 
 ### 4.6.5 GDPR Article 17 — Right to Erasure (Firm Brain)
 
@@ -88,7 +88,7 @@ The Firm Brain (Curator Shared Brain, per [ADR-002](../../docs/internal/ADR-002-
 
 ### 4.7 Italian Law 132/2025 (for orgs operating in Italy)
 
-<!-- TODO: harden — Art. 612-quater mapping; aggravating-circumstances awareness; counsel coordination. -->
+> **TODO (v1.x):** Art. 612-quater mapping; aggravating-circumstances awareness; counsel coordination.
 
 ## 5. Brain interaction protocol
 
@@ -103,6 +103,8 @@ Per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md), c
 **No Firm Brain writes from S7.** Compliance ADRs and decision rationales are authored by the accountable partner in their personal Curator and pushed via Curator Shared Brain — that's an authorship flow, not an S7 Routine flow.
 
 ## 6. Excel interaction protocol
+
+> **On the `mcp__excel__*` tools in this pack's frontmatter (ADR-001):** Excel writes go through **openpyxl in code execution on the Ledger clone on BOTH tracks** — cloud and privacy Routines perform the identical operation, then signed-commit + push; there is no Google Sheets path. The `mcp__excel__*` tools are **optional, human-in-the-loop only** (a founder inspecting or hand-patching a workbook at their workstation) and are never the Routine write path. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
 | File | Sheet | Operation | Trigger |
 |---|---|---|---|
@@ -122,12 +124,12 @@ Per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md), c
 1. Don't treat compliance as a one-time exercise; it is continuous.
 2. Don't bypass the daily R6 audit trail.
 3. Don't claim EU AI Act compliance without counsel review.
-4. <!-- TODO: harden — don't update the Risk Register without an audit trail of who updated and why. -->
-5. <!-- TODO: harden — don't auto-publish Article 13 transparency notes externally without legal review. -->
+4. **TODO (v1.x):** don't update the Risk Register without an audit trail of who updated and why.
+5. **TODO (v1.x):** don't auto-publish Article 13 transparency notes externally without legal review.
 
 ## 9. Quick reference
 
-<!-- TODO: harden — the standard 6-row Quick Reference table. -->
+> **TODO (v1.x):** the standard 6-row Quick Reference table.
 
 ## 10. References
 

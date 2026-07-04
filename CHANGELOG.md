@@ -99,7 +99,7 @@ Patch release covering everything that shipped between v1.0.0 and the Firm Brain
 
 **Documentation alignment with the actual Anthropic product surface:**
 - "Anthropic Remote Routines" renamed to "Claude Code Routines" repo-wide (the actual product name; Anthropic launched the feature 14 April 2026). Old name preserved in v1.0.0 release notes for historical accuracy.
-- Per-day Routine run limits documented: Pro 5, Max 15, Team 25, Enterprise 25. Plan-tier guidance added to quickstart and routines docs.
+- Per-day Routine run limits documented: Pro 5, Max 15, Team 15, Enterprise 25. Plan-tier guidance added to quickstart and routines docs.
 
 **ADR-001 — cloud-track Excel writeback canonical pattern:**
 - Operational `.xlsx` files (X1–X9) now live in the firm's Ledger GitHub repo at `firm/excel/`, not in Google Sheets / Drive.

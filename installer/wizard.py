@@ -5,7 +5,7 @@ Entry point: `python3 installer/wizard.py` or `oot-wizard` (after `pip install -
 
 Path B of the install-path overhaul. For founders who explicitly avoid using a
 coding agent (Path A) but want a guided form rather than the manual docs (Path C).
-Mirrors the 15-step structure of `installer/agent-assisted/cloud-install-plan.md`.
+Mirrors the 17-step structure of `installer/agent-assisted/cloud-install-plan.md`.
 
 Flags:
   --resume     Resume from the first incomplete step in ~/.oot/wizard-state.yaml.
@@ -804,7 +804,7 @@ def resolve_track(state: dict[str, Any], cli_track: str, resume: bool) -> dict[s
     return profile
 
 
-# ----- the 15 steps ---------------------------------------------------------
+# ----- the 17 steps ---------------------------------------------------------
 
 def step_00_welcome(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_00_welcome"):
@@ -818,7 +818,7 @@ def step_00_welcome(state: dict[str, Any], dry_run: bool) -> None:
             f"  {REPO_ROOT}\n"
             "and the Python environment is at\n"
             f"  {VENV_DIR}\n\n"
-            "From here, this wizard asks you ~15 questions and walks you through every\n"
+            "From here, this wizard asks you ~17 questions and walks you through every\n"
             "click and copy-paste. Expect ~2-4 hours total (mostly waiting on you to\n"
             "open browser tabs and approve things). You can quit anytime — re-run the\n"
             "same bootstrap command to resume where you left off.\n\n"
@@ -858,7 +858,7 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
         return (state.get("preflight", {}).get("python")
                 or state.get("oot_python")
                 or sys.executable)
-    header("Step 1 / 15 — Preflight: required tools", level=2)
+    header("Step 1 / 17 — Preflight: required tools", level=2)
 
     explainer(
         "What this step does and why",
@@ -918,7 +918,7 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
 def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_02_python_venv"):
         return
-    header("Step 2 / 15 — Python virtual environment", level=2)
+    header("Step 2 / 17 — Python virtual environment", level=2)
     explainer(
         "What this step does and why",
         "We create an isolated Python environment at ~/.oot/venv and install the\n"
@@ -944,7 +944,7 @@ def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
 def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
     if is_step_done(state, "step_03_locations"):
         return state.get("locations", {})
-    header("Step 3 / 15 — Choose locations", level=2)
+    header("Step 3 / 17 — Choose locations", level=2)
 
     explainer(
         "What this step does and why",
@@ -1034,7 +1034,7 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
 def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]:
     if is_step_done(state, "step_04_firm_profile"):
         return state.get("firm_profile", {})
-    header("Step 4 / 15 — Firm profile", level=2)
+    header("Step 4 / 17 — Firm profile", level=2)
 
     explainer(
         "What this step does and why",
@@ -1083,7 +1083,7 @@ def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]
 def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, Any]:
     if is_step_done(state, "step_05_module_selection"):
         return state.get("modules_chosen", {})
-    header("Step 5 / 15 — Module selection (choose what to install)", level=2)
+    header("Step 5 / 17 — Module selection (choose what to install)", level=2)
 
     profile = state.get("firm_profile", {})
     eu = profile.get("eu_high_risk") in {"yes", "not-sure"}
@@ -1256,7 +1256,7 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
         info(f"  Skill packs:       {', '.join(modules['skills']) or '(none)'}")
         info(f"  Routines now:      {', '.join(modules['routines']) or '(none)'}")
         info(f"  Security:          {', '.join(modules['security']) or '(none)'}")
-        # Indicate whether the Second Brain bridge will be set up at Step 12.
+        # Indicate whether the Second Brain bridge will be set up at Step 13.
         track = state.get("firm_profile", {}).get("track", "cloud")
         will_bridge = (
             track == "cloud"
@@ -1264,7 +1264,7 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
             and "R5" in modules["routines"]
         )
         if will_bridge:
-            info(f"  Second Brain:      bridge will be set up at Step 12 "
+            info(f"  Second Brain:      bridge will be set up at Step 13 "
                  f"(R5 will reach the Curator graph via GitHub-sync)")
         elif track == "privacy":
             info(f"  Second Brain:      not needed — privacy MCP runs alongside Routines")
@@ -1307,7 +1307,7 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
 def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
     if is_step_done(state, "step_06_github_plan_tier"):
         return state.get("firm_profile", {}).get("github_plan_tier", "free")
-    header("Step 6 / 15 — GitHub plan-tier choice (CRITICAL)", level=2)
+    header("Step 6 / 17 — GitHub plan-tier choice (CRITICAL)", level=2)
     explainer(
         "What this step does and why  ⚠️  (structural choice)",
         "GitHub Free + private repos display branch-protection rules in the UI but\n"
@@ -1357,14 +1357,14 @@ def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
 def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_07_anthropic_check"):
         return
-    header("Step 7 / 15 — Anthropic check", level=2)
+    header("Step 7 / 17 — Anthropic check", level=2)
     explainer(
         "What this step does and why",
         "Two Anthropic products you'll need:\n\n"
         "  - Claude Desktop  — the chat app. This is where the my-curator MCP runs.\n"
         "    Download free: https://claude.com/download\n\n"
         "  - Claude Code CLI (or web dashboard at claude.ai/code/routines) — used to\n"
-        "    create and manage Routines at Step 12. Either works.\n\n"
+        "    create and manage Routines at Step 14. Either works.\n\n"
         "Plan tiers:\n"
         "  pro   — 5 Routine runs/day. OK for solo founders with no R7.\n"
         "  max   — 15/day. Recommended for any firm taking R7 / Klarna gate seriously.\n"
@@ -1410,7 +1410,7 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
 def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_08_brain_repo"):
         return
-    header("Step 8 / 15 — Create the Ledger + Firm Brain GitHub repos", level=2)
+    header("Step 8 / 17 — Create the Ledger + Firm Brain GitHub repos", level=2)
 
     locations = state["locations"]
     profile = state["firm_profile"]
@@ -1672,7 +1672,7 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
 def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_09_signing_key"):
         return
-    header("Step 9 / 15 — Generate signing key + upload to GitHub", level=2)
+    header("Step 9 / 17 — Generate signing key + upload to GitHub", level=2)
 
     explainer(
         "What this step does and why",
@@ -1859,7 +1859,7 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
 def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_10_branch_protection"):
         return
-    header("Step 10 / 15 — Branch protection on main", level=2)
+    header("Step 10 / 17 — Branch protection on main", level=2)
     modules = state.get("modules_chosen", {})
     if not modules.get("install_branch_protection", True):
         info("Branch protection opted out at Step 5. Skipping.")
@@ -2031,7 +2031,7 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
 def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_11_curator"):
         return
-    header("Step 11 / 15 — Curator integration (the second-brain app)", level=2)
+    header("Step 11 / 17 — Curator integration (the second-brain app)", level=2)
     locations = state["locations"]
     modules = state.get("modules_chosen", {})
     mode = modules.get("curator_mode", "install-fresh" if not locations.get("existing_curator") else "use-existing")
@@ -2298,6 +2298,73 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     mark_step_done(state, "step_11_curator")
 
 
+def step_12_brain_ingest(state: dict[str, Any], dry_run: bool) -> None:
+    """Guide the founder to ingest 5-10 seed documents into their firm domain.
+
+    Mirrors cloud-install-plan.md Step 9 (Initial Brain ingest). Entirely a
+    walkthrough — the Curator app does the ingestion; the wizard only explains
+    what to pick and confirms completion. There is nothing safe to do
+    programmatically here (the ingestion runs inside the Curator GUI against a
+    cloud-LLM), so this step is confirmation-gated, not DRY_RUN-gated.
+    """
+    if is_step_done(state, "step_12_brain_ingest"):
+        return
+    header("Step 12 / 17 — Seed your Brain (initial document ingest)", level=2)
+
+    locations = state.get("locations", {})
+    modules = state.get("modules_chosen", {})
+    curator_domain = locations.get("curator_domain", "<your-firm-domain>")
+
+    # If the founder skipped Curator entirely, there's nothing to ingest into.
+    if modules.get("skip_curator"):
+        info("Curator skipped at Step 5 (skip-for-now) — no Brain to ingest into yet.")
+        info("When you install Curator later, re-run the wizard and we'll come back here.")
+        mark_step_done(state, "step_12_brain_ingest")
+        return
+
+    explainer(
+        "What this step does and why",
+        "A fresh Curator domain is empty — the Routines that read your Brain (R5\n"
+        "Brain Health Check especially) have nothing to work with until you feed it\n"
+        "a starting set of documents. This one-time ingest gives the knowledge graph\n"
+        "its first real content and lets you confirm end-to-end that ingestion +\n"
+        "the my-curator MCP are actually working before you wire up automation.\n\n"
+        "Pick 5-10 documents that best represent your firm's knowledge. This is a\n"
+        "GUI action inside the Curator app — the wizard just tells you what to pick\n"
+        "and waits while you drag-and-drop.",
+    )
+
+    info(f"\nIngest into domain: {curator_domain}\n")
+    info("Good starter documents (pick 5-10 you already have):")
+    info("  1. A recent customer contract or SOW")
+    info("  2. A strategic memo (your recent thinking / a founding thesis)")
+    info("  3. A product spec or technical design doc")
+    info("  4. A pitch deck (export to PDF first)")
+    info("  5. A meeting transcript (export to plain text)")
+    info("")
+    info("In the Curator app:")
+    info(f"  Ingest → drag-and-drop the files → select domain `{curator_domain}` → run.")
+    info("  Ingestion uses your configured cloud-LLM (Gemini Flash Lite / Claude / etc.)")
+    info("  and can take a few minutes for a batch this size.")
+
+    if not ask_confirm("Ingestion complete for your starter documents?", default=True):
+        info("Pausing here. When ingestion is done, re-run with --resume.")
+        sys.exit(0)
+
+    info("\nNow a quick health check. In Claude Desktop, paste:")
+    info(f"  > Use my-curator. scan_wiki_health on domain={curator_domain}.")
+    info(f"  > Then scan_semantic_duplicates on domain={curator_domain}. Report.")
+    info("")
+    info("Expected: a clean report. If it flags broken wikilinks, walk through")
+    info("`fix_wiki_issue` for each (Claude can do this in the same chat).")
+
+    ask_confirm("Health check run (clean, or issues noted)?", default=True)
+
+    state["brain_ingest_done"] = True
+    mark_step_done(state, "step_12_brain_ingest")
+    ask_navigation("Brain ingest")
+
+
 def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     """Bridge step: hook Routines into the Second Brain via Curator's GitHub sync.
 
@@ -2315,7 +2382,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     """
     if is_step_done(state, "step_12_secondbrain_sync"):
         return
-    header("Step 12 / 15 — Connect Routines to your Second Brain (the bridge)", level=2)
+    header("Step 13 / 17 — Connect Routines to your Second Brain (the bridge)", level=2)
 
     profile = state.get("firm_profile", {})
     track = profile.get("track", "cloud")
@@ -2358,7 +2425,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
         f"     repo — much safer than full repo scope.\n"
         f"  3. Verify a clone works.\n"
         f"  4. Save the repo URL + the curator domain ({curator_domain}) so Routines\n"
-        f"     in Step 13 can be configured against it.\n\n"
+        f"     in Step 14 can be configured against it.\n\n"
         "Trade-off: cloud Routines lose the 17 MCP tools — they fall back to plain\n"
         "file reads + grep. For R5 (the only Day-1 Routine that actually needs the\n"
         "Second Brain) this is enough; broken-wikilink and orphan scans are file-\n"
@@ -2452,7 +2519,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     info("")
     info("  IMPORTANT: store this PAT in your password manager (Bitwarden / 1Password /")
     info("  keychain) — we'll NOT save it to the wizard state file. You'll paste it")
-    info("  when configuring R5's GitHub connector in Step 13.")
+    info("  when configuring R5's GitHub connector in Step 14.")
     info("")
 
     pat_for_test = ""
@@ -2510,10 +2577,10 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     info("Summary of what's saved (to state file):")
     info(f"  Second Brain repo URL:     {sync_url}")
     info(f"  Curator domain scope:      wiki/{curator_domain}")
-    info(f"  PAT:                       NOT saved (you'll paste it at Step 13)")
+    info(f"  PAT:                       NOT saved (you'll paste it at Step 14)")
     info(f"  Clone-test verified:       {'yes' if verified else 'no (do this manually later)'}")
     info("")
-    info("At Step 13 we'll configure R5 (and any other Routine that needs Second Brain")
+    info("At Step 14 we'll configure R5 (and any other Routine that needs Second Brain")
     info("access) with a GitHub connector pointing at this repo. You'll paste the PAT")
     info("there, and the Routine clones the repo at every scheduled run.")
 
@@ -2524,7 +2591,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
 def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_13_routines"):
         return
-    header("Step 13 / 15 — Configure Day-1 Routines", level=2)
+    header("Step 14 / 17 — Configure Day-1 Routines", level=2)
     modules = state.get("modules_chosen", {})
     chosen = modules.get("routines", [])
 
@@ -2589,12 +2656,12 @@ def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
             info(f"  Secondary GitHub connector (Second Brain, READ-ONLY):")
             info(f"    {sb_url}")
             info(f"    Scope:  {sb_subfolder}/")
-            info(f"    PAT:    the fine-grained Contents:Read PAT you created at Step 12")
+            info(f"    PAT:    the fine-grained Contents:Read PAT you created at Step 13")
             info(f"            (paste it from your password manager when prompted)")
         info("\n  In Claude Code (CLI or desktop app):")
         info("    /schedule  →  New Routine  →  upload the prompt body file above")
         info("    Attach the my-curator MCP (privacy-track only — cloud Routines use")
-        info("    the Second Brain bridge instead; see Step 12).")
+        info("    the Second Brain bridge instead; see Step 13).")
         info("    Configure the GitHub connector(s) listed above. Save.")
         info("\n  Web alternative: https://claude.ai/code/routines  →  'New Routine'")
         info("\n  Once saved: click 'Run now' (or `/run-now` in the CLI) to do a test fire.")
@@ -2635,10 +2702,188 @@ def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
     mark_step_done(state, "step_13_routines")
 
 
+def step_klarna_gate(state: dict[str, Any], dry_run: bool) -> None:
+    """(Optional) Install the Klarna gate workflow + auto-labeller into the Ledger.
+
+    Mirrors cloud-install-plan.md Step 11. Copies .github/workflows/klarna-gate.yml
+    and .github/labeler.yml from the framework repo into the firm's Ledger clone,
+    signed-commits + pushes, then walks the user through the two manual pieces the
+    firm MUST do itself: (a) adapt the workflow's guard + workbook path per its
+    header comment block, (b) require the `oot/klarna-test` status check in branch
+    protection via the web UI.
+
+    Programmatic file-copy + git ops are DRY_RUN-gated (nothing lands on disk or
+    GitHub in a dry run). Offered with a skip — this only matters once the firm
+    expects AI-replaces-human PRs.
+    """
+    if is_step_done(state, "step_klarna_gate"):
+        return
+    header("Step 15 / 17 — (Optional) Install the Klarna gate", level=2)
+
+    profile = state.get("firm_profile", {})
+    modules = state.get("modules_chosen", {})
+    locations = state.get("locations", {})
+    firm_folder = Path(locations.get("firm_folder", ""))
+    repo_url = state.get("ledger_repo_url", "<repo>")
+    owner = state.get("ledger_repo_owner")
+    repo_name = state.get("ledger_repo_name")
+
+    explainer(
+        "What this step does and why",
+        "The Klarna gate is the framework's pre-merge discipline: any PR labelled\n"
+        "`ai-replaces-human` must pass the Klarna Test (score >=14/20 + two sign-offs)\n"
+        "before it can merge. It ships as a GitHub Actions workflow that posts the\n"
+        "`oot/klarna-test` status check, plus an auto-labeller.\n\n"
+        "This step copies both files into your Ledger and pushes them. Then it walks\n"
+        "you through the two things ONLY YOU can do: adapting the workflow to your firm,\n"
+        "and requiring the status check in branch protection.\n\n"
+        "This only matters once you expect PRs that replace a human function with an\n"
+        "AI one. Most founders defer it — you can skip and run this step later with\n"
+        "--resume.",
+    )
+
+    # Honour the Step 4 choice, but always allow a skip here.
+    klarna_now = (profile.get("klarna_gate_choice") == "now"
+                  or "R7" in modules.get("routines", []))
+    default_install = klarna_now
+    if not ask_confirm(
+        "Install the Klarna gate workflow + auto-labeller into your Ledger now?"
+        + (" (recommended — you chose 'now' at Step 4)" if klarna_now
+           else " (you can defer — most founders do)"),
+        default=default_install,
+    ):
+        info("Skipping the Klarna gate. Re-run with --resume to install it later,")
+        info("or copy .github/workflows/klarna-gate.yml + .github/labeler.yml from the")
+        info("framework repo into your Ledger by hand when you're ready.")
+        mark_step_done(state, "step_klarna_gate", outcome="skipped")
+        return
+
+    src_workflow = REPO_ROOT / ".github" / "workflows" / "klarna-gate.yml"
+    src_labeler = REPO_ROOT / ".github" / "labeler.yml"
+    dst_workflows_dir = firm_folder / ".github" / "workflows"
+    dst_github_dir = firm_folder / ".github"
+
+    info("\n[1/3] Copy klarna-gate.yml + labeler.yml into the Ledger + push")
+    if dry_run:
+        info(f"  (dry-run) would copy {src_workflow.name} → .github/workflows/ and "
+             f"{src_labeler.name} → .github/ in {firm_folder}, then signed-commit + push")
+    else:
+        if not src_workflow.exists() or not src_labeler.exists():
+            warn(f"Could not find the source files in the framework repo:")
+            warn(f"  {src_workflow}  (exists: {src_workflow.exists()})")
+            warn(f"  {src_labeler}   (exists: {src_labeler.exists()})")
+            warn("Skipping the copy. Install the Klarna gate by hand later.")
+            mark_step_done(state, "step_klarna_gate", outcome="failed")
+            return
+        dst_workflows_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src_workflow, dst_workflows_dir / src_workflow.name)
+        shutil.copy2(src_labeler, dst_github_dir / src_labeler.name)
+        ok("Copied klarna-gate.yml + labeler.yml into .github/")
+        os.chdir(firm_folder)
+        run(["git", "add", ".github/"], check=False)
+        if not run_critical(
+            ["git", "commit", "-S", "-m", "config: Klarna gate workflow + auto-labeller"],
+            "Signed commit of Klarna gate files", capture=True,
+        ):
+            info("Pausing. Fix the signing/commit error above, then re-run with --resume.")
+            return  # NOT marked done
+        if not run_critical(["git", "push", "origin", "main"],
+                            "Push Klarna gate files", capture=True):
+            info("Pausing. Re-run with --resume once the push succeeds.")
+            return  # NOT marked done
+
+    # --- 2. Firm-specific adaptation (the workflow ships as a template) -----
+    info("\n[2/3] Adapt the workflow to YOUR firm (required — it ships as a template)")
+    explainer(
+        "Why you must edit two things in the workflow",
+        "The klarna-gate.yml you just copied is scoped to the framework repo. Per its\n"
+        "header comment block, adapt these before it will score your firm's PRs:",
+    )
+    info("  1. WORKBOOK PATH — in the workflow's `env:` block, change")
+    info("     WORKBOOK_PATH: templates/excel/klarna-test.xlsx")
+    info("     to your live Ledger path:")
+    info("     WORKBOOK_PATH: firm/excel/klarna-test.xlsx   (per ADR-001)")
+    info("  2. REPO GUARD — the `if:` guard on the scoring step short-circuits scoring")
+    info("     when it sees the framework repo (FRAMEWORK_REPO: talirezun/oot-framework).")
+    info("     Set FRAMEWORK_REPO to your own repo, or delete the guard, so scoring")
+    info("     actually runs on your PRs.")
+    info("  3. LABELER GLOBS — .github/labeler.yml decides which PRs get the")
+    info("     `ai-replaces-human` label. Its globs are commented-out framework-scoped")
+    info("     placeholders; adapt them to your firm's product paths (src/**, etc.).")
+    info("")
+    info("  Full guidance is in the header comment block at the top of")
+    info("  .github/workflows/klarna-gate.yml in your Ledger.")
+    ask_confirm("Read the header comment block and understand what to adapt?", default=True)
+
+    # --- 3. Require the status check in branch protection (web UI) ----------
+    info("\n[3/3] Require the `oot/klarna-test` status check in branch protection")
+    explainer(
+        "Why this is a manual web-UI step",
+        "A GitHub Actions status check only *blocks* a merge if branch protection is\n"
+        "configured to REQUIRE it. Adding a required status check is a repo-settings\n"
+        "change we walk you through in the browser (same style as the Step 10\n"
+        "branch-protection walkthrough).",
+    )
+    applied_via_gh = False
+    if gh_available_and_authed() and owner and repo_name:
+        if ask_confirm(
+            "Add `oot/klarna-test` as a required status check automatically via `gh api`?",
+            default=True,
+        ):
+            payload = {
+                "strict": False,
+                "contexts": ["oot/klarna-test"],
+            }
+            payload_path = Path("/tmp/oot-klarna-status-check.json")
+            import json as _json
+            payload_path.write_text(_json.dumps(payload))
+            rc, out = run(
+                ["gh", "api", "-X", "PATCH",
+                 f"repos/{owner}/{repo_name}/branches/main/protection/required_status_checks",
+                 "-H", "Accept: application/vnd.github+json",
+                 "--input", str(payload_path)],
+                dry_run=dry_run, capture=True, check=False,
+            )
+            if rc == 0:
+                ok("Required status check `oot/klarna-test` added to branch protection.")
+                applied_via_gh = True
+            else:
+                warn("`gh api` failed (branch protection may not exist yet, or Free plan). Output:")
+                if out:
+                    info(out)
+                warn("Falling back to the web UI walkthrough.")
+            payload_path.unlink(missing_ok=True)
+
+    if not applied_via_gh:
+        settings_url = (repo_url.removesuffix(".git") or "<repo>") + "/settings/branches"
+        info(
+            f"\nManual setup:\n"
+            f"  1. Open {settings_url} in your browser.\n"
+            "  2. Edit your `main` branch protection rule (from Step 10).\n"
+            "  3. Check 'Require status checks to pass before merging'.\n"
+            "  4. In the search box, type and select:  oot/klarna-test\n"
+            "     (it appears once the workflow has run at least once — open a test PR\n"
+            "      first if it's not listed yet.)\n"
+            "  5. Save changes.\n"
+        )
+        if plan_tier_is_free(state):
+            warn("On GitHub Free + private repos, required status checks are advisory only —")
+            warn("same enforcement caveat as branch protection (Step 6). Upgrade to Team for")
+            warn("real enforcement of the gate.")
+        ask_confirm("Required status check configured (or noted to do after first PR)?", default=True)
+
+    state["klarna_gate_installed"] = True
+    mark_step_done(state, "step_klarna_gate")
+
+
+def plan_tier_is_free(state: dict[str, Any]) -> bool:
+    return state.get("firm_profile", {}).get("github_plan_tier", "free") == "free"
+
+
 def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_14_smoke_test"):
         return
-    header("Step 14 / 15 — Smoke test", level=2)
+    header("Step 16 / 17 — Smoke test", level=2)
     locations = state["locations"]
     firm_folder = Path(locations["firm_folder"])
     info("Running smoke test against your firm folder...")
@@ -2692,17 +2937,17 @@ def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
         info("    No bridge needed; full 17-tool MCP access from privacy-track Routines.")
     elif modules.get("skip_curator"):
         info("  · Curator skipped at Step 5 — no Second Brain to bridge.")
-        info("    To enable later: install Curator, then re-run the wizard from Step 12.")
+        info("    To enable later: install Curator, then re-run the wizard from Step 13.")
     elif not sb_url:
-        warn("  Bridge state missing. Step 12 (Second Brain sync) may not have completed.")
-        info("    To complete: re-run the bootstrap and let Step 12 run.")
+        warn("  Bridge state missing. Step 13 (Second Brain sync) may not have completed.")
+        info("    To complete: re-run the bootstrap and let Step 13 run.")
     else:
         info(f"  ✓ Second Brain repo:  {sb_url}")
         info(f"  ✓ Domain scope:        {sb_subfolder or '(unset)'}")
         if sb_verified:
-            info(f"  ✓ Clone verification:  passed at Step 12.")
+            info(f"  ✓ Clone verification:  passed at Step 13.")
         else:
-            warn(f"  Clone verification:  NOT verified at Step 12.")
+            warn(f"  Clone verification:  NOT verified at Step 13.")
             info(f"    Test manually: open the repo URL above in your browser. You should")
             info(f"    see a `{sb_subfolder or 'wiki/<domain>'}/` folder with markdown files.")
         if gh_available_and_authed() and not dry_run:
@@ -2733,7 +2978,7 @@ def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
 def step_15_summary(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_15_summary"):
         return
-    header("Step 15 / 15 — Install summary", level=2)
+    header("Step 17 / 17 — Install summary", level=2)
     summary_path = OOT_HOME / "install-summary.md"
     profile = state.get("firm_profile", {})
     locations = state.get("locations", {})
@@ -2848,8 +3093,10 @@ def main() -> int:
         ("step_09_signing_key",      "Signing key",           step_09_signing_key),
         ("step_10_branch_protection","Branch protection",     step_10_branch_protection),
         ("step_11_curator",          "Curator",               step_11_curator),
+        ("step_12_brain_ingest",     "Brain ingest",          step_12_brain_ingest),
         ("step_12_secondbrain_sync", "Second Brain bridge",   step_12_secondbrain_sync),
         ("step_13_routines",         "Routines",              step_13_routines),
+        ("step_klarna_gate",         "Klarna gate",           step_klarna_gate),
         ("step_14_smoke_test",       "Smoke test",            step_14_smoke_test),
         ("step_15_summary",          "Summary",               step_15_summary),
     ]

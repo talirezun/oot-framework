@@ -37,7 +37,7 @@ The Klarna Test runs before any decision that:
 3. **Removes a quality gate** that was protecting against AI-generated regressions (in code, content, customer interactions, contractual language, etc.).
 4. **Publicly attributes a workforce change to AI** in marketing, investor communications, or public statements.
 
-Each of these is a Klarna trigger. Each requires running the test and clearing it (score ≥7) before proceeding.
+Each of these is a Klarna trigger. Each requires running the test and clearing it (score ≥14/20) before proceeding.
 
 The test does **not** run for:
 
@@ -49,7 +49,7 @@ The test does **not** run for:
 
 ## The ten-question scoring rubric
 
-Each question is scored 0, 1, or 2. Total possible: 20. The threshold for proceeding is **≥14 / 20 (70%)**, equivalent to a score of ≥7 on the 10-question gate (legacy framing). A score below 14 blocks the proposed action.
+Each question is scored 0, 1, or 2. Total possible: 20. The threshold for proceeding is **≥14 / 20 (70%)** (the retired 10-point rubric mapped this to ≥7). A score below 14 blocks the proposed action.
 
 For each question, score:
 

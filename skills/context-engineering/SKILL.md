@@ -182,7 +182,7 @@ None.
 
 ## 7. Routine integration
 
-Not invoked by any Routine directly. Every Routine *implicitly* uses this pack's patterns — the prompts for R1, R2, R3, R5, R6, R7, R8 are themselves versioned prompt artefacts in `firm/prompts/`.
+Not invoked by any Routine directly. Every Routine *implicitly* uses this pack's patterns — the prompts for R1, R2, R3, R4, R5, R6, R7, R8 are themselves versioned prompt artefacts in `firm/prompts/`.
 
 ## 8. Don'ts
 

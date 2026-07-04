@@ -12,7 +12,11 @@ A framework — markdown specs + tools + Skill Packs + templates + Routines + go
 
 **Do I have to use Claude?**
 
-No. The framework's reference implementation uses Claude (Desktop, Code, Claude Code Routines), but Skill Packs are markdown and load into any MCP-compatible client (Cursor, LM Studio, ChatGPT, Cody, future agents). The privacy track explicitly uses local models. The framework is vendor-neutral by design (per Thesis 5).
+**Mostly no — with one honest caveat.** The framework's two most valuable, portable assets are vendor-neutral: the **Skill Packs** are plain markdown that load into any MCP-compatible client (Cursor, LM Studio, OpenCode, Cody, future agents), and the **Ledger** is a GitHub repo of markdown + `.xlsx` — no Anthropic lock-in.
+
+The caveat is the **cloud track's scheduled automation**. The Routines (R1–R8) run on **Claude Code Routines**, which today requires an Anthropic Pro-or-higher plan. If you don't want an Anthropic subscription, your alternative *today* is the **privacy track**: run the identical Routine prompts on your own always-on hardware against a local model (LM Studio), scheduled with cron / launchd / Task Scheduler. That's real sovereignty, but it costs hardware and setup time.
+
+A **third, no-subscription-no-hardware path is planned** (ADR-003, in progress): substrate-neutral routine prompts driven by a free open-source agent (OpenCode) on your own laptop cron or GitHub Actions. Until it lands, the two supported answers are "Anthropic plan (cloud track)" or "own hardware + local model (privacy track)". The reference implementation is Claude by design (per Thesis 5), but the framework is built to outlive any single vendor.
 
 ---
 
@@ -36,9 +40,9 @@ Technically yes for the Brain and Skills, but the framework is designed for ≥3
 
 **How much does this cost?**
 
-For a 10-partner cloud-track firm: roughly €100–€200/month in tool subscriptions (Anthropic seats, Curator pay-as-you-go, GitHub, Bitwarden Org, Slack). Privacy track adds hardware: ~€2,000-3,000 one-time (Mac mini + Trezors + UPS + Yubikeys) + ~€110/year (4thtech domain + Bitwarden + PollinationX storage NFT).
+Tooling costs live in one canonical place: the **[Cost summary in `docs/ECOSYSTEM.md`](ECOSYSTEM.md#cost-summary)** — cloud vs. privacy, solo vs. 3-partner vs. 10-partner, one-time hardware, and per-year recurring. It's kept current there so the numbers don't drift across the docs.
 
-Counsel costs separately: €5-15k for initial readiness review across the eleven legal touchpoints.
+Counsel costs are separate (not a tooling cost): budget for an initial readiness review across the eleven legal touchpoints — see [`docs/06-when-to-call-a-lawyer.md`](06-when-to-call-a-lawyer.md).
 
 ---
 

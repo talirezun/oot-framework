@@ -129,19 +129,19 @@ pip install openpyxl pyyaml httpx
 
 If user doesn't have all hardware: pause the plan here.
 
-🟡 **ASK USER:** "I'll wait. When all hardware is in hand, restart this plan and I'll resume from Step 0.5 (locations)."
+🟡 **ASK USER:** "I'll wait. When all hardware is in hand, restart this plan and I'll resume from Step 1.5 (locations)."
 
 `step_1_collect_profile: done` once user confirms hardware in hand.
 
 ---
 
-## Step 0.5 — Choose locations
+## Step 1.5 — Choose locations
 
 **What you're about to do (tell the user):** "Same three location questions as cloud, but the answers refer to the always-on machine, not your daily laptop. ~3 minutes."
 
-(This step runs after Step 1 in the privacy plan because we need the firm profile + hardware-in-hand confirmation first.)
+(Numbered 1.5 because it runs after Step 1 in the privacy plan — we need the firm profile + hardware-in-hand confirmation first. In the cloud plan the equivalent is Step 0.5.)
 
-### 0.5.1 — Firm operational repo path on the always-on machine
+### 1.5.1 — Firm operational repo path on the always-on machine
 
 🟡 **ASK USER:** "On the always-on machine (not your daily laptop), where should the firm operational repo live? Default: `/Users/<oot-user>/<firm-slug>` (macOS) or `/home/<oot-user>/<firm-slug>` (Linux).
 
@@ -151,7 +151,7 @@ Some founders prefer:
 
 Type the path, or `default`."
 
-### 0.5.2 — Existing Curator detection (on the always-on machine)
+### 1.5.2 — Existing Curator detection (on the always-on machine)
 
 🟡 **ASK USER:** "Do you already have the Curator desktop app installed on the always-on machine?
 
@@ -161,13 +161,13 @@ Most privacy-track founders are setting up the always-on machine fresh, so the a
 
 If yes: ask for the existing vault path.
 
-### 0.5.3 — Curator integration mode
+### 1.5.3 — Curator integration mode
 
-(Same Configuration A vs B as cloud plan Step 0.5.3. For greenfield privacy installs, Configuration B is the more common choice — the always-on machine is dedicated to the firm, no reason to keep a separate second-brain.)
+(Same Configuration A vs B as cloud plan Step 0.5.3 [cloud numbering]. For greenfield privacy installs, Configuration B is the more common choice — the always-on machine is dedicated to the firm, no reason to keep a separate second-brain.)
 
-### 0.5.4 — Mark step done
+### 1.5.4 — Mark step done
 
-`step_0_5_locations: done`.
+`step_1_5_locations: done`.
 
 ---
 
@@ -342,7 +342,7 @@ pollinationx --version
 (Same as cloud plan Step 5, which now creates **both** the Ledger and the Firm Brain repos per [ADR-002](https://github.com/talirezun/oot-framework/blob/main/docs/internal/ADR-002-firm-brain-curator-shared-brain.md), with these privacy-track deltas:)
 
 - The local clone of the **Ledger** lives **on the always-on machine**, not the daily laptop. The Firm Brain repo is managed by Curator on the always-on machine — partners' personal Curators on their own laptops Push to it; the admin's Curator on the always-on machine runs weekly Synthesize.
-- The clone path for the Ledger is `<FIRM_FOLDER>` from Step 0.5.1.
+- The clone path for the Ledger is `<FIRM_FOLDER>` from Step 1.5.1.
 - The framework repo is cloned on the always-on machine too (at `~/oot-framework` typically) so we have access to `templates/excel/` for the initial copy.
 - Persist BOTH `LEDGER_REPO_URL` and `FIRM_BRAIN_REPO_URL` in the privacy-track state file.
 

@@ -16,7 +16,7 @@ After install, the daily-driver playbooks live alongside the install plans:
 
 This is the primary path because it best matches the framework's own discipline: humans direct, agents implement, and the artefact is the audit trail. The agent reads the install plan, executes against your machine, asks for your decisions, and produces a written summary you can hand to your accountant or your lawyer.
 
-> **Status:** v1.0.1 (May 2026). The install plans are stable and have been tested with Claude Code (cloud track) end-to-end on the framework's authors' own machine. Other compatible agents (Augment Code, Aider, OpenCode, Cline, Continue.dev, Cursor agent mode) work but are less heavily tested. Report issues at [github.com/talirezun/oot-framework/issues](https://github.com/talirezun/oot-framework/issues).
+> **Status:** v1.0.1 (May 2026). The install plans are stable and have been tested with Claude Code (cloud track) end-to-end on the framework's authors' own machine. Other compatible agents (Augment Code, Aider, OpenCode, Cline, Continue.dev) are author-verified for basic operation but not yet driven to a full end-to-end install. Cursor's agent mode is **not recommended** — it is IDE-bound, which makes the plans' terminal steps awkward (see [AGENT-CAPABILITY-SPEC.md](AGENT-CAPABILITY-SPEC.md) "NOT recommended"); use Cline if you want a VSCode-resident agent. Report issues at [github.com/talirezun/oot-framework/issues](https://github.com/talirezun/oot-framework/issues).
 
 ---
 
@@ -113,7 +113,7 @@ The privacy track plan starts with the hardware-acquisition pre-week (you order 
 
 You have two options:
 
-1. **Use Path B (the wizard)** at [`installer/wizard.py`](../wizard.py). It's a complete Python terminal wizard (v1.2.0, steps 0–15) that asks you the same questions and drives the whole install — programmatic where safe, web-UI walkthrough where you must approve a third-party action. It's resumable (`--resume`) and has a `--dry-run`. Start it via the bootstrap one-liner in the [installer README](../README.md).
+1. **Use Path B (the wizard)** at [`installer/wizard.py`](../wizard.py). It's a complete Python terminal wizard (v1.2.0, steps 0–17) that asks you the same questions and drives the whole install — programmatic where safe, web-UI walkthrough where you must approve a third-party action. It's resumable (`--resume`) and has a `--dry-run`. Start it via the bootstrap one-liner in the [installer README](../README.md).
 2. **Use Path C (the manual docs)** at [`docs/00-quickstart-cloud.md`](../../docs/00-quickstart-cloud.md). This is the original Weekend One / Weekend Two path. Slowest, but every step is something you typed yourself, so nothing is opaque.
 
 If your agent meets *most* of the capability spec but fails on one item, the install plans are written defensively: the agent reads the failure, asks you to do that step manually following the linked Path C section, and then resumes from the next step.

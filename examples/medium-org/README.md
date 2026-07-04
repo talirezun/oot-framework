@@ -34,4 +34,4 @@
 
 ## v1.0 scaffold status
 
-This reference org ships as a scaffold in v1.0. Directory structure complete; representative Brain pages in place. Full-quarter operational data lands in v1.x.
+This reference org ships as **README only** in v1.0 — no `firm/` tree yet. The directory structure is specified in this README (and in [`examples/SPEC.md`](../SPEC.md)); the Brain pages, full-quarter operational data, and every `firm/...` path referenced in the awkward-edges list above (all **(v1.x)**) land in v1.x.

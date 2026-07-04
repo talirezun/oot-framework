@@ -37,7 +37,7 @@ End-to-end walkthrough of standing up a fully sovereign Gen 1 ØØT instance.
    {
      "mcpServers": {
        "my-curator": { "command": "curator-mcp" },
-       "excel-mcp": { "command": "excel-mcp-server", "env": { "EXCEL_MCP_BASE_PATH": "/Users/oot/oot-framework/templates/excel/" }},
+       "excel-mcp": { "command": "excel-mcp-server", "env": { "EXCEL_MCP_BASE_PATH": "/Users/oot/oot-ledger/firm/excel/" }},
        "desktop-commander": { "command": "desktop-commander-mcp" },
        "github-mcp": { "command": "github-mcp", "env": { "GITHUB_TOKEN_FILE": "/Users/oot/.config/oot/github-token" }}
      }

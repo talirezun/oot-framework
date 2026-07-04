@@ -10,11 +10,11 @@ The provisioning happens during the 90-minute onboarding session. It is the *las
 
 Before any partner is provisioned, the firm has:
 
-- A Bitwarden organisation (or 1Password Business) with collections per the structure in `governance/SECRETS-POLICY.md`.
-- A GitHub organisation with at least one repo (the firm Ledger) and the `Owner` access scoped to the founder's Yubikey-protected admin account.
+- **(Optional in Gen 1)** A Bitwarden organisation (or 1Password Business) with collections per the structure in `governance/SECRETS-POLICY.md`. Recommended once the firm has 2+ admins sharing credentials; a solo/2-admin firm can start with personal vaults and add the org later (decision #13). If the firm has no Bitwarden organisation yet, skip the Bitwarden step (Step 1) and provision credentials by hand.
+- A GitHub organisation with at least one repo (the firm Ledger, `<firm-slug>-ledger`) and `Owner` access scoped to the founder's admin account (Yubikey-protected once the firm has 2+ admins).
 - A Slack workspace (cloud track) or 4thtech wallet identity for the firm (privacy track).
-- A Google Workspace tenant (cloud track) or PollinationX storage allocation (privacy track).
-- The Curator desktop app installed on the founder's machine and pointed at the firm Ledger.
+- **(Cloud: optional)** A Google Workspace tenant — only if the firm already uses it for the read-only Drive connector; it is never a state store (ADR-001), so it is not required. Privacy track: a PollinationX storage allocation (required).
+- The Curator desktop app installed on the founder's machine and pointed at the founder's own Curator vault (which contributes the opted-in domain to the Firm Brain, `<firm-slug>-brain`, per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)). The Curator is **not** pointed at the Ledger — the Ledger (`<firm-slug>-ledger`) holds operational `.xlsx` state written by Routines, and the Curator never touches it.
 
 All credentials needed by the provisioning script live in Bitwarden under the `founders` collection. The script reads via the `bw` CLI (`bw get item <name>`) — never via plaintext config files.
 
@@ -163,9 +163,9 @@ The partner enters these once; the script confirms before executing.
 
 ### Step 6 — Reward Species Declaration anchoring
 
-1. Open `templates/excel/reward-species-declaration.xlsx` in the firm's instance (cloud: Google Sheets via API; privacy: Excel MCP).
+1. Open the firm's Ledger copy `firm/excel/reward-species-declaration.xlsx` (X2) — the pristine `templates/excel/` copy is never mutated. Both tracks edit the Ledger copy the same way, via openpyxl on a clone of the Ledger repo + a signed commit (per [ADR-001](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md)); a human can also edit it by hand in any spreadsheet viewer and commit.
 2. Append a new sheet (named `<partner_id>`) populated from the on-screen onboarding answers.
-3. Generate a signed PDF from the new sheet (cloud: Google Apps Script; privacy: a small Python script using openpyxl + reportlab in `installer/privacy/`).
+3. Generate a signed PDF from the new sheet (a small Python script using openpyxl + reportlab; same on both tracks).
 4. Upload the PDF to the firm's storage (Drive folder `partners/{{partner_id}}/legal/` or PollinationX equivalent).
 5. Update the partner's `reward-species-declaration.md` Brain stub with wikilinks to (a) the X2 sheet row, (b) the signed PDF storage URL.
 
@@ -174,8 +174,8 @@ The partner enters these once; the script confirms before executing.
 The script does *not* execute on the partner's machine. It outputs a one-page checklist the partner runs themselves with the founder watching (the last 15 minutes of the onboarding session):
 
 1. Install the Curator desktop app from `https://github.com/talirezun/the-curator/releases/latest`.
-2. Configure cloud-LLM ingest with the firm's API key (founder provides via Bitwarden Send — one-time link, expires after first use).
-3. Add the firm Ledger as the Curator's sync target.
+2. Configure cloud-LLM ingest with the firm's API key (founder provides via Bitwarden Send — one-time link, expires after first use). If the firm has no Bitwarden organisation yet, the founder shares the one-time key by another secure channel.
+3. Join the Firm Brain (`<firm-slug>-brain`, a Curator Shared Brain per [ADR-002](../../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)): run Curator's contributor wizard, select the opted-in domain, and Pull the synthesized mirror. (The Curator syncs to the Firm Brain, **not** to the Ledger — the Ledger is Routine-written operational state the Curator never touches.)
 4. Run `scan_wiki_health` — should return clean (no broken wikilinks at the partner's freshly created stub).
 5. Open `firm/partners/<id>/profile.md` and add one personal note to confirm write access works.
 6. Commit, push.

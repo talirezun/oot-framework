@@ -31,6 +31,6 @@
 
 ## v1.0 scaffold status
 
-This reference org ships as a scaffold in v1.0. Directory structure complete; representative Brain pages in place. The 60-day operational dataset (60 daily audit logs, 8 Klarna tests, 4 ADRs, full X7 mapping) lands in v1.x.
+This reference org ships as **README only** in v1.0 — no `firm/` tree yet. The directory structure is specified in this README (and in [`examples/SPEC.md`](../SPEC.md)); the Brain pages, the 60-day operational dataset (60 daily audit logs, 8 Klarna tests, 4 ADRs, full X7 mapping), and every `firm/...` path referenced in the awkward-edges list above (all **(v1.x)**) land in v1.x.
 
 The **abandoned engagement** is the most important single artefact in this reference org — it shows the framework declining a client when the Klarna Test cannot be cleared. New founders should read this first.

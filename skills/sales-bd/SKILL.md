@@ -36,12 +36,12 @@ Brain-fed pipeline that writes itself. Outreach skill patterns. **Lumina widget 
 
 ## 2. When to invoke this pack
 
-1. <!-- TODO: harden — building pipeline from Brain signals (customer mentions in research, contract events, conversation threads, Lumina inbound). -->
-2. <!-- TODO: harden — drafting cold outreach (every prompt versioned in `firm/prompts/sales/`). -->
-3. <!-- TODO: harden — drafting warm follow-up (post-Lumina or post-customer-meeting). -->
-4. <!-- TODO: harden — reviewing Lumina widget conversations weekly and qualifying leads. -->
-5. <!-- TODO: harden — recording a closed deal as a `customers/<slug>/contracts/<contract-id>.md` Brain page. -->
-6. <!-- TODO: harden — long-tail attribution for sales (per YOLO model — sales output deserves the same compounding entitlement as engineering). -->
+1. **TODO (v1.x):** building pipeline from Brain signals (customer mentions in research, contract events, conversation threads, Lumina inbound).
+2. **TODO (v1.x):** drafting cold outreach (every prompt versioned in `firm/prompts/sales/`).
+3. **TODO (v1.x):** drafting warm follow-up (post-Lumina or post-customer-meeting).
+4. **TODO (v1.x):** reviewing Lumina widget conversations weekly and qualifying leads.
+5. **TODO (v1.x):** recording a closed deal as a `customers/<slug>/contracts/<contract-id>.md` Brain page.
+6. **TODO (v1.x):** long-tail attribution for sales (per YOLO model — sales output deserves the same compounding entitlement as engineering).
 
 ## 3. When NOT to invoke this pack
 
@@ -52,31 +52,31 @@ Brain-fed pipeline that writes itself. Outreach skill patterns. **Lumina widget 
 
 ## 4. Operational instructions
 
-<!-- TODO: harden in v1.x. -->
+> **TODO (v1.x):**
 
 ### 4.1 Pipeline construction from Brain signals
 
-<!-- TODO: harden — query patterns: customer mentions in `research/*`; contract-renewal-due-soon in `customers/*/contracts/*`; Lumina inbound conversations not yet contacted. Output: a `firm/sales/pipeline-<YYYY-MM-DD>.md` Brain page with prioritised contacts. -->
+> **TODO (v1.x):** query patterns: customer mentions in `research/*`; contract-renewal-due-soon in `customers/*/contracts/*`; Lumina inbound conversations not yet contacted. Output: a `firm/sales/pipeline-<YYYY-MM-DD>.md` Brain page with prioritised contacts.
 
 ### 4.2 Outreach drafting (cold + warm)
 
-<!-- TODO: harden — every outreach prompt is a versioned artefact in `firm/prompts/sales/<pattern>.md` per S2. Five-step skeleton enforced. Partner reviews + edits before sending; partner is the named sender. -->
+> **TODO (v1.x):** every outreach prompt is a versioned artefact in `firm/prompts/sales/<pattern>.md` per S2. Five-step skeleton enforced. Partner reviews + edits before sending; partner is the named sender.
 
 ### 4.3 Lumina widget integration
 
-<!-- TODO: harden — Lumina is the inbound front door. The pack: (a) syncs the Brain's customer-facing knowledge to Lumina weekly; (b) reviews Lumina conversations every Monday morning; (c) qualifies leads per criteria (BANT — Budget, Authority, Need, Timeline — adapted); (d) escalates qualified leads to the partner-on-pipeline; (e) records dismissed leads with reason for the labeller's improvement. -->
+> **TODO (v1.x):** Lumina is the inbound front door. The pack: (a) syncs the Brain's customer-facing knowledge to Lumina weekly; (b) reviews Lumina conversations every Monday morning; (c) qualifies leads per criteria (BANT — Budget, Authority, Need, Timeline — adapted); (d) escalates qualified leads to the partner-on-pipeline; (e) records dismissed leads with reason for the labeller's improvement.
 
 ### 4.4 Closed-deal Brain page
 
-<!-- TODO: harden — per `templates/brain/SPEC.md` (no specific deal-record template yet; Phase 4 freeform with required frontmatter: deal_id, customer_slug, value, partner_attribution, contract_link, deal_close_date, long_tail_eligible). The page is the canonical record; X1 row references it. -->
+> **TODO (v1.x):** per `templates/brain/SPEC.md` (no specific deal-record template yet; Phase 4 freeform with required frontmatter: deal_id, customer_slug, value, partner_attribution, contract_link, deal_close_date, long_tail_eligible). The page is the canonical record; X1 row references it.
 
 ### 4.5 Long-tail attribution for sales
 
-<!-- TODO: harden — per S3 §4.5; sales output is long-tail-eligible; the partner who closed the deal gets a partner_share_pct of the realised revenue. The framework's discipline: sales-driven long-tail is settled quarterly per R4, just like engineering long-tail. The percentage is set at deal-close time per the partner's reward-species declaration; cannot be retroactively reduced. -->
+> **TODO (v1.x):** per S3 §4.5; sales output is long-tail-eligible; the partner who closed the deal gets a partner_share_pct of the realised revenue. The framework's discipline: sales-driven long-tail is settled quarterly per R4, just like engineering long-tail. The percentage is set at deal-close time per the partner's reward-species declaration; cannot be retroactively reduced.
 
 ### 4.6 Sales output capture (R1 sub-flow)
 
-<!-- TODO: harden — R1 captures `output_type: contract_signed` and `output_type: deal_closed` from: GitHub PR labels (`contract:<customer>`); calendar events (`Deal closed: <customer>`); explicit `#sales-deal-closed` Slack/dChat tags. Verification: the closed-deal Brain page must exist before R1 lands the row in X1. -->
+> **TODO (v1.x):** R1 captures `output_type: contract_signed` and `output_type: deal_closed` from: GitHub PR labels (`contract:<customer>`); calendar events (`Deal closed: <customer>`); explicit `#sales-deal-closed` Slack/dChat tags. Verification: the closed-deal Brain page must exist before R1 lands the row in X1.
 
 ## 5. Brain interaction protocol
 
@@ -101,12 +101,12 @@ Brain-fed pipeline that writes itself. Outreach skill patterns. **Lumina widget 
 1. **Don't auto-send outreach** without partner sign-off.
 2. **Don't omit closed deals from the partner output ledger** — sales is output too.
 3. **Don't bypass the Lumina widget's qualification step.**
-4. <!-- TODO: harden — don't credit a partner with a deal if the customer was sourced inbound via Lumina without that partner's involvement. The Lumina widget contributes; the partner who closes the deal gets credit; ambiguity goes to the BR for adjudication. -->
-5. <!-- TODO: harden — don't auto-respond to inbound Lumina conversations on partner accounts. The Lumina-as-front-door pattern: Lumina handles initial conversation; qualified leads are warm-handed-off to a human partner. -->
+4. **TODO (v1.x):** don't credit a partner with a deal if the customer was sourced inbound via Lumina without that partner's involvement. The Lumina widget contributes; the partner who closes the deal gets credit; ambiguity goes to the BR for adjudication.
+5. **TODO (v1.x):** don't auto-respond to inbound Lumina conversations on partner accounts. The Lumina-as-front-door pattern: Lumina handles initial conversation; qualified leads are warm-handed-off to a human partner.
 
 ## 9. Quick reference
 
-<!-- TODO: harden. -->
+> **TODO (v1.x):**
 
 ## 10. References
 

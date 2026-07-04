@@ -2,7 +2,22 @@
 
 The two-layer architecture for storing credentials in an ØØT organisation. Software credentials in Bitwarden (or 1Password). Crypto signing keys in Trezor (or Ledger). Org-level admin in Yubikey-protected accounts. No credentials in plaintext anywhere — not in `.env` files, not in `claude_desktop_config.json`, not in shell history.
 
-This document is normative for both Cloud and Privacy tracks. The privacy track adds 4thtech wallet keys to the Trezor layer; otherwise the architecture is identical.
+This document is **normative once a control is adopted** for both Cloud and Privacy tracks — i.e. once you put a credential in Bitwarden, or issue a Yubikey, you run it the way this policy describes. It is **not** a Day-1 gate on every founder: the tiering below says what a beginning firm actually needs on Day 1 versus what it adds as it grows. The privacy track adds 4thtech wallet keys to the Trezor layer; otherwise the architecture is identical.
+
+---
+
+## Gen-1 tiering — what a beginning firm needs, and when (decision #13)
+
+The three hardware/vault tools below are **recommended-but-optional for Gen 1** except where noted. A solo or two-partner founder can start the framework without a Yubikey or a Trezor and add them as the firm matures. Do not treat this policy as a wall between the founder and their first install. The gating language elsewhere in this document is read against this table.
+
+| Tool | Gen-1 status | Adopt when |
+|---|---|---|
+| **Bitwarden — personal vault** | **Recommended Day-1.** Any password manager beats browser autofill; start here even solo. | Immediately. |
+| **Bitwarden — organisation (shared collections)** | Optional until you have 2+ admins or you store customer data. | 2+ admins, OR the firm holds customer PII/credentials. |
+| **Yubikey (hardware 2FA)** | Optional for a solo founder. | 2+ admins on any org-level admin account (GitHub org, Anthropic admin, Workspace super-admin). |
+| **Trezor (crypto signing)** | **Generation 2** on the cloud track — it stores stablecoin-payroll and treasury keys that Gen 1 does not use. | Cloud track: when Gen-2 stablecoin payroll turns on. **Privacy track: Day-1** — the 4thtech wallet identity is a Gen-1 privacy-track requirement, and its keys live on Trezor. |
+
+"Skip until you grow" is a supported posture for Bitwarden-org, Yubikey, and (cloud-track) Trezor. The moment the adopt-trigger fires, the corresponding section below becomes normative for that firm.
 
 ---
 
@@ -18,6 +33,8 @@ A single tool cannot do both well. The framework specifies both.
 ---
 
 ## Layer 1 — Bitwarden (software credentials)
+
+> **Gen-1 tiering (decision #13):** A **personal Bitwarden vault is recommended Day-1** — any password manager beats browser autofill, and a solo founder should start here. The **Bitwarden organisation** with the shared collections below is optional until the firm has **2+ admins** or stores customer data. Start personal; add the org when the trigger fires. See the Gen-1 tiering table at the top of this document.
 
 ### Why Bitwarden as the default recommendation
 
@@ -81,6 +98,8 @@ The Reporting & Business Review Skill Pack includes a rotation tracker (a simple
 
 ## Layer 2 — Trezor (crypto signing keys)
 
+> **Gen-1 tiering (decision #13):** On the **cloud track**, Trezor is a **Generation 2** tool — it holds treasury and stablecoin-payroll keys that Gen 1 does not use, so a beginning cloud-track founder can skip it until Gen-2 payroll turns on. On the **privacy track**, Trezor is **Day-1**: the 4thtech wallet identity is a Gen-1 privacy-track requirement and its keys live on Trezor. See the Gen-1 tiering table at the top of this document.
+
 ### Why Trezor as the default recommendation
 
 Open source firmware (the framework's authors strongly prefer open-source hardware-wallet firmware for sovereignty reasons). Strong supply-chain integrity. Long track record. Supports the major chains used by 4thtech and Ethereum-family stablecoins. Not the cheapest hardware wallet, but the framework prioritises trust over cost in this layer.
@@ -130,6 +149,8 @@ If a Trezor is lost AND the seed is lost: the wallet's contents are unrecoverabl
 
 ## Layer 3 — Yubikey (hardware-key 2FA for org-level admin)
 
+> **Gen-1 tiering (decision #13):** Yubikey is **optional for a solo founder** and becomes normative once the firm has **2+ admins** on any org-level admin account. Until then, a TOTP authenticator on those accounts is the acceptable floor (SMS 2FA is never acceptable). See the Gen-1 tiering table at the top of this document.
+
 ### Why Yubikey
 
 Org-level admin accounts (GitHub organisation admin, Anthropic admin, Google Workspace super-admin) are the highest-value attack targets. SMS 2FA is broken (SIM-swap attacks). TOTP in a software authenticator is acceptable for individual partners but not for org admin. Hardware keys eliminate phishing of 2FA codes.
@@ -141,7 +162,7 @@ Org-level admin accounts (GitHub organisation admin, Anthropic admin, Google Wor
 - Google Workspace super-admin account.
 - Bitwarden organisation owner account.
 - Any AWS / Azure / GCP root account if the firm uses cloud infrastructure.
-- Any account with the ability to delete the Brain repository or revoke partner access at scale.
+- Any account with the ability to delete the Ledger or revoke partner access at scale.
 
 ### Setup procedure
 
@@ -181,9 +202,9 @@ If both Yubikeys are lost: each account's recovery procedure must be invoked ind
 The framework's authors have seen each of the following in practice. Refuse all of them:
 
 - API keys checked into git history. Even if the commit is later removed, the key is in the history. Rotate immediately and check `gh-secret-scanning` alerts.
-- API keys in `claude_desktop_config.json` committed to GitHub. Use environment variable references instead (`"env": {"API_KEY": "${BITWARDEN_API_KEY}"}`).
+- API keys in `claude_desktop_config.json` committed to GitHub. **Never commit this file.** Note that Claude Desktop does **not** expand shell-style variable references in config values — a literal `"env": {"API_KEY": "${BITWARDEN_API_KEY}"}` is passed through verbatim, not resolved, so the MCP server receives the string `${BITWARDEN_API_KEY}` and fails. The honest options are: (a) paste the literal secret value into the config and treat the file as plaintext — set file permissions to `600` (`chmod 600 claude_desktop_config.json`) so only your user can read it, keep it out of any git repo, and never sync it to cloud storage; or (b) point the MCP entry at a small wrapper script (`"command": "/path/to/wrapper.sh"`) that reads the secret at launch from Bitwarden via `bw get password <item>` and exports it into the child process's environment, so the plaintext secret never lands in the config file at all. Option (b) is preferred once `bw` is set up; option (a) is acceptable for a beginning founder provided the `600` permission and no-commit rules hold.
 - Crypto seeds in password managers, screenshots, photos, or cloud-synced notes. The seed must be on paper, stored physically.
-- Org admin accounts protected by SMS 2FA. Replace with Yubikey within one week of org formation.
+- Org admin accounts protected by SMS 2FA. SMS 2FA is broken (SIM-swap); at minimum move to a TOTP authenticator immediately. Once the firm has 2+ admins on any org-level admin account (the Yubikey adopt-trigger in the Gen-1 tiering table), replace TOTP with a Yubikey on those accounts within one week of crossing that threshold.
 - "We'll fix this later" exceptions. Never. The first hour of a security violation is the cheapest hour to fix it.
 
 ---

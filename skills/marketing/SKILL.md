@@ -35,11 +35,11 @@ The AI marketing team workflow — content generation from technical sources to 
 
 ## 2. When to invoke this pack
 
-1. <!-- TODO: harden — drafting a customer-facing email / newsletter / social post. -->
-2. <!-- TODO: harden — running the content pipeline (technical-source → outline → draft → review → publish). -->
-3. <!-- TODO: harden — Lumina widget conversation review (qualifying leads, escalating to sales). -->
-4. <!-- TODO: harden — brand-voice management (the firm's voice document; voice-tuning prompts). -->
-5. <!-- TODO: harden — publishing automation (with mandatory human editorial sign-off). -->
+1. **TODO (v1.x):** drafting a customer-facing email / newsletter / social post.
+2. **TODO (v1.x):** running the content pipeline (technical-source → outline → draft → review → publish).
+3. **TODO (v1.x):** Lumina widget conversation review (qualifying leads, escalating to sales).
+4. **TODO (v1.x):** brand-voice management (the firm's voice document; voice-tuning prompts).
+5. **TODO (v1.x):** publishing automation (with mandatory human editorial sign-off).
 
 ## 3. When NOT to invoke this pack
 
@@ -50,31 +50,31 @@ The AI marketing team workflow — content generation from technical sources to 
 
 ## 4. Operational instructions
 
-<!-- TODO: harden in v1.x. -->
+> **TODO (v1.x):**
 
 ### 4.1 Content pipeline (technical source → publishable)
 
-<!-- TODO: harden — sequential chain pattern (per S2): ingest source → extract key points → outline → draft → human review → polish → publish. Each stage as its own prompt artefact in `firm/prompts/marketing/`. -->
+> **TODO (v1.x):** sequential chain pattern (per S2): ingest source → extract key points → outline → draft → human review → polish → publish. Each stage as its own prompt artefact in `firm/prompts/marketing/`.
 
 ### 4.2 Lumina widget integration
 
-<!-- TODO: harden — Lumina is the firm's front-door RAG chatbot for inbound. The pack manages: knowledge-base sync from Brain → Lumina; conversation review (R8-style weekly review of conversations); lead qualification; escalation to S11. -->
+> **TODO (v1.x):** Lumina is the firm's front-door RAG chatbot for inbound. The pack manages: knowledge-base sync from Brain → Lumina; conversation review (R8-style weekly review of conversations); lead qualification; escalation to S11.
 
 ### 4.3 Brand voice management
 
-<!-- TODO: harden — the firm's voice document at `firm/marketing/brand-voice.md`. Voice-tuning prompts at `firm/prompts/marketing/voice-tuning.md`. Every drafted piece passes through the voice-tuning pass. -->
+> **TODO (v1.x):** the firm's voice document at `firm/marketing/brand-voice.md`. Voice-tuning prompts at `firm/prompts/marketing/voice-tuning.md`. Every drafted piece passes through the voice-tuning pass.
 
 ### 4.4 Memes-to-technical-content workflow
 
-<!-- TODO: harden — the framework's authors' practice (per Dr. Tali Režun's *How I Built an AI Marketing Team* article): start with a meme/visual idea, expand to technical depth via the Brain, polish to the firm's voice. -->
+> **TODO (v1.x):** the framework's authors' practice (per Dr. Tali Režun's *How I Built an AI Marketing Team* article): start with a meme/visual idea, expand to technical depth via the Brain, polish to the firm's voice.
 
 ### 4.5 Publishing automation
 
-<!-- TODO: harden — every externally-published piece passes through human editorial sign-off (frontmatter `editorial_signoff: <partner_id>`). Auto-publishing is **not allowed** in Gen 1. -->
+> **TODO (v1.x):** every externally-published piece passes through human editorial sign-off (frontmatter `editorial_signoff: <partner_id>`). Auto-publishing is **not allowed** in Gen 1.
 
 ### 4.6 Content performance review
 
-<!-- TODO: harden — weekly review of email open rates, social engagement, landing conversion; surface to BR's KPI block via S5. -->
+> **TODO (v1.x):** weekly review of email open rates, social engagement, landing conversion; surface to BR's KPI block via S5.
 
 ## 5. Brain interaction protocol
 
@@ -95,12 +95,12 @@ None directly. The pack contributes to S5's KPI block (content performance metri
 1. **Don't publish AI-generated content without human editorial sign-off.**
 2. **Don't claim AI authorship as human authorship.** Bylines reflect the principal partner; AI assistance is `Co-authored-by:` in the commit, not the byline.
 3. **Don't bypass the brand voice guidelines.**
-4. <!-- TODO: harden — don't auto-respond on social media without the partner's explicit per-post sign-off. -->
-5. <!-- TODO: harden — don't forward Lumina widget conversations to sales without consent (the conversation may have privacy implications). -->
+4. **TODO (v1.x):** don't auto-respond on social media without the partner's explicit per-post sign-off.
+5. **TODO (v1.x):** don't forward Lumina widget conversations to sales without consent (the conversation may have privacy implications).
 
 ## 9. Quick reference
 
-<!-- TODO: harden. -->
+> **TODO (v1.x):**
 
 ## 10. References
 

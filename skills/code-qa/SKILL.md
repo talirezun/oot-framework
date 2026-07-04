@@ -64,7 +64,7 @@ Before any other §4 step against a new repo, the pack runs `oot-codeqa setup-pr
 2. **Force-push disabled, deletion disabled** on `main` (and any `audit/*` branches).
 3. **Required signed commits** on the same branches — GPG or SSH-backed.
 4. **Required reviewer count ≥ 1** for any PR touching `firm/audit-logs/`.
-5. **Auto-label rule** at `.github/labeler.yml` matching the diff signatures in §4.7.
+5. **Auto-label rule** at `.github/labeler.yml` matching the diff signatures in §4.8.
 
 If any are missing, the pack offers to configure them via `oot-codeqa setup-protections --apply` (requires a GitHub admin token from Bitwarden). Without items 1–4, the pack refuses to claim "Klarna gate enforced" — the discipline is advisory only.
 
@@ -96,7 +96,7 @@ For any change touching >3 files OR introducing a new abstraction:
 
 **Verify (10–30 min):** human runs the test plan. Test failure = halt; iterate via fresh planning conversation.
 
-**PR (5 min):** PR description references the plan Brain page, lists plan-steps completed, lists deviations. AI-authored commits use `Co-authored-by:` trailers. Auto-labeller may apply `ai-replaces-human` (§4.7).
+**PR (5 min):** PR description references the plan Brain page, lists plan-steps completed, lists deviations. AI-authored commits use `Co-authored-by:` trailers. Auto-labeller may apply `ai-replaces-human` (§4.8).
 
 ### 4.3 Parallel session orchestration
 

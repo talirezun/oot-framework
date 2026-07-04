@@ -38,7 +38,7 @@ The 8 Routines:
 | R7 | GitHub event | Klarna Test trigger on PR labelled `ai-replaces-human` | wait |
 | R8 | Monday 08:00 | Treasury runway (OPTIONAL — Unit Fund only) | optional |
 
-Day-1 install is **R5, R6, R1, R2** in that order (R5 has no dependencies so it goes first; R6 needs branch protection one-time; R1 needs a partner with X2 sheet; R2 needs R1 to have data).
+Day-1 install is **R5, R6, R1, R2** in that order (R5 has no dependencies on other Routines so it goes first — but cloud-track R5 requires the Second Brain bridge; R6 needs branch protection one-time; R1 needs a partner with X2 sheet; R2 needs R1 to have data).
 
 ---
 
@@ -47,7 +47,8 @@ Day-1 install is **R5, R6, R1, R2** in that order (R5 has no dependencies so it 
 - **Anthropic Pro or Max plan** (Routines require Pro+). Plan tiering:
   - **Pro** (5 runs/day) — solo or 2-partner firm with no R7 (Klarna gate) firing yet.
   - **Max** (15 runs/day) — **recommended default** for 3+ partner firms or any firm with active R7.
-  - **Team / Enterprise** (25 runs/day) — 5+ partner firms, or firms running R8 + extended R7.
+  - **Team** (15 runs/day) — 5+ partner firms with discretionary ad-hoc Routines.
+  - **Enterprise** (25 runs/day) — large firms running R8 + extended R7.
 - **Curator + my-curator MCP** installed and verified ([docs/01-installing-the-curator.md](01-installing-the-curator.md)).
 - **GitHub Ledger** — your firm's Ledger (markdown wiki + `.xlsx` operational state). Pre-configured with branch protection per `routines/cloud/R6.md` setup checklist.
 - **Bot identity for Routines** — typically `oot-bot` GitHub user, with: a GPG or SSH signing key uploaded; push access to the Ledger's `main` branch; the `[skip review]` exemption on `firm/excel/*` and `firm/audit-logs/*` paths per `skills/code-qa/SKILL.md` §4.0.
@@ -62,7 +63,7 @@ For each Routine, the install pattern is the same. Here's the full procedure for
 
 ### R5 — Brain Health Check (do first)
 
-**Why first:** no dependencies. If R5 fires successfully, your Curator + MCP + Slack stack is wired.
+**Why first:** no dependencies on other Routines, but cloud-track R5 requires the Second Brain bridge (Curator GitHub sync + a fine-grained read-only PAT — see [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) Step 8c / [`installer/agent-assisted/cloud-install-plan.md`](../installer/agent-assisted/cloud-install-plan.md) Step 9b). Privacy-track R5 talks to the local my-curator MCP directly. If R5 fires successfully, your Curator + bridge + Slack stack is wired.
 
 1. **Open the Claude Code Routines dashboard.** [claude.ai/code/routines](https://claude.ai/code/routines), or via the `/schedule` command in Claude Code, or via the Claude Code desktop app's "New Remote Task" feature.
 2. Click **"New Routine"**.
@@ -75,7 +76,9 @@ For each Routine, the install pattern is the same. Here's the full procedure for
 
 5. **Prompt:** copy the body from [`routines/cloud/R5.md`](../routines/cloud/R5.md) (everything inside the `## Prompt body` fenced block).
 6. **Skill Packs:** attach `my-curator` (the canonical S1 SKILL.md, already in Claude Desktop as a Project Document — the Routines dashboard lets you select it from your skill library).
-7. **Connectors:** Slack (post permission for `#brain-health` and `#ops`), GitHub (read for the Ledger).
+7. **Connectors:** Slack (post permission for `#brain-health` and `#ops`), plus **two GitHub connectors**:
+   - **Ledger** (`<firm-slug>-ledger`) — **read-write** with the signing key, for the report writeback.
+   - **Brain bridge** (`<firm-slug>-brain`, or legacy `<firm-slug>-secondbrain`) — **read-only** with the fine-grained Contents:Read PAT from the bridge setup ([`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) Step 8c / plan Step 9b), for the health scan.
 8. **Save** the Routine.
 9. **Manual test fire:** in the Routine's detail page, click "Run now". The Routine executes immediately (instead of waiting until Sunday).
 10. **Verify outputs:**
@@ -97,7 +100,7 @@ If both verifications pass, R5 is operational. ✓
 3. **Trigger:** Schedule. Daily. Time: 23:00.
 4. **Prompt body** from [`routines/cloud/R6.md`](../routines/cloud/R6.md).
 5. **Skill Packs:** `governance-compliance` (S7 scaffold).
-6. **Connectors:** GitHub (push to `main` with signed-commit capability), Curator MCP (read agent-decision data), Slack (escalation to `#ops`).
+6. **Connectors:** GitHub (push to `main` with signed-commit capability), Slack (escalation to `#ops`). R6 reads agent-decision data from the **Ledger** (commit history, output logs, `firm/audit-logs/`) — it does **not** use the my-curator MCP (cloud Routines can't reach the local stdio MCP).
 7. **Save.** Manual fire.
 8. **Verify:** `firm/audit-logs/<today>.md` exists and is a **signed** commit (`git log --show-signature` shows `gpg: Good signature`).
 
@@ -115,7 +118,7 @@ If both verifications pass, R5 is operational. ✓
 6. **Connectors:** GitHub, Slack, Drive.
 7. **Template variables:** set `{{TRACKED_CHANNELS}}` (e.g. `#commercial,#sales,#engineering`) and `{{TRACKED_FOLDERS}}` (Drive folder IDs you want monitored).
 8. Save. Manual fire.
-9. **Verify:** `templates/excel/partner-output-ledger.xlsx` Output_Log has a new row for today; `firm/output-logs/<today>.md` exists.
+9. **Verify:** your Ledger's `firm/excel/partner-output-ledger.xlsx` Output_Log has a new row for today (committed via a signed commit on `main`); `firm/output-logs/<today>.md` exists.
 
 ---
 
@@ -138,7 +141,7 @@ If both verifications pass, R5 is operational. ✓
 
 - **R3** — install after the first month closes (so the partner-output-ledger has 30+ days of data). Recommended model: Opus.
 - **R4** — install after the first quarter (so partners have shipped long-tail-eligible outputs).
-- **R7** — install after Phase 8 ships `.github/workflows/klarna-gate.yml` and you have configured the `ai-replaces-human` auto-labeller and the required-status-check branch protection.
+- **R7** — install once you've copied `.github/workflows/klarna-gate.yml` (shipped in the framework repo) into your firm's Ledger repo and configured the `ai-replaces-human` auto-labeller and the required-status-check branch protection.
 - **R8** — install only if the firm adopts the Unit Fund (Generation 2 readiness).
 - **R9 — Firm Brain Synthesize** — install as soon as the Firm Brain (Curator Shared Brain) is provisioned, typically Weekend One Sunday evening alongside the founder's contributor wizard. **R9 is the *one routine that does not run on Claude Code Routines* — it runs on the admin's machine via Curator's local CLI (or the Curator desktop app's Synthesize button).** It does **not** count against Claude Code Routine per-day plan-tier limits. Schedule weekly (Sunday evening recommended) — on the cloud track, that's a calendar reminder or a local cron; on the privacy track, a cron on the always-on machine: `0 19 * * 0 /usr/local/bin/curator sharedbrain synthesize --brain <firm>-brain >> ~/oot/logs/r9.log 2>&1`. See [`routines/SPEC.md`](../routines/SPEC.md) §R9 for the full operation flow + failure handling.
 
@@ -161,9 +164,9 @@ For Routines that need Firm Brain reads, add a **second GitHub connector** in th
 
 ## Common pitfalls
 
-**1. Routine fires but Brain page doesn't appear.**
-- Cause: my-curator MCP is configured for Claude Desktop but the Routine on Anthropic's infrastructure can't reach your local Curator app. (Stdio MCPs cannot run in cloud Routines — there's no local machine to dial.)
-- Fix: the my-curator MCP must run as a remote-HTTP MCP reachable from Anthropic's infrastructure. Options: deploy MyCuratorMCP on a tiny always-on Pi 5 with a Tailscale-routed HTTPS endpoint; or use Anthropic's Curator-as-a-service offering (Q3 2026 launch). Privacy-track partners use the always-on machine for the same purpose.
+**1. R5 fires but doesn't scan any Brain pages (empty / "Second Brain unreachable" report).**
+- Cause: cloud Routines can't reach your local my-curator MCP (stdio MCPs cannot run in cloud Routines — there's no local machine to dial). R5 gets its Brain content from the **Second Brain bridge**, not the MCP.
+- Fix: configure the bridge. Enable Curator GitHub sync (or point it at the Firm Brain repo per [ADR-002](internal/ADR-002-firm-brain-curator-shared-brain.md)), then add R5's **second GitHub connector** — the bridge repo with a fine-grained **Contents: Read-only** PAT. See [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) Step 8c and [`installer/agent-assisted/cloud-install-plan.md`](../installer/agent-assisted/cloud-install-plan.md) Step 9b for the exact wiring. Privacy-track partners run my-curator locally on the always-on machine and skip the bridge entirely.
 
 **1a. Routine fires but no commit lands on main.**
 - Cause: bot identity's signing key is missing, branch protection rejects the push, or `[skip review]` exemption is misconfigured.

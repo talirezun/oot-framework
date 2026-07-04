@@ -68,7 +68,7 @@ Columns:
 | M | notes | Text | Optional human annotation |
 
 Named ranges:
-- `output_log` = OutputLog!A:M
+- `output_log` = Output_Log!$A:$M
 - `value_envelope_table` = (defined in this sheet rows 1–5 in cells O1:P5; see lookup table below)
 
 Value envelope lookup table (in cells O1:P5):
@@ -103,7 +103,7 @@ Columns:
 | D | total_variable | Number | SUMIFS from Output_Log column L |
 | E | base_pay | Number | From X2 (lookup) |
 | F | total_compensation | Number | E + D |
-| G | sign_off_status | Text | One of: `draft`, `partner_reviewed`, `founder_approved`, `paid` |
+| G | sign_off_status | Text | One of: `draft`, `partner_reviewed`, `partner_disputed`, `partner_unresponsive`, `founder_approved`, `paid` |
 | H | approval_date | Date | |
 | I | payment_date | Date | |
 
@@ -191,7 +191,7 @@ DO NOT
 | F | base_currency | Text | EUR / USD / GBP — Gen 1 FIAT |
 | G | stablecoin_upgrade_pref | Yes/No | Activated in Gen 2 |
 | H | unit_fund_interest | Yes/No | Activated in Gen 2 |
-| I | two_worlds_self_id | Text | One of: `vibe-coder`, `agentic-engineer`, `non-code` |
+| I | two_worlds_self_id | Text | One of: `vibe-coder`, `agentic-engineer`, `transitional`, `non-code` |
 
 **2. Base_Variable_Split**
 
@@ -331,9 +331,9 @@ Mirror sheet of X4 Decision_Log entries that hit during the BR week.
 | L | post_review_outcome | Text | After 90-day review |
 
 Formulas:
-- **H:** `=VLOOKUP(A2, Klarna_Score_Index, 2, FALSE)` — pulls total from Klarna_Score sheet by test_id.
-- **I:** `=IF(H2>=14, "PROCEED", "HOLD")`
-- **K:** `=B2+90`
+- **H (total_score):** `=IFERROR(VLOOKUP(A2, Klarna_Score!A:L, 12, FALSE), "")` — pulls `total` (Klarna_Score column L) by test_id via a direct sheet-range reference. (There is no `Klarna_Score_Index` named range — the generator uses the direct `Klarna_Score!A:L` range with column index 12; `IFERROR` blanks the cell when no matching test_id exists yet.)
+- **I (decision):** `=IF(H2>=14, "PROCEED", "HOLD")` — **formula-driven; do not overwrite with a literal.**
+- **K (review_date_90d):** `=B2+90`
 
 Conditional formatting:
 - Column I: green if "PROCEED", red if "HOLD".
@@ -485,7 +485,7 @@ Every AI system used in the org. Columns: use_case_id, name, owner_partner_id, b
 
 **2. Annex_III_Risk_Mapping**
 
-For each use case: annex_iii_category (or "none"), rationale, conservative_baseline_tier (high/limited/minimal), counsel_review_status, counsel_review_date.
+For each use case: annex_iii_category (or "none"), rationale, conservative_baseline_tier (one of: `high`, `limited`, `minimal`, `prohibited`), counsel_review_status, counsel_review_date.
 
 **3. Article_Obligations**
 
@@ -493,7 +493,7 @@ For each high-risk use case: use_case_id, article_9_status (compliant / partial 
 
 **4. Evidence_Trail**
 
-Per-obligation evidence pointers. Columns: use_case_id, article, requirement, evidence_type (skill_pack_ref / routine_id / brain_page / risk_register_row), evidence_link, last_verified_date.
+Per-obligation evidence pointers. Columns: use_case_id, article, requirement, evidence_type (one of: `skill_pack_ref`, `routine_id`, `brain_page`, `risk_register_row`, `external`), evidence_link, last_verified_date.
 
 **5. Audit_Log_Index**
 

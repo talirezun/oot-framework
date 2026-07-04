@@ -166,7 +166,7 @@ Failure handling: if any source is unreachable, log the failure to the daily sum
 
 **Allowed Skills:** S5 (Reporting & Business Review), S1 (My Curator).
 
-**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector. Code execution required (openpyxl reads X1, X4, X6 and writes X3 in the cloned Ledger).
+**MCP servers and tools:** GitHub connector / GitHub MCP (Brain-repo clone + signed commit + push). Slack / 4thtech connector. Code execution required (openpyxl reads X1, X4, X6, X2, and X8-if-adopted, and reads + writes X3 in the cloned Ledger).
 
 **Prompt body:**
 
@@ -175,13 +175,13 @@ You are preparing the Friday Business Review agenda for an ØØT organisation. T
 
 Your task: populate business-review.xlsx (X3) Weekly_Review sheet for the week starting {{MONDAY_DATE}} and ending today.
 
-1. Read partner-output-ledger.xlsx Output_Log for the past 7 days. Identify the top 5 outputs by value_envelope. For each: who shipped it, what tier, brief description from the output_spec_ref. Write to column B (notable_outputs) as a markdown bullet list.
+1. Read partner-output-ledger.xlsx Output_Log for the past 7 days. Identify the top 5 outputs by computed_variable (column L = value_envelope × partner_multiplier × rework_flag). For each: who shipped it, what tier, brief description from the output_spec_ref. Write to column B (notable_outputs) as a markdown bullet list.
 
 2. Query the Ledger (firm/output-logs/) for blocker tags raised in the past 7 days that remain open. Write to column C (blockers).
 
 3. Read klarna-test.xlsx Decision_Log for any tests in {{state IN ("scoring", "remediation", "monitoring")}} state. Write to column D (klarna_test_status).
 
-4. Read agent-skill-roi.xlsx for week-over-week deltas on KPIs (customer_count, treasury_runway_months, ai_skill_roi). Write to column E (kpi_movements).
+4. Read the KPI sources for week-over-week deltas and write to column E (kpi_movements). Each KPI has a specific home: `ai_skill_roi` from X6 ROI_Calc (`roi_multiple`); `agent_human_ratio` from X6 Human_Agent_Ratio (`agent_human_ratio`); `treasury_runway_months` from X8 Runway_Calc (`runway_months`) — or "n/a" if X8 not adopted; `partner_count` from X2 Partner_Profile (row count); `customer_count` from X3 Monthly_BR (`customer_count_delta`).
 
 5. Identify decisions due — items in the Ledger tagged decision-pending. Write to column F (decisions_due).
 
@@ -190,7 +190,7 @@ Post a draft summary to Slack #business-review (or dChat equivalent) by 09:00:
 
 After the BR meeting (signaled by manual trigger or by the Decisions_Log getting populated), commit the final summary as a Ledger page at firm/business-reviews/YYYY-MM-DD.md.
 
-**Implementation:** clone the Ledger, read X1 / X4 / X6 via openpyxl, write the new row(s) to X3's Weekly_Review sheet via openpyxl, write the Ledger summary markdown, signed-commit both changes, push to `main`. Same Pattern C as R1 (ADR-001).
+**Implementation:** clone the Ledger, read X1 / X4 / X6 / X2 / X8(if adopted) via openpyxl, write the new row(s) to X3's Weekly_Review sheet via openpyxl, write the Ledger summary markdown, signed-commit both changes, push to `main`. Same Pattern C as R1 (ADR-001).
 
 Failure handling: if any data source is unreachable, populate from what's available and clearly mark the gap in column G (meeting_notes) for the BR participants to address.
 ```
@@ -296,7 +296,7 @@ Your task: for every output that has an entry in any partner's reward-species-de
 
 2. For each such (partner, output) pair, query the Ledger or financial system for the realised outcome attributable to the output during {{LAST_QUARTER}}: revenue generated, cost saved, customer impact metric — the metric committed to in the Output Spec.
 
-3. Compute the partner's long-tail payment for the quarter as: outcome_attributable × partner_share_pct.
+3. Compute the partner's long-tail payment for the quarter as: outcome_attributable × partner_share_pct / 100.
 
 4. Update the partner's Long_Tail_Schedule sheet: append the quarter to total_settled_to_date.
 
@@ -391,6 +391,8 @@ Failure handling: if any source unreachable, append from available sources and f
 **Allowed Skills:** S6 (Change Management), S4 (Code & QA).
 
 **MCP servers and tools:** GitHub connector / GitHub MCP (PR status check, Brain-repo clone + signed commit + push). Slack / 4thtech connector. Email / dMail. Code execution required (openpyxl appends row to X4 Decision_Log).
+
+> **Known schema gap (fix scheduled, ADR pending):** Decision_Log has no `status` column; the scoring/remediation state machine currently has no Excel home. Do not write a `status` value — column I (`decision`) is formula-driven (`=IF(H2>=14,"PROCEED","HOLD")`). The R7 prompt body below (and R2 §3, R2's `klarna_test_status` roll-up) refer to `status='scoring'`, `status='proceeded'`, `status='held'`, and the BR-visible `scoring`/`remediation`/`monitoring` states as the *intended* state machine, but there is no column to persist them yet. Until the ADR lands, track these states in the `firm/klarna-tests/{{test_id}}.md` Ledger page frontmatter, not in X4.
 
 **Prompt body:**
 

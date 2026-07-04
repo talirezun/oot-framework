@@ -11,6 +11,8 @@ status: active
 
 # Solunar Studio — Partners
 
+> **v1.x note:** the per-partner pages this roster wikilinks to (`partners/mira-tek`, `partners/davor-krznar`, `partners/anya-gorska`, the check-in pages) are not yet authored — they land with the populated `firm/` tree in v1.x. The wikilinks below are the target slugs, not resolving links today.
+
 ## Roster
 
 | Partner | Cohort | Reward species | Joined | Two-worlds |

@@ -263,7 +263,7 @@ run_wizard() {
 
 main() {
   banner "ØØT — Organisation of Tomorrow — Bootstrap"
-  printf '%sZero-to-wizard installer. ~2 minutes of prerequisites, then a guided 15-step setup.%s\n' "$C_DIM" "$C_RESET"
+  printf '%sZero-to-wizard installer. ~2 minutes of prerequisites, then a guided 17-step setup.%s\n' "$C_DIM" "$C_RESET"
 
   detect_os
   check_prereqs

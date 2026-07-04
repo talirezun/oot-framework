@@ -108,7 +108,8 @@ If you're a solo founder doing a pilot: Free is acceptable on the Ledger only. U
 |---|---|---|
 | **Pro** (~€20/mo) | 5 | Solo founder or 2-partner firm with no R7 (Klarna gate) activity |
 | **Max** (~€100/mo) | 15 | **Recommended default** for 3+ partner firms or any firm with active R7 |
-| **Team** | 25 | 5+ partner firms with discretionary ad-hoc Routines |
+| **Team** | 15 | 5+ partner firms with discretionary ad-hoc Routines |
+| **Enterprise** | 25 | Large firms with heavy ad-hoc Routine use |
 
 Steady-state Day-1 daily-routine cost: R1 daily + R6 daily + R2/R5 weekly ≈ 2.3 runs/day average. Pro plan handles this. The moment R3 month-end firing + acknowledgement polling kicks in (5–7 fires per month) or R7 fires on a real PR, you exceed Pro's 5/day. Upgrade to Max before that happens.
 
@@ -349,7 +350,7 @@ Then commit and push (this first commit is unsigned — signing key comes next):
 
 ```bash
 git add .
-git commit -m "scaffold: initial Brain folder + Excel templates from framework v1.0.0"
+git commit -m "scaffold: initial Ledger scaffold + Excel templates"
 git push -u origin main
 ```
 
@@ -501,6 +502,44 @@ You're now wiring your personal Second Brain to push contributions into the firm
 
 **That's the full Shared Brain loop:** Push (you author) → Synthesize (admin merges) → Pull (everyone reads). For solo founders, you're all three roles. When partners join (Weekend Two onwards), they run the contributor wizard with your invite token — they only Push and Pull; you stay the admin for Synthesize.
 
+### Step 8c — Connect cloud Routines to your brain (the bridge)
+
+**Why this step exists:** cloud Routines run on Anthropic's infrastructure, so they **cannot reach your local my-curator MCP** (it's a local-only stdio server on your machine). One Day-1 Routine, **R5 (Brain Health Check)**, needs to read your brain's markdown to scan for broken wikilinks, orphans, and stale pages. We bridge this gap using the Curator's built-in GitHub sync: the Curator pushes your brain to a GitHub repo as plain markdown, and R5 clones that repo read-only at run time and scans the files directly. About 10 minutes. (Background: [`docs/AUTOMATION-PIPELINE.md`](AUTOMATION-PIPELINE.md) § "How the bridge works".)
+
+> **Which repo does the bridge point at?** Per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md), **prefer pointing the bridge at the Firm Brain repo you created in Step 1b** (`<firm-slug>-brain`). It already receives your Curator's synthesized output via the Shared Brain loop (Step 8b), so no separate sync repo is needed — R5 scans `collective/<firm-slug>/wiki/`. The legacy path (a separate `<firm-slug>-secondbrain` repo synced from your personal Curator) still works but is retired as a framework primitive; new installs should use the Firm Brain.
+
+**1. Enable Curator GitHub sync (skip if you're using the Firm Brain repo).**
+If you're pointing the bridge at the **Firm Brain** (recommended), it's already populated by your Step 8b Synthesize — no extra sync to enable. Note the Firm Brain repo URL (`https://github.com/<you>/<firm-slug>-brain.git`) and the scan subfolder `collective/<firm-slug>/wiki/`; skip to substep 2.
+
+If you're using the **legacy separate-repo path**: in the Curator app, open **Settings → Sync** (or **Preferences → Sync**). Create a new private GitHub repo `<firm-slug>-secondbrain`, generate a PAT with `repo` scope, paste it into Curator, click **Enable Sync**, then **Sync Up** for the initial push. Note the repo URL; the scan subfolder is `wiki/<firm-slug>/`.
+
+**2. Create a fine-grained, read-only PAT for R5.**
+The Routine needs read-only access to the bridge repo. In your browser:
+
+1. Open https://github.com/settings/personal-access-tokens/new.
+2. **Token name:** `oot-routines-brain-read`.
+3. **Expiration:** 1 year.
+4. **Resource owner:** yourself.
+5. **Repository access:** **Only select repositories** → pick your bridge repo (`<firm-slug>-brain`, or the legacy `<firm-slug>-secondbrain`).
+6. **Permissions → Repository permissions → Contents: Read-only.** Leave everything else as **No access**.
+7. Click **Generate token**. **Copy it immediately** (GitHub shows it once).
+8. Save it in your password manager — you'll paste it when configuring R5 in "Sunday afternoon" below.
+
+> ⚠️ **Read-only, on purpose.** R5 must never write to the brain repo — fixes go through the Curator app, which syncs them back. A Contents: Read-only token enforces that at the GitHub level.
+
+**3. (Optional) Verify the token works.** In a terminal:
+
+```bash
+WORKDIR=$(mktemp -d)
+git clone --depth 1 --quiet "https://<PASTE_PAT>@github.com/<you>/<firm-slug>-brain.git" "$WORKDIR/brain"
+ls "$WORKDIR/brain/collective/<firm-slug>/wiki/" | head -5    # legacy path: wiki/<firm-slug>/
+rm -rf "$WORKDIR"
+```
+
+Success (a listing of `.md` files) means the bridge is ready. If the folder is missing, run one more Synthesize (Firm Brain) or **Sync Up** (legacy) so the domain has at least one page.
+
+You'll wire this PAT into R5 as its **second GitHub connector** (read-only) in "Sunday afternoon". Keep the token in your password manager until then; don't paste it into any file.
+
 ### Step 9 — First ingest
 
 Pick five existing documents that represent your firm's knowledge:
@@ -537,11 +576,15 @@ For each Routine, the workflow is:
 6. Configure connectors (GitHub with the Ledger + signing, Slack, Drive read-only as needed).
 7. **Confirm code execution is enabled** (default for Pro+).
 8. Manual test fire.
-9. Verify expected outputs (Brain page lands as signed commit on `main`; Slack post visible).
+9. Verify expected outputs (Ledger page lands as signed commit on `main`; Slack post visible).
 
 Install order:
 
-1. **R5 — Brain Health Check** (Sunday 09:00; no dependencies). Do this first — if R5 fires successfully, your stack is wired correctly. [`routines/cloud/R5.md`](../routines/cloud/R5.md).
+1. **R5 — Brain Health Check** (Sunday 09:00). Do this first — if R5 fires successfully, your stack is wired correctly. [`routines/cloud/R5.md`](../routines/cloud/R5.md). **R5 has no dependencies on other Routines, but cloud-track R5 requires the Second Brain bridge** (the read-only PAT you created in **Step 8c** above). Configure **two GitHub connectors** for R5:
+   - **Primary (Ledger):** `<firm-slug>-ledger` with the signing key. **Read-write** (for the report writeback).
+   - **Secondary (brain):** your bridge repo (`<firm-slug>-brain`, or legacy `<firm-slug>-secondbrain`) with the fine-grained **Contents: Read-only** PAT from Step 8c. **Read-only.** Paste the PAT from your password manager.
+
+   Set the scan subfolder template variable to `collective/<firm-slug>/wiki/` (Firm Brain) or `wiki/<firm-slug>/` (legacy). On a manual fire, verify a signed commit lands on `main` adding `firm/brain-health/<YYYY-WW>.md` **and** that the report references your brain's pages (i.e. the scan actually reached the bridge repo).
 2. **R6 — EU AI Act Audit Trail** (daily 23:00; mandatory for EU founders, recommended for everyone). **Pre-requisite:** branch protection configured at Step 7 above. [`routines/cloud/R6.md`](../routines/cloud/R6.md).
 3. **R1 — Daily Output Capture** (daily 18:00). **Pre-requisite:** at least one partner onboarded (you, the founder, count). [`routines/cloud/R1.md`](../routines/cloud/R1.md).
 4. **R2 — Weekly BR Prep** (Friday 08:00). **Pre-requisite:** R1 has 7+ days of data. [`routines/cloud/R2.md`](../routines/cloud/R2.md).

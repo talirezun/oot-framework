@@ -16,7 +16,7 @@ The Routines are the *only* automation in Gen 1. Everything else (partner onboar
 
 Two execution substrates, identical prompts:
 
-- **Cloud track** — Claude Code Routines run on Anthropic's infrastructure. **Your laptop can be closed; no dedicated machine required.** Per-day limits: 5 (Pro) / 15 (Max) / 25 (Team/Enterprise). [Anthropic launch announcement →](https://claude.com/blog/introducing-routines-in-claude-code). You manage them from any of three interfaces (all configure the same cloud-hosted feature):
+- **Cloud track** — Claude Code Routines run on Anthropic's infrastructure. **Your laptop can be closed; no dedicated machine required.** Per-day limits: 5 (Pro) / 15 (Max, Team) / 25 (Enterprise). [Anthropic launch announcement →](https://claude.com/blog/introducing-routines-in-claude-code). You manage them from any of three interfaces (all configure the same cloud-hosted feature):
   - **Claude Code CLI** in your terminal: `/schedule` command
   - **Web dashboard:** [claude.ai/code/routines](https://claude.ai/code/routines)
   - **Claude Code desktop app:** "New Remote Task" feature *(this is the Claude Code-specific desktop app, distinct from Claude Desktop chat)*
@@ -28,7 +28,7 @@ Two execution substrates, identical prompts:
 
 | # | Schedule | What it does | What it produces | Day-1? |
 |---|---|---|---|---|
-| **R5** | Sunday 09:00 | Curator brain-health scan + auto-fix safe issues | `firm/brain-health/<YYYY-WW>.md` + `#brain-health` Slack post | ✅ first Routine to install — no dependencies |
+| **R5** | Sunday 09:00 | Curator brain-health scan + report (cloud: scan + report only; auto-fix is privacy-track only) | `firm/brain-health/<YYYY-WW>.md` + `#brain-health` Slack post | ✅ first Routine to install — no Routine dependencies (cloud needs the Second Brain bridge) |
 | **R6** | Daily 23:00 | Capture today's AI decisions → daily audit log (signed commit) | `firm/audit-logs/<YYYY-MM-DD>.md` + X7 Audit_Log_Index | ✅ mandatory for EU founders; recommended otherwise |
 | **R1** | Daily 18:00 | Capture partner outputs (commits, contracts, deals) → X1 Output_Log | New rows in X1 + `firm/output-logs/<YYYY-MM-DD>.md` | ✅ but needs first partner with X2 sheet |
 | **R2** | Friday 08:00 | Build the Friday BR agenda; populate X3 | X3 Weekly_Review row + Slack draft + `firm/business-reviews/<date>.md` | ✅ but needs R1 with 7+ days of data |
@@ -144,12 +144,14 @@ Each Routine needs a specific set of connectors configured in the Claude Code Ro
 | R2 — Weekly BR Prep | ✅ | ✅ | ✅ post | — | — | optional | — |
 | R3 — Monthly Variable | ✅ | ✅ | ✅ post | ✅ send | — | — | — |
 | R4 — Long-tail Settlement | ✅ | ✅ | ✅ post | ✅ send | — | — | — |
-| R5 — Brain Health | ✅ | optional | ✅ post | — | — | **required**¹ | — |
+| R5 — Brain Health | ✅ +bridge² | ✅ | ✅ post | — | — | not on cloud¹ | — |
 | R6 — EU AI Act Audit | ✅ | ✅ | ✅ post on errors | — | — | optional¹ | — |
 | R7 — Klarna Trigger | ✅ | ✅ | ✅ post | ✅ send | — | — | — |
 | R8 — Treasury (optional) | ✅ | ✅ | ✅ post | ✅ alert | — | — | ✅ jurisdiction-specific |
 
-¹ **my-curator MCP is local to your machine, not reachable from Anthropic's cloud.** R5 (Brain Health Check) used to be broken on cloud track because of this. **Resolved in v1.0.1 by the Second Brain bridge** — see [How the bridge works](#how-the-bridge-works-cloud-routines-reaching-the-second-brain-via-curator-github-sync). R5 now clones the Curator-synced Second Brain repo at execution time (scoped to `wiki/<firm-curator-domain>/`) and scans markdown files directly.
+¹ **my-curator MCP is local to your machine, not reachable from Anthropic's cloud.** Cloud Routines never use it. R5 (Brain Health Check) used to be broken on cloud track because of this. **Resolved in v1.0.1 by the Second Brain bridge** — see [How the bridge works](#how-the-bridge-works-cloud-routines-reaching-the-second-brain-via-curator-github-sync). R5 now clones the Curator-synced Second Brain repo at execution time (scoped to `wiki/<firm-curator-domain>/`, or `collective/<firm-domain>/wiki/` on the Firm Brain per ADR-002) and scans markdown files directly. Privacy-track R5 does use the local my-curator MCP.
+
+² **R5 needs a *second*, read-only GitHub connector** (the Second Brain bridge repo, fine-grained Contents:Read PAT) in addition to the read-write Ledger connector. **Code execution is required** — the scan + report writeback runs Python. Both wired at [`docs/00-quickstart-cloud.md`](00-quickstart-cloud.md) Step 8c / plan Step 9b.
 
 ### What each connector does
 
@@ -183,15 +185,16 @@ The framework does not require any specific paid Slack/Email plan; free tiers wo
 ```
 Routine fires (Anthropic infra)
    │
-   ├─► git clone https://github.com/<you>/<brain-repo> /tmp/brain
+   ├─► WORKDIR=$(mktemp -d)
+   ├─► git clone https://github.com/<you>/<ledger-repo> "$WORKDIR/ledger"
    │
-   ├─► openpyxl.load_workbook('/tmp/brain/firm/excel/X1.xlsx')   ← reads from the cloned copy
+   ├─► openpyxl.load_workbook("$WORKDIR/ledger/firm/excel/X1.xlsx")  ← reads from the cloned copy
    │
-   ├─► append rows; write K, L formulas; save                    ← mutation in cloud sandbox
+   ├─► append rows; write K, L formulas; save                        ← mutation in cloud sandbox
    │
-   ├─► git commit -S -m "R1: append <N> outputs"                 ← signed commit
+   ├─► git commit -S -m "R1: append <N> outputs"                     ← signed commit
    │
-   └─► git push origin main                                       ← pushes back to GitHub
+   └─► git push origin main                                           ← pushes back to GitHub
 ```
 
 The `.xlsx` file lives in your GitHub Ledger. **GitHub is the canonical store.** Your local copy at `/Users/<you>/<firm-folder>/` is a working clone you keep in sync with `git pull`. The Routine has its own working clone in its cloud sandbox — they never touch each other directly. They round-trip through GitHub.
@@ -474,7 +477,7 @@ This is what the wizard's **Step 12 — Second Brain bridge** configures, and wh
 |---|---|---|---|
 | R5 (Brain Health Check) | Yes — entire job | **Broken** on cloud | ✅ Works |
 | R2 (Weekly BR Prep) | Marginal — could enrich agenda | Works (reads Ledger only) | Could enrich but not required Gen-1 |
-| R8 (Quarterly Sentiment) | Marginal | Works (reads Ledger only) | Could enrich but not required Gen-1 |
+| R8 (Treasury Runway Update) | Marginal | Works (reads Ledger only) | Could enrich but not required Gen-1 |
 | R1 (Daily Output Capture) | No — partner-id lookups via X2 Excel | Works | Works |
 | R3, R4, R6, R7 | No | Work | Work |
 
@@ -507,10 +510,10 @@ The framework is designed so you can add Routines incrementally. Match your situ
 Don't install Routines yet. None of them produce useful output until you have partners or a populated Brain. Instead:
 
 - Ingest 5–10 documents into your Curator domain to populate the Brain.
-- When you onboard your first partner (real one — 4thtech or PollinationX, in your case): start with R6 (audit trail), then R1 (daily output capture).
+- When you onboard your first partner: start with R6 (audit trail), then R1 (daily output capture).
 - R5 / R7 / R3 / R4 / R8: defer until later milestones per [`docs/MODULES.md`](MODULES.md).
 
-This is your situation right now. The next useful action is **Curator domain ingest, not Routines**.
+For a solo founder still exploring, the next useful action is **Curator domain ingest, not Routines**.
 
 ### B. Solo founder, first partner imminent (next 2 weeks)
 

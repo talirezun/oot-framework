@@ -1,5 +1,7 @@
 # Skill Pack S12 — Privacy / Self-Sovereign Stack: SPEC
 
+> **Historical build spec (pre-v1.0.1 in places). Where this file and SKILL.md disagree, SKILL.md is authoritative.**
+
 **ID:** S12
 **Name:** Privacy / Self-Sovereign Stack
 **Tier:** 1
@@ -183,11 +185,11 @@ When a partner ingests a large file:
 The privacy track's spreadsheet automation parity hinges on `haris-musa/excel-mcp-server`. Install:
 
 1. `pip install excel-mcp-server` (or `uv pip install`).
-2. Configure with the Ledger path: `EXCEL_MCP_BASE_PATH=/Users/<user>/oot-framework/templates/excel/`.
+2. Configure the base path to the **firm Ledger clone's `firm/excel/`** (operational workbooks), NOT the framework's `templates/excel/` (pristine masters): `EXCEL_MCP_BASE_PATH=/Users/<user>/<firm>-ledger/firm/excel/`.
 3. Add to LM Studio's MCP host config (per §4.3 step 4).
 4. Test: ask the loaded model "list the worksheets in `partner-output-ledger.xlsx`". Successful response = configured.
 
-**Discipline:** the privacy-track Routines (R1, R2, R3, R4, R6, R7, R8) all read/write Excel via this MCP. The cloud-track equivalents use Google Sheets API. Both code paths are exercised in CI (Phase 8) so the privacy-track is not second-class.
+**Discipline (per [ADR-001](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md)):** the privacy-track Routines (R1, R2, R3, R4, R6, R7, R8) mutate the workbooks with **openpyxl in code execution on the local Ledger clone**, then signed-commit + push — the **identical operation cloud Routines perform** (no Google Sheets). The Excel MCP configured here is an **optional human-in-the-loop** tool for inspecting or hand-patching a workbook from an LM Studio chat, not the Routine write path.
 
 ### 4.8 Desktop Commander setup; folder permissioning
 
@@ -314,7 +316,7 @@ The migration is documented in `firm/privacy-track/migration-runbook.md` per par
 
 ## Excel interaction protocol
 
-This pack provides the **privacy-track equivalent of cloud Excel automation** — reads/writes all 9 templates via Excel MCP. The pack does not own any Excel file directly; it is the integration layer that lets every other pack's Excel writes land via Excel MCP rather than Google Sheets API.
+This pack provides the **privacy-track substrate for Excel automation** — every other pack's Excel writes land via **openpyxl in code execution on the local Ledger clone, then signed-commit + push** ([ADR-001](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md)), the identical operation the cloud track performs (no Google Sheets). The pack does not own any Excel file directly; it is the integration layer. The Excel MCP remains available as an optional human-in-the-loop inspection tool.
 
 ---
 

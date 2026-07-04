@@ -112,11 +112,19 @@ Invoked by R1 at 18:00. For each detected output signal:
 3. Cross-reference `output_spec_ref`. If missing → `status: needs-spec`.
 4. Determine `value_tier` (default L if no Output Spec).
 5. Estimate `ai_authored_pct` from `Co-authored-by:` trailers + diff patterns.
-6. Set `rework_within_30d=No` (R1 retroactively flips per its detection rule).
+6. Set `rework_within_30d=No` (R1 retroactively flips per its detection rule — see below).
 7. **Resolve `partner_multiplier` (X1.J) by reading X2's `output_multiplier` field at runtime** — do not use a cross-workbook formula.
-8. Compute `value_envelope` (X1.K) from the embedded lookup (XS=100, L=500, M=2000, S=8000 — Gen 1 defaults).
-9. Append rows to X1 Output_Log.
-10. Write daily summary to `firm/output-logs/YYYY-MM-DD.md` (per `templates/brain/daily-output-log.md`).
+8. Append rows to X1 Output_Log — but see the appended-row contract below; it is not just "write the values."
+9. Write daily summary to `firm/output-logs/YYYY-MM-DD.md` (per `templates/brain/daily-output-log.md`).
+
+**Appended-row contract (Findings 6/7 — the silent-zero-pay bug).** R1 must follow these rules exactly when appending; the routine layer (`routines/SPEC.md` R1) is the authority and this pack must match it:
+
+- **Find the next empty row via column A (`log_id`), NOT `ws.max_row`.** The `value_envelope_table` embedded at O1:P5 inflates `max_row` to 5 even when data only fills rows 2–4; appending at `max_row + 1` leaves a permanent ghost gap. Scan down column A for the first empty cell.
+- **MUST write the K (`value_envelope`) formula on every appended row:** `=VLOOKUP(G{R}, $O$2:$P$5, 2, FALSE)`. Leaving K blank makes the cell contribute zero to Monthly_Variable's SUMIFS — a silent zero-pay failure R3 does not catch. Do not rely on the embedded lookup's Gen-1 defaults (XS=100, L=500, M=2000, S=8000) being read some other way; the formula in column K is how the envelope reaches the row.
+- **MUST write the L (`computed_variable`) formula on every appended row:** `=K{R}*J{R}*IF(I{R}="Yes", 0, 1)`. Blank L means zero variable pay for that output until someone manually patches it — same silent-failure class as K.
+- **Dedupe on `output_ref` (column E) for idempotent re-runs.** Before appending a candidate, collect the set of `output_ref` values already in Output_Log within the last 45 days and skip any candidate already present. Running R1 twice on the same day (e.g. after an infra retry) must append zero duplicate rows and pay nobody twice.
+
+**Retroactive rework detection rule (4 conditions — matches `routines/SPEC.md` R1).** On every run within the 30 days after an earlier commit, R1 flips that earlier X1 row's `rework_within_30d` to `Yes` (which zeroes its `computed_variable` via the column-L formula) **if all four hold**: (a) same `partner_id` on both commits; (b) the new commit is within 30 days after the earlier one; (c) ≥50% file overlap between the two commits' changed-file sets; (d) the new commit's message OR its associated PR title/description matches the regex `\b(fix|revert|hotfix|redo|retry|reapply|backout|rollback)\b` (case-insensitive). Every retroactive flip is logged in the daily Brain summary under a `## Retroactive rework detections` heading.
 
 **Anomaly flag** if a full-time partner has zero outputs for >3 consecutive days.
 
@@ -252,6 +260,8 @@ When S3 is invoked **manually by a founder** (in Claude Desktop or Claude Code o
 | X4 klarna-test.xlsx | Decision_Log, Klarna_Score | Write | R7 |
 
 Never touches X3, X5, X6, X7, X8, X9.
+
+> **On the `mcp__excel__*` tools in this pack's frontmatter (ADR-001):** In Routine execution (R1/R3/R4/R7), Excel writes go through **openpyxl in code execution on the Ledger clone on BOTH tracks** — cloud and privacy do the identical operation; there is no Google Sheets path. The `mcp__excel__read_workbook / write_cell / append_row` tools listed above are **optional, human-in-the-loop only** — a founder inspecting or hand-patching a workbook at their workstation. They are not the Routine write path and are never required for a Routine to run. See [`docs/internal/ADR-001-cloud-routine-excel-writeback.md`](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md).
 
 ## 7. Routine integration
 

@@ -70,6 +70,21 @@ If you have an existing copyright on the contribution that is incompatible with 
 
 ---
 
+## Single source of truth (read before editing docs)
+
+The framework has a handful of facts that used to be restated in many files and drifted out of sync. Each now lives in **exactly one** canonical home; everywhere else must **link** to that home, never restate the number. PRs that restate one of these facts instead of linking get bounced.
+
+| Fact | Canonical home | Everything else must… |
+|---|---|---|
+| Anthropic plan-tier guidance + Routine per-day limits (5 Pro / 15 Max+Team / 25 Enterprise) | [`docs/02-installing-routines.md`](docs/02-installing-routines.md) | link there |
+| Cost tables (cloud + privacy, per-firm) | [`docs/ECOSYSTEM.md#cost-summary`](docs/ECOSYSTEM.md#cost-summary) | link there |
+| Installer wizard step count | [`installer/README.md`](installer/README.md) | link there |
+| Repo-name defaults (`<firm-slug>-ledger`, `<firm-slug>-brain`) | [`GLOSSARY.md`](GLOSSARY.md) | link there |
+
+If you need one of these facts in a new doc, write a sentence that points the reader at the canonical home. If the canonical value itself changes, change it in the one home and check that nothing else restated it (`grep` for the old value).
+
+---
+
 ## Process
 
 1. **For non-trivial changes**, open an issue first describing the change. Tag it `proposal` or `bug` or `documentation`.

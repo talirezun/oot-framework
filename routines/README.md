@@ -29,12 +29,12 @@ The substrates differ; **the prompts are functionally identical** so a firm can 
 
 For a new firm setting up from zero, install Routines in this order. Each subsequent Routine depends on the prior ones being operational.
 
-1. **R5 (Brain Health Check)** — first. No dependencies. Confirms Curator + my-curator MCP are working.
+1. **R5 (Brain Health Check)** — first. No dependencies on other Routines, but cloud-track R5 requires the Second Brain bridge (Curator GitHub sync + a fine-grained read-only PAT — wizard Step 12 / agent-plan Step 9b / [`docs/00-quickstart-cloud.md`](../docs/00-quickstart-cloud.md) Step 8c). Privacy-track R5 talks to the local my-curator MCP directly. A successful R5 fire confirms the stack is wired.
 2. **R6 (EU AI Act Audit Trail)** — second. Depends only on Curator + GitHub. Critical for EU adopters; recommended for everyone.
 3. **R1 (Daily Output Capture)** — third. Depends on partners being onboarded with X2 reward-species sheets.
 4. **R2 (Weekly BR Prep)** — fourth. Depends on R1 having ≥7 days of data.
 5. **R3 (Monthly Variable Calc)** — fifth. Depends on R1 having ≥30 days of data.
-6. **R7 (Klarna Test Trigger)** — sixth. Depends on `.github/workflows/klarna-gate.yml` shipping (Phase 8) and branch protection configured.
+6. **R7 (Klarna Test Trigger)** — sixth. Depends on `.github/workflows/klarna-gate.yml` (shipped in the framework repo) being copied into your firm's Ledger repo and branch protection configured.
 7. **R4 (Quarterly Long-Tail Settlement)** — seventh. Depends on R3 + at least one X2 Long_Tail_Schedule entry.
 8. **R8 (Treasury Runway Update)** — eighth (optional). Depends on Unit Fund adoption decision.
 
@@ -63,7 +63,7 @@ For each Routine to install:
 
 Estimated setup time per Routine: 10-15 minutes. Total for the 4 Day-1 Routines: ~1 hour.
 
-**Plan-tier guidance.** Pro plan (5 runs/day) is sufficient for solo / 2-partner firms with no R7 activity. **Max plan (15 runs/day) is the recommended default** for 3+ partner firms or any firm with active R7 (Klarna gate enforcement). Team / Enterprise (25 runs/day) for >5 partners with extended R7 + R8.
+**Plan-tier guidance.** Pro plan (5 runs/day) is sufficient for solo / 2-partner firms with no R7 activity. **Max plan (15 runs/day, same limit on Team) is the recommended default** for 3+ partner firms or any firm with active R7 (Klarna gate enforcement). Enterprise (25 runs/day) for large firms with extended R7 + R8.
 
 ---
 

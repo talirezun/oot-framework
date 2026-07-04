@@ -1,5 +1,7 @@
 # Skill Pack S3 — Compensation & Attribution: SPEC
 
+> **Historical build spec (pre-v1.0.1 in places). Where this file and SKILL.md disagree, SKILL.md is authoritative.**
+
 **ID:** S3
 **Name:** Compensation & Attribution
 **Tier:** 1
@@ -68,7 +70,7 @@ Gen 1 partner Charter sign-on must explicitly note layers 4/6/7 as locked; Gen 2
 ## Allowed tools / dependencies
 
 - **Curator MCP** — read Brain partner pages and reward-species declarations; write ledger entries, statements, and dispute records.
-- **Excel MCP** (privacy track) **/ Google Sheets API** (cloud track) — read/write X1 partner-output-ledger.xlsx and X2 reward-species-declaration.xlsx; the cross-workbook discipline (write multiplier into X1.J at row-append time) is enforced.
+- **openpyxl in code execution on the Ledger clone (both tracks, per [ADR-001](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md))** — read/write X1 partner-output-ledger.xlsx and X2 reward-species-declaration.xlsx, then signed-commit + push; cloud and privacy Routines perform the identical operation (no Google Sheets). The cross-workbook discipline (write multiplier into X1.J at row-append time) is enforced. Excel MCP is an optional human-in-the-loop inspection tool only, not the write path.
 - **GitHub MCP** — read commits, PR metadata for R1 capture.
 - **Slack MCP** (cloud track) **/ 4thtech CLI** (privacy track) — read configured channels for output signals; post statements to `#compensation`.
 - **Email MCP / dMail CLI** — send variable-pay statement notifications to partners.
@@ -119,7 +121,7 @@ The eventual SKILL.md follows the canonical template. Numbered sections below co
 5. Long_Tail_Schedule starts empty; populated as outputs ship with long-tail eligibility.
 6. Unit_Fund_Eligibility is **locked** in Gen 1 (sheet protection enabled; activation flag in `firm/decisions/D-...md` when Gen 2 opens).
 7. Renegotiation_Log starts empty.
-8. Generate a signed PDF of the populated sheet (use Google Apps Script / Excel macro / Python script per track). Store the PDF in `firm/partners/<partner_id>/legal/reward-species-YYYY-MM-DD.pdf`.
+8. Generate a signed PDF of the populated sheet (a Python script — e.g. openpyxl/LibreOffice headless export — on either track). Store the PDF in `firm/partners/<partner_id>/legal/reward-species-YYYY-MM-DD.pdf`.
 9. Create the corresponding Brain stub at `firm/partners/<partner_id>/reward-species-declaration.md` from `templates/brain/reward-species-declaration-summary.md`. Wikilink to the X2 sheet row + the signed PDF.
 10. Both founder and partner sign (digital signature on PDF; commit to Brain via signed git commit).
 

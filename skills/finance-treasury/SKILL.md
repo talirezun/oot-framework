@@ -43,13 +43,13 @@ The pack does **not** execute payroll directly; it produces the founder-approval
 
 ## 2. When to invoke this pack
 
-1. <!-- TODO: harden — monthly payroll preparation (post R3 founder-approval packet → bank execution). -->
-2. <!-- TODO: harden — quarterly long-tail settlement (post R4 → bank/stablecoin execution). -->
-3. <!-- TODO: harden — agent-cost ROI weekly tracking (R8 sub-flow). -->
-4. <!-- TODO: harden — treasury runway snapshot weekly (R8 main flow; optional). -->
-5. <!-- TODO: harden — Gen 2 stablecoin upgrade verification (per-partner jurisdictional). -->
-6. <!-- TODO: harden — annual financial close (year-end ledger lock + tax-prep handoff). -->
-7. <!-- TODO: harden — Unit Fund opening prep (Gen 2; legal scoping + treasury reserve discipline). -->
+1. **TODO (v1.x):** monthly payroll preparation (post R3 founder-approval packet → bank execution).
+2. **TODO (v1.x):** quarterly long-tail settlement (post R4 → bank/stablecoin execution).
+3. **TODO (v1.x):** agent-cost ROI weekly tracking (R8 sub-flow).
+4. **TODO (v1.x):** treasury runway snapshot weekly (R8 main flow; optional).
+5. **TODO (v1.x):** Gen 2 stablecoin upgrade verification (per-partner jurisdictional).
+6. **TODO (v1.x):** annual financial close (year-end ledger lock + tax-prep handoff).
+7. **TODO (v1.x):** Unit Fund opening prep (Gen 2; legal scoping + treasury reserve discipline).
 
 ## 3. When NOT to invoke this pack
 
@@ -60,35 +60,35 @@ The pack does **not** execute payroll directly; it produces the founder-approval
 
 ## 4. Operational instructions
 
-<!-- TODO: harden in v1.x. -->
+> **TODO (v1.x):**
 
 ### 4.1 Monthly FIAT payroll execution (Gen 1)
 
-<!-- TODO: harden — read R3 founder-approval packet at `firm/compensation/<month>/founder-approval.md`; produce a structured payment list (per-partner: amount, currency, IBAN, reference); execute via SEPA/wire from firm's banking partner; record `payment_date` in X1 Monthly_Variable. -->
+> **TODO (v1.x):** read R3 founder-approval packet at `firm/compensation/<month>/founder-approval.md`; produce a structured payment list (per-partner: amount, currency, IBAN, reference); execute via SEPA/wire from firm's banking partner; record `payment_date` in X1 Monthly_Variable.
 
 ### 4.2 Agent-cost attribution (X6 agent-skill-roi.xlsx)
 
-<!-- TODO: harden — daily/weekly capture of token costs per Skill / Routine / use case. Sources: Anthropic API usage dashboard, Curator Gemini Flash Lite usage, LM Studio local inference (privacy track — electricity-attributed). Per-Skill ROI computed at month-end. -->
+> **TODO (v1.x):** daily/weekly capture of token costs per Skill / Routine / use case. Sources: Anthropic API usage dashboard, Curator Gemini Flash Lite usage, LM Studio local inference (privacy track — electricity-attributed). Per-Skill ROI computed at month-end.
 
 ### 4.3 Treasury runway tracker (X8 — optional)
 
-<!-- TODO: harden — R8 weekly sub-flow: pull bank balances + obligations → update X8 Cash_Position + Obligations + Runway_Calc. Alert if `runway_months < 9` OR `reserve_coverage_ratio < 1.0`. -->
+> **TODO (v1.x):** R8 weekly sub-flow: pull bank balances + obligations → update X8 Cash_Position + Obligations + Runway_Calc. Alert if `runway_months < 9` OR `reserve_coverage_ratio < 1.0`.
 
 ### 4.4 Monthly financial close
 
-<!-- TODO: harden — coordinate with bookkeeping (firm's accountant); ensure X1 month-locked status before close; deliver tax-prep packet to tax advisor. -->
+> **TODO (v1.x):** coordinate with bookkeeping (firm's accountant); ensure X1 month-locked status before close; deliver tax-prep packet to tax advisor.
 
 ### 4.5 Gen 2 stablecoin upgrade preparation
 
-<!-- TODO: harden — per-partner jurisdictional check (S8 + counsel); verify USDC/EURC legal status; Rise (Circle partner) integration; per-partner wallet provisioning. -->
+> **TODO (v1.x):** per-partner jurisdictional check (S8 + counsel); verify USDC/EURC legal status; Rise (Circle partner) integration; per-partner wallet provisioning.
 
 ### 4.6 Smart-contract long-tail entitlement (Gen 2)
 
-<!-- TODO: harden — replaces Excel-tracked Long_Tail_Schedule with on-chain percentage entitlements; counsel review per jurisdiction; quarterly auto-payment via smart contract. -->
+> **TODO (v1.x):** replaces Excel-tracked Long_Tail_Schedule with on-chain percentage entitlements; counsel review per jurisdiction; quarterly auto-payment via smart contract.
 
 ### 4.7 Internal Unit Fund (Gen 2)
 
-<!-- TODO: harden — opening procedure after 6-9 months of pilot data; treasury reserve discipline (X8 mandatory); subscription-credit issuance; bid/ask liquidity; quarterly dividend payments. -->
+> **TODO (v1.x):** opening procedure after 6-9 months of pilot data; treasury reserve discipline (X8 mandatory); subscription-credit issuance; bid/ask liquidity; quarterly dividend payments.
 
 ## 5. Brain interaction protocol
 
@@ -114,12 +114,12 @@ The pack does **not** execute payroll directly; it produces the founder-approval
 1. **Don't activate stablecoin payroll** without counsel review for the partner's jurisdiction.
 2. **Don't open the Unit Fund** without ≥6–9 months of attribution accuracy data + treasury reserve coverage ≥1.0.
 3. **Don't bypass treasury runway discipline** if the Unit Fund is open.
-4. <!-- TODO: harden — don't run payroll without an explicit founder-approved packet matching the X1 Monthly_Variable. -->
-5. <!-- TODO: harden — don't change X6 cost-attribution methodology without a Brain ADR (changes affect ROI calculations partners can see). -->
+4. **TODO (v1.x):** don't run payroll without an explicit founder-approved packet matching the X1 Monthly_Variable.
+5. **TODO (v1.x):** don't change X6 cost-attribution methodology without a Brain ADR (changes affect ROI calculations partners can see).
 
 ## 9. Quick reference
 
-<!-- TODO: harden. -->
+> **TODO (v1.x):**
 
 ## 10. References
 

@@ -1,5 +1,7 @@
 # ØØT Foundation Kit — Master Manifest
 
+> **Historical build-provenance document (v1.0.0 era).** Terms and claims here reflect that point in time (naming, tool set, counts). They are preserved as-is for provenance; see [`CHANGELOG.md`](../../CHANGELOG.md) for what has changed since. Do not treat this file as current guidance.
+
 **Status:** Foundation kit complete. Ready to hand to Claude Code for repository scaffolding.
 
 **Initiator:** Dr. Tali Režun

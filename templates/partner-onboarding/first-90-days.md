@@ -10,9 +10,9 @@ This is a **template**. The founder customises per partner — a senior engineer
 
 ### Day 1 (Monday)
 
-- **90-minute onboarding session** (founder + partner). All 17 onboarding-checklist items.
-- **Tools provisioned** by end of day.
-- **Welcome to the partnership** announcement in `#general`.
+- **90-minute onboarding session** (founder + partner). Checklist steps **1-15** run in the session itself.
+- **Tools provisioned** by end of day. Checklist steps **16-17** (Curator self-test + welcome announcement) complete end-of-day, right after the session.
+- **Welcome to the partnership** announcement in `#general` (step 17).
 
 ### Day 2 — Day 5
 

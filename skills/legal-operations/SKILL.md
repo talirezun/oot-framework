@@ -34,14 +34,14 @@ Harvey-style patterns for in-house legal work in an ØØT-native firm. Contract 
 
 ## 2. When to invoke this pack
 
-1. <!-- TODO: harden — drafting a customer MSA / SOW / NDA / DPA. -->
-2. <!-- TODO: harden — reviewing a counterparty's draft before signature. -->
-3. <!-- TODO: harden — preparing a due-diligence pack for a new partner. -->
-4. <!-- TODO: harden — preparing a counsel-handoff packet for a complex matter. -->
-5. <!-- TODO: harden — Tier-3 dispute escalation packet. -->
-6. <!-- TODO: harden — Partner Charter template renegotiation. -->
-7. <!-- TODO: harden — variable-pay-structure legal verification (Gen 1 FIAT; Gen 2 stablecoin upgrade). -->
-8. <!-- TODO: harden — long-tail entitlement legal-wrapper preparation. -->
+1. **TODO (v1.x):** drafting a customer MSA / SOW / NDA / DPA.
+2. **TODO (v1.x):** reviewing a counterparty's draft before signature.
+3. **TODO (v1.x):** preparing a due-diligence pack for a new partner.
+4. **TODO (v1.x):** preparing a counsel-handoff packet for a complex matter.
+5. **TODO (v1.x):** Tier-3 dispute escalation packet.
+6. **TODO (v1.x):** Partner Charter template renegotiation.
+7. **TODO (v1.x):** variable-pay-structure legal verification (Gen 1 FIAT; Gen 2 stablecoin upgrade).
+8. **TODO (v1.x):** long-tail entitlement legal-wrapper preparation.
 
 ## 3. When NOT to invoke this pack
 
@@ -52,39 +52,39 @@ Harvey-style patterns for in-house legal work in an ØØT-native firm. Contract 
 
 ## 4. Operational instructions
 
-<!-- TODO: harden in v1.x. The pack's depth requires real engagement with the eleven legal touchpoints from `docs/06-when-to-call-a-lawyer.md`; v1.0 is a scaffold with structural placeholders. -->
+> **TODO (v1.x):** The pack's depth requires real engagement with the eleven legal touchpoints from `docs/06-when-to-call-a-lawyer.md`; v1.0 is a scaffold with structural placeholders.
 
 ### 4.1 Contract drafting workflow
 
-<!-- TODO: harden — Plan-Mode-style chain: (1) discovery (read prior similar contracts in `legal/contracts/*`); (2) draft per template; (3) counsel-handoff packet; (4) revisions; (5) signature; (6) commit to `legal/`. -->
+> **TODO (v1.x):** Plan-Mode-style chain: (1) discovery (read prior similar contracts in `legal/contracts/*`); (2) draft per template; (3) counsel-handoff packet; (4) revisions; (5) signature; (6) commit to `legal/`.
 
 ### 4.2 Contract review (counterparty's draft)
 
-<!-- TODO: harden — read; flag risks per categorised list (data residency, IP assignment, liability cap, indemnity, termination); draft redline; counsel review. -->
+> **TODO (v1.x):** read; flag risks per categorised list (data residency, IP assignment, liability cap, indemnity, termination); draft redline; counsel review.
 
 ### 4.3 Due-diligence pack for a new partner
 
-<!-- TODO: harden — identity verification; jurisdictional check; conflict-of-interest scan against firm's customer/competitor list. -->
+> **TODO (v1.x):** identity verification; jurisdictional check; conflict-of-interest scan against firm's customer/competitor list.
 
 ### 4.4 Counsel-handoff packet
 
-<!-- TODO: harden — standardised structure: question, context, prior firm decisions, draft language, deadline. -->
+> **TODO (v1.x):** standardised structure: question, context, prior firm decisions, draft language, deadline.
 
 ### 4.5 Tier-3 dispute escalation
 
-<!-- TODO: harden — per `governance/DECISION-RIGHTS.md` Tier 3; counsel + founder; binding decision documented. -->
+> **TODO (v1.x):** per `governance/DECISION-RIGHTS.md` Tier 3; counsel + founder; binding decision documented.
 
 ### 4.6 Partner Charter management
 
-<!-- TODO: harden — version-controlled template; renegotiation flow; per-partner customisations stored in `firm/partners/<id>/legal/`. -->
+> **TODO (v1.x):** version-controlled template; renegotiation flow; per-partner customisations stored in `firm/partners/<id>/legal/`.
 
 ### 4.7 Variable-pay legal verification
 
-<!-- TODO: harden — jurisdictional verification of variable-pay structure compatibility; Gen 1 FIAT only; Gen 2 stablecoin requires re-verification per partner's jurisdiction. -->
+> **TODO (v1.x):** jurisdictional verification of variable-pay structure compatibility; Gen 1 FIAT only; Gen 2 stablecoin requires re-verification per partner's jurisdiction.
 
 ### 4.8 Long-tail entitlement legal wrapper
 
-<!-- TODO: harden — securities-law analysis per jurisdiction; partnership-agreement provisions; Gen 1 = Excel-tracked + signed addendum; Gen 2 = on-chain smart contract requiring fresh counsel review. -->
+> **TODO (v1.x):** securities-law analysis per jurisdiction; partnership-agreement provisions; Gen 1 = Excel-tracked + signed addendum; Gen 2 = on-chain smart contract requiring fresh counsel review.
 
 ## 5. Brain interaction protocol
 
@@ -105,12 +105,12 @@ None directly. The pack is invoked manually or via S3 / S6 cross-references.
 1. **Don't replace counsel with Skills.** The pack augments; counsel decides.
 2. **Don't auto-execute contract changes** without counsel review.
 3. **Don't bypass the eleven legal touchpoints** from `docs/06-when-to-call-a-lawyer.md`.
-4. <!-- TODO: harden — don't sign on the firm's behalf without explicit founder-level authorisation. -->
-5. <!-- TODO: harden — don't redline a counterparty's draft without explicit principal direction (the partner authoring the redline is the named author, not the AI). -->
+4. **TODO (v1.x):** don't sign on the firm's behalf without explicit founder-level authorisation.
+5. **TODO (v1.x):** don't redline a counterparty's draft without explicit principal direction (the partner authoring the redline is the named author, not the AI).
 
 ## 9. Quick reference
 
-<!-- TODO: harden — standard quick reference table. -->
+> **TODO (v1.x):** standard quick reference table.
 
 ## 10. References
 

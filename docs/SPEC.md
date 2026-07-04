@@ -1,8 +1,8 @@
 # Documentation — SPEC
 
-Specifications for the user-guide layer Claude Code generates in Phase 7 of `BUILD-INSTRUCTIONS.md`. Two tiers, **18 documents total**:
+Specifications for the user-guide layer Claude Code generates in Phase 7 of `BUILD-INSTRUCTIONS.md`. Two tiers. The Tier-1 set below has grown since the original Phase-7 plan (the `glossary.md` alias, `ECOSYSTEM.md`, and — post-v1.0 — `MODULES.md` and `AUTOMATION-PIPELINE.md` were added), so this SPEC now inventories **15 Tier-1 docs + 6 Tier-2 walkthroughs = 21 documents total**:
 
-- **Tier 1 — Concept + Setup guides (12 docs in `docs/`):** the original twelve plain-language guides. Each doc is for a specific audience, with a specific purpose, with copy-pasteable commands and screenshot placeholders where applicable.
+- **Tier 1 — Concept + Setup guides (15 docs in `docs/`):** the plain-language guides. Each doc is for a specific audience, with a specific purpose, with copy-pasteable commands and screenshot placeholders where applicable.
 - **Tier 2 — UI walkthroughs (6 docs in `docs/walkthroughs/`):** the day-by-day operational guides for the non-technical partner who is using the framework via Claude Desktop, Excel/Sheets, the Curator desktop app, and the Routines dashboard. Each walkthrough is screenshot-rich, sequential, and assumes nothing about file paths or shell commands.
 
 The foundation kit deliberately does not write these docs itself; Claude Code generates them from this SPEC plus the rest of the foundation kit, with full repo context (it has just generated the Skills, Excel templates, and Routines, so it can reference them concretely).
@@ -25,7 +25,7 @@ Every Tier-1 doc that involves a UI tool follows the **three-layer pattern**:
 - Plain language. No jargon without definition. The Glossary is a living reference; every first use of a glossary term wikilinks to it.
 - The reader has read MANIFESTO.md and at least one of QUICKSTART.md, but no other technical material.
 - "Open Excel and click the cell at row 3, column F" is *better* than "set `A3` to a literal `=SUM(...)` formula" when the audience is non-technical.
-- Where a step diverges between Microsoft Excel and Google Sheets, both are shown.
+- The `.xlsx` files are the firm's operational state (they live in the Ledger repo and are mutated by Routines via openpyxl per [ADR-001](internal/ADR-001-cloud-routine-excel-writeback.md)); the reader only ever *views* them by hand. Steps that open a spreadsheet name the file and the cell/sheet, and are agnostic to which viewer the reader uses (Microsoft Excel / LibreOffice / Apple Numbers / Excel for Web). Do **not** author separate "Excel vs Google Sheets" instruction variants — Google Sheets is not a state store in this framework.
 - Where a step diverges between cloud track and privacy track, both are shown.
 - Shell commands appear *only* in Tier-1 docs that explicitly target a technical audience (the Curator install for the founder, the Phase 8 CI doc for an engineer). Even there, the doc explains what the command will do in plain terms before showing it.
 
@@ -48,11 +48,11 @@ Every Tier-1 doc that involves a UI tool follows the **three-layer pattern**:
 
 ---
 
-## Tier-1 — the 12 plain-language guides
+## Tier-1 — the plain-language guides
 
 ---
 
-## The 12 documents
+## The Tier-1 documents
 
 ### `docs/00-quickstart-cloud.md`
 
@@ -337,11 +337,27 @@ For the last item especially: the answer is "your 4thtech identity is gone; crea
 4. **Privacy-track ecosystem** — same shape; Trezor, 4thtech, PollinationX, LM Studio, Excel MCP, Desktop Commander, GitHub MCP get the prominent treatment.
 5. **Both-track tools** — Bitwarden, GitHub, Yubikey, the Curator.
 6. **Reading order** — for a founder who wants to understand the ecosystem before installing anything: read this doc, then the relevant Tier-2 wikis (the Curator README, 4thtech's wiki, PollinationX's wiki, Anthropic's docs), then the Tier-1 quickstart, then start installing.
-7. **A note on costs** — order-of-magnitude monthly costs for each track, with the framework's recommended budget ranges (cloud: ~€100-€200/month for a 10-partner firm; privacy: ~€600 hardware + ~€10-80/month PollinationX; both: ~€80/Trezor per partner one-time).
+7. **A note on costs** — a short pointer to the canonical cost tables at [`docs/ECOSYSTEM.md#cost-summary`](ECOSYSTEM.md#cost-summary). ECOSYSTEM.md is the single source of truth for cost figures; this doc (and every other) links there rather than restating numbers.
 
 **Length:** ~3,000 words. Heavy on links to the external wikis (the Curator's, 4thtech's, PollinationX's, LM Studio's, Anthropic's, etc.). The doc *intentionally* defers to those external resources rather than duplicating them — the doc's job is orientation, not training.
 
 **References:** `research/external-resources.md` (the comprehensive index this doc derives from), Skill Pack S12 (privacy track integration), `governance/SECRETS-POLICY.md` (Bitwarden + Trezor + Yubikey).
+
+---
+
+### `docs/MODULES.md`
+
+**Audience:** Founder deciding what to install and in what order.
+
+**Purpose:** The install-decision reference — the framework's modules (Skill Packs, Excel templates, Routines, governance docs), their dependencies, and the recommended adoption order. Added post-v1.0 as part of the install-path overhaul.
+
+---
+
+### `docs/AUTOMATION-PIPELINE.md`
+
+**Audience:** Founder or ops partner who wants to understand how the 8 Routines chain together.
+
+**Purpose:** End-to-end map of the automation pipeline — which Routine writes which Excel sheet / Brain page, in what order, on what schedule, and how the cloud and privacy tracks realise the same pipeline. Added post-v1.0.
 
 ---
 
@@ -418,7 +434,7 @@ The day-by-day operational guides. Each one is a single end-to-end task, screens
 **Required sections:**
 
 1. **What's about to happen** (5 min). On the 1st of the month, R3 (Monthly Variable Calc) ran at 09:00. It populated three things you need to inspect: the Monthly_Variable sheet in `partner-output-ledger.xlsx`, a per-partner Brain statement, and a founder-approval packet. Your job: verify and approve.
-2. **Open `partner-output-ledger.xlsx` in Excel** (or in Google Sheets — both shown). The sheet you want is **Monthly_Variable**. Look for the row for the month that just closed.
+2. **Open `partner-output-ledger.xlsx`** in your spreadsheet viewer of choice (Excel / LibreOffice / Numbers / Excel for Web — the steps are viewer-agnostic). The file is the firm's Ledger copy at `firm/excel/partner-output-ledger.xlsx`. The sheet you want is **Monthly_Variable**. Look for the row for the month that just closed.
 3. **The four columns to inspect**:
    - `total_outputs` — does it match what you remember the team shipping?
    - `total_variable` — is it consistent with the team's recent average?
@@ -431,7 +447,7 @@ The day-by-day operational guides. Each one is a single end-to-end task, screens
 8. **Trigger payment** — Gen 1 is FIAT manual. The walkthrough shows: opening the firm's banking portal, copying the payment list from the founder-approval packet, executing the SEPA / wire transfers, recording the `payment_date` in the spreadsheet.
 9. **Common pitfalls** — a partner whose Reward Species Declaration has changed mid-month (proration); a retroactive rework zero-out from a prior month showing up in the current calc; a dispute that wasn't escalated cleanly.
 
-**Length:** ~3,000 words + 25 screenshots (Excel and Google Sheets variants both shown for steps 2–7).
+**Length:** ~3,000 words + 25 screenshots (viewer-agnostic; use whichever spreadsheet app the reader has for steps 2–7).
 **Cross-references:** Skill Pack S3, X1 schema, R3 prompt, DECISION-RIGHTS.md Tier 1.
 
 ---
@@ -524,6 +540,6 @@ For all 18 docs:
 - No assumed knowledge beyond the level stated in this SPEC.
 - Tone is plain, direct, opinionated where the framework has earned the opinion. No marketing language.
 - **Tier-1 docs** that involve a UI tool follow the three-layer pattern (orientation → walkthrough → pitfalls).
-- **Tier-2 walkthroughs** include both Microsoft Excel and Google Sheets variants for any spreadsheet-touching step, and include both cloud-track and privacy-track variants where the underlying tool differs.
+- **Tier-2 walkthroughs** are agnostic to which spreadsheet viewer the reader uses (Microsoft Excel / LibreOffice / Apple Numbers / Excel for Web) — they name the file, sheet, and cell, not a viewer-specific instruction set — and include both cloud-track and privacy-track variants where the underlying tool differs. (Google Sheets is not a state store per [ADR-001](internal/ADR-001-cloud-routine-excel-writeback.md); do not author Sheets-specific variants.)
 
 If a doc cannot be plain-language because the underlying topic is technical (e.g., the privacy-track scheduling), the doc should include a "for technical partners" subsection where complexity is acceptable, with a "for everyone else" summary at the top.

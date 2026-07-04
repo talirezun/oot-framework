@@ -84,13 +84,13 @@ This list is current as of v1.0.1 (May 2026). It's not exhaustive — the framew
 
 - **Augment Code** — strong on multi-file builds; excellent context handling. Works against Anthropic / OpenAI / others. MCP support varies by version. https://www.augmentcode.com/
 - **Aider** — minimalist; works against any OpenAI-compatible API including LM Studio's local server endpoint. No native MCP yet (May 2026); manual fallback for MCP verification steps. https://aider.chat/
-- **OpenCode (opencode-ai)** — open-source Claude Code competitor. Native MCP. https://github.com/sst/opencode
+- **OpenCode (opencode-ai)** — open-source Claude Code competitor. Native MCP. Author-verified basic operation; end-to-end install test queued (ADR-003 will make OpenCode first-class). https://github.com/sst/opencode
 - **Cline (formerly Claude Dev)** — VSCode extension, broad model support including local. https://github.com/cline/cline
 - **Continue.dev** — VSCode/JetBrains extension, broad model support. https://www.continue.dev/
 
 ### Tested privacy track
 
-- **OpenCode against LM Studio** — Qwen 3 32B+ recommended for sustained 50-step tasks; Llama 3.3 70B for the high-stakes config-file edits. Tested by the framework's authors on a Mac mini M4 Pro 32GB.
+- **OpenCode against LM Studio** — Qwen 3 32B+ recommended for sustained 50-step tasks; Llama 3.3 70B for the high-stakes config-file edits. Author-verified basic operation on a Mac mini M4 Pro 32GB; end-to-end privacy-track install test queued (ADR-003 will make OpenCode first-class).
 - **Aider against LM Studio** — same model recommendations. Aider is more terse in its outputs which suits the privacy track's "no chatter, just do" preference.
 - **Cline against LM Studio** — works; UI is friendlier than Aider for non-technical privacy-track founders.
 

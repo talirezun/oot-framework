@@ -24,7 +24,7 @@ The founder + Mira run §4.1 of S3:
 4. Validate: 0.6 + 0.3 + 0.1 = 1.0 ✓; bonus_split sum = 1.0 ✓ (default 1/3 each).
 5. Generate signed PDF; store at `firm/partners/mira-tek/legal/reward-species-2026-03-15.pdf`.
 6. Compile Brain summary at `firm/partners/mira-tek/reward-species-declaration.md`.
-7. Both sign. The first decision in the partnership: D-2026-03-007 — *"Onboard Mira Tek as full-time partner per attached declaration."*
+7. Both sign. The first decision in the partnership: D-2026-007 — *"Onboard Mira Tek as full-time partner per attached declaration."*
 
 ## Step 2 — March outputs (16 days of work)
 

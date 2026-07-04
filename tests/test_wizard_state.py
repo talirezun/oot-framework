@@ -214,3 +214,60 @@ def test_module_imports_without_optional_deps():
     """The wizard must import even if questionary/rich aren't installed."""
     importlib.reload(wiz)
     assert hasattr(wiz, "main")
+
+
+# ---------------------------------------------------------------------------
+# (f) the two Phase-2 wizard steps exist and are registered in the navigator
+# ---------------------------------------------------------------------------
+
+def _steps_list_source() -> str:
+    """Return the source of main(), which contains the STEPS list literal."""
+    import inspect
+    return inspect.getsource(wiz.main)
+
+
+def test_new_step_functions_exist():
+    """Brain-ingest + Klarna-gate step functions must be defined on the module."""
+    assert callable(getattr(wiz, "step_12_brain_ingest", None))
+    assert callable(getattr(wiz, "step_klarna_gate", None))
+
+
+def test_new_steps_registered_in_steps_list():
+    """Both new steps must appear in the STEPS navigator list in main()."""
+    src = _steps_list_source()
+    assert '"step_12_brain_ingest"' in src, "brain-ingest not registered in STEPS"
+    assert '"step_klarna_gate"' in src, "klarna-gate not registered in STEPS"
+    # Ordering: ingest before the bridge; klarna gate after routines, before smoke.
+    assert src.index("step_12_brain_ingest") < src.index("step_12_secondbrain_sync")
+    assert src.index("step_13_routines") < src.index("step_klarna_gate")
+    assert src.index("step_klarna_gate") < src.index("step_14_smoke_test")
+
+
+def test_klarna_gate_respects_dry_run(tmp_path, monkeypatch):
+    """In --dry-run the Klarna-gate step must not copy files or persist state."""
+    state_file = tmp_path / "wizard-state.yaml"
+    monkeypatch.setattr(wiz, "OOT_HOME", tmp_path)
+    monkeypatch.setattr(wiz, "STATE_FILE", state_file)
+    monkeypatch.setattr(wiz, "DRY_RUN", True)
+
+    # No third-party CLI in a dry run test.
+    monkeypatch.setattr(wiz, "gh_available_and_authed", lambda: False)
+    # Auto-answer every confirm as "yes" and never block on input.
+    monkeypatch.setattr(wiz, "ask_confirm", lambda *a, **k: True)
+    monkeypatch.setattr(wiz, "ask_navigation", lambda *a, **k: None)
+
+    firm_folder = tmp_path / "acme"
+    firm_folder.mkdir()
+    state = {
+        "firm_profile": {"github_plan_tier": "free", "klarna_gate_choice": "now"},
+        "modules_chosen": {"routines": ["R7"]},
+        "locations": {"firm_folder": str(firm_folder)},
+        "ledger_repo_url": "https://github.com/acme/acme-ledger.git",
+    }
+
+    wiz.step_klarna_gate(state, dry_run=True)
+
+    # Dry-run must not have copied the workflow into the (empty) firm folder...
+    assert not (firm_folder / ".github").exists(), "dry-run must not copy gate files"
+    # ...nor written the on-disk state file.
+    assert not state_file.exists(), "dry-run must not persist state"

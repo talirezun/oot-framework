@@ -1,5 +1,7 @@
 # Skill Pack S5 — Reporting & Business Review: SPEC
 
+> **Historical build spec (pre-v1.0.1 in places). Where this file and SKILL.md disagree, SKILL.md is authoritative.**
+
 **ID:** S5
 **Name:** Reporting & Business Review
 **Tier:** 1
@@ -38,7 +40,7 @@ The **operational heartbeat** of an ØØT firm. Replaces all status meetings wit
 ## Allowed tools / dependencies
 
 - **Curator MCP** — read ledger, write BR summaries to Brain.
-- **Excel MCP** (privacy track) **/ Google Sheets API** (cloud track) — read X1, write X3.
+- **openpyxl in code execution on the Ledger clone (both tracks, per [ADR-001](../../docs/internal/ADR-001-cloud-routine-excel-writeback.md))** — read X1, write X3, then signed-commit + push; cloud and privacy Routines perform the identical operation (no Google Sheets). Excel MCP is an optional human-in-the-loop inspection tool only.
 - **Slack MCP** (cloud) **/ 4thtech CLI** (privacy) — read configured channels for blockers and decisions; post BR draft summary.
 - **Calendar MCP** — invite the BR meeting; schedule the quarterly partner check-in.
 

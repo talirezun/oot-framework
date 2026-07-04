@@ -35,11 +35,11 @@ The following ØØT components are likely to be classified as **high risk** unde
 
 - **Attribution agent + variable pay calculator.** AI used for "decisions affecting access to and terms of employment" (Annex III, point 4). The attribution agent's outputs feed compensation; this falls within scope.
 - **Klarna Test gating + Routine R7.** AI used in "decisions on recruitment or selection" or related employment-management decisions, even when AI is in a *gating* role. The mapping is conservative; counsel should confirm.
-- **Onboarding Skill (P4).** AI used in partner-onboarding workflows, particularly if it screens or assesses candidates.
+- **Partner-onboarding materials** (`templates/partner-onboarding/`). AI used in partner-onboarding workflows, particularly if it screens or assesses candidates.
 
 The following are likely **limited risk** (transparency obligations only):
 
-- **Lumina AI widget (S11).** Customer-facing chatbot. Article 50 transparency: customers must know they are interacting with AI.
+- **Lumina AI widget (pattern used by S9/S11).** Customer-facing chatbot. Article 50 transparency: customers must know they are interacting with AI.
 - **Brain query interface.** Internal-facing, not a "decision" system; transparency obligation only if it could be mistaken for human authorship.
 
 The following are likely **minimal risk** (no specific obligations):
@@ -80,12 +80,12 @@ The four articles ØØT explicitly maps:
 
 - Routine R6 (EU AI Act Audit Trail) is the framework's primary logging mechanism. Runs daily at 23:00. Appends to a markdown audit log committed to the **Ledger** repo (per [ADR-001](../docs/internal/ADR-001-cloud-routine-excel-writeback.md) and [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md)).
 - The audit log captures: AI system identifier, decision context, input summary (sanitised for PII), output, human reviewer if any, timestamp.
-- **Practical immutability is provided by three combined controls** on the Ledger repo's audit branch (typically `main`): (a) force-push disabled; (b) deletion disabled; (c) signed commits required (GPG or SSH); (d) audit log paths under `firm/audit-logs/` are append-only by convention. Plain `git history` alone is **not** immutable — force-push can rewrite history — so the controls above must be configured at the GitHub repo level. **The Firm Brain repo (Curator Shared Brain) inherits the same three controls** for its synthesized output history; Curator's per-contributor revocation audit log lives alongside (`state/last-synthesis.json` + per-revoke audit entries). The cloud installer (Phase 9) and the Code & QA SKILL.md (S4) document the configuration. Generation 2 introduces external anchoring (daily SHA-256 of the audit log committed to a public ledger or service) for adopters who require stronger guarantees.
+- **Practical immutability is provided by four combined controls** on the Ledger's audit paths (branch typically `main`): (a) force-push disabled; (b) deletion disabled; (c) signed commits required (GPG or SSH); (d) audit log paths under `firm/audit-logs/` are append-only by convention. Plain `git history` alone is **not** immutable — force-push can rewrite history — so the controls above must be configured at the GitHub repo level. **The Firm Brain repo (Curator Shared Brain) inherits the same four controls** for its synthesized output history; Curator's per-contributor revocation audit log lives alongside (`state/last-synthesis.json` + per-revoke audit entries). The cloud installer (Phase 9) and the Code & QA SKILL.md (S4) document the configuration. Generation 2 introduces external anchoring (daily SHA-256 of the audit log committed to a public ledger or service) for adopters who require stronger guarantees.
 - **GitHub plan-tier requirement (Finding #16):** GitHub Free private repos do **not** enforce branch protection. The Article 12 immutability claim is therefore only defensible on **GitHub Team** or higher for both the Ledger and the Firm Brain. EU firms requiring data residency must additionally be on **GitHub Enterprise Cloud with the EU residency option**.
 
 **Adopter actions:**
 - Confirm R6 is configured and running for every high-risk use case.
-- Configure branch protection on the audit branch with the three controls above before relying on the Article 12 retention claim.
+- Configure branch protection on the Ledger's audit paths with the four controls above before relying on the Article 12 retention claim.
 - Set retention policy (default: indefinite via git; archive older than 12 months to PollinationX cold storage on privacy track).
 - Document the logging in the Risk Register.
 

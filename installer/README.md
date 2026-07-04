@@ -8,7 +8,7 @@ Open Terminal and paste this. That's it — no `git clone`, no `cd`, nothing els
 curl -fsSL https://raw.githubusercontent.com/talirezun/oot-framework/main/installer/bootstrap.sh | bash
 ```
 
-The bootstrap checks your prerequisites (git, python ≥3.11, curl, gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv at `~/.oot/venv/`, installs the wizard's nice-UI dependencies, and hands you off to the 15-step interactive wizard. Safe to re-run — it detects an existing install and resumes.
+The bootstrap checks your prerequisites (git, python ≥3.11, curl, gpg), clones the framework to `~/.oot/oot-framework/`, sets up a Python venv at `~/.oot/venv/`, installs the wizard's nice-UI dependencies, and hands you off to the 17-step interactive wizard. Safe to re-run — it detects an existing install and resumes.
 
 If anything is missing, it prints the exact copy-paste command to install it (no auto-sudo, no auto-Homebrew). Re-run the same one-liner to continue.
 
@@ -49,7 +49,7 @@ For founders who prefer not to use a coding agent. **The bootstrap above is the 
 ~/.oot/venv/bin/python ~/.oot/oot-framework/installer/wizard.py --resume
 ```
 
-Interactive **16-step terminal wizard** (steps 0–15, shown as "/15"; wizard v1.2.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Ledger creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
+Interactive **18-step terminal wizard** (steps 0–17, shown as "/17"; wizard v1.2.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Ledger creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → **Brain first-ingest** → Second Brain bridge → Routines (R5/R6 walkthrough) → **optional Klarna-gate install** → smoke test → install summary at `~/.oot/install-summary.md`.
 
 Programmatic where safe (folder creation, git operations, GPG key generation, file edits, smoke test); web-UI walkthrough where the user must approve a third-party action (GitHub repo creation, branch protection rule, GPG public-key upload, MCP installation in Claude Desktop).
 
@@ -76,7 +76,7 @@ These scripts are deliberately thin. They reference the user docs rather than du
 
 ## What the wizard does (the spec)
 
-The wizard (`wizard.py`, v1.2.0) is a complete, end-to-end interactive install. It mirrors the agent-runnable [`cloud-install-plan.md`](agent-assisted/cloud-install-plan.md). Sixteen steps (numbered 0–15, shown as "/15" in the UI):
+The wizard (`wizard.py`, v1.2.0) is a complete, end-to-end interactive install. It mirrors the agent-runnable [`cloud-install-plan.md`](agent-assisted/cloud-install-plan.md). Eighteen steps (numbered 0–17, shown as "/17" in the UI):
 
 | Step | What it does |
 |---|---|
@@ -92,10 +92,12 @@ The wizard (`wizard.py`, v1.2.0) is a complete, end-to-end interactive install. 
 | 9 | Generate GPG signing key, upload to GitHub, configure git to sign, verify with a signed commit |
 | 10 | Branch protection on `main` (Ledger + Firm Brain) |
 | 11 | Curator integration + Firm Brain admin/contributor wizards + Push→Synthesize→Pull verify |
-| 12 | Second Brain bridge — Curator GitHub sync so cloud Routines can read the Brain |
-| 13 | Configure Day-1 Routines (R5/R6/R7) + verify their first commits |
-| 14 | Smoke test — signed commit, Excel templates open, folder structure, bridge |
-| 15 | Install summary at `~/.oot/install-summary.md` |
+| 12 | Brain first-ingest — seed 5-10 starter documents into the firm domain + health check (mirrors plan Step 9) |
+| 13 | Second Brain bridge — Curator GitHub sync so cloud Routines can read the Brain |
+| 14 | Configure Day-1 Routines (R5/R6/R7) + verify their first commits |
+| 15 | (Optional) Klarna gate — copy `klarna-gate.yml` + `labeler.yml` into the Ledger, push, adapt guard/path, require the `oot/klarna-test` status check (mirrors plan Step 11) |
+| 16 | Smoke test — signed commit, Excel templates open, folder structure, bridge |
+| 17 | Install summary at `~/.oot/install-summary.md` |
 
 The wizard:
 - Explains *why* it's asking each question (per-step explainer panels).
