@@ -5,12 +5,16 @@ on:
     paths:
       - 'scripts/**'
       - 'installer/**'
+      - 'templates/excel/**'
+      - 'tests/**'
       - 'pyproject.toml'
   push:
     branches: [main]
     paths:
       - 'scripts/**'
       - 'installer/**'
+      - 'templates/excel/**'
+      - 'tests/**'
       - 'pyproject.toml'
 
 jobs:
@@ -27,11 +31,26 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install ruff black mypy openpyxl
-          pip install -e ".[dev]" || true   # tolerate missing dev extras
+          pip install -e ".[dev]"
+          pip install openpyxl pyyaml
 
-      - name: Ruff lint
-        run: ruff check scripts/ || true   # warning-only in v1.0; harden in v1.x
+      # ── Hard gate: the test suite must pass. No `|| true`. ──
+      - name: Pytest
+        run: python -m pytest tests/ -q
 
-      - name: Black format check
-        run: black --check scripts/ || true   # warning-only in v1.0
+      # ── Lint. Covers scripts/ AND installer/. ──
+      # TODO(v1.x): the tree is NOT yet ruff/black-clean, so lint is reported
+      # (annotations) but not gating. Pre-existing dirt to clear before flipping
+      # `continue-on-error` off:
+      #   - scripts/build_excel.py: F401 (unused get_column_letter), F541 (f-string
+      #     without placeholders); black would reformat build_excel.py + validate_skills.py.
+      #   - installer/wizard.py: F401, F541 (~30 findings); black would reformat.
+      # Reformatting source is out of scope for the CI-hardening pass; do it in a
+      # dedicated formatting PR, then remove the two `continue-on-error` lines below.
+      - name: Ruff lint (scripts + installer)
+        continue-on-error: true
+        run: python -m ruff check scripts/ installer/ --output-format=github
+
+      - name: Black format check (scripts + installer)
+        continue-on-error: true
+        run: python -m black --check scripts/ installer/

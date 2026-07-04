@@ -49,7 +49,7 @@ For founders who prefer not to use a coding agent. **The bootstrap above is the 
 ~/.oot/venv/bin/python ~/.oot/oot-framework/installer/wizard.py --resume
 ```
 
-Interactive **15-step terminal wizard** (v1.1.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Ledger creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
+Interactive **16-step terminal wizard** (steps 0–15, shown as "/15"; wizard v1.2.0). Resumable (`--resume`). Dry-run available (`--dry-run`). Mirrors the agent-runnable plan's structure: preflight → Python venv → locations + Curator config (A/B) → firm profile → module selection → **GitHub plan-tier choice (Finding 16)** → Anthropic check → Ledger creation → signing key + GPG upload + git config → branch protection → Curator integration (existing-Curator vs greenfield, with handoff to the Curator's own [one-line installer](https://github.com/talirezun/the-curator)) → Routines (R5/R6 walkthrough) → smoke test → install summary at `~/.oot/install-summary.md`.
 
 Programmatic where safe (folder creation, git operations, GPG key generation, file edits, smoke test); web-UI walkthrough where the user must approve a third-party action (GitHub repo creation, branch protection rule, GPG public-key upload, MCP installation in Claude Desktop).
 
@@ -76,35 +76,33 @@ These scripts are deliberately thin. They reference the user docs rather than du
 
 ## What the wizard does (the spec)
 
-The wizard's full spec is in [`BUILD-INSTRUCTIONS.md`](../BUILD-INSTRUCTIONS.md) Phase 9. Twelve steps:
+The wizard (`wizard.py`, v1.2.0) is a complete, end-to-end interactive install. It mirrors the agent-runnable [`cloud-install-plan.md`](agent-assisted/cloud-install-plan.md). Sixteen steps (numbered 0–15, shown as "/15" in the UI):
 
-1. Welcome + framework overview.
-2. Track selection (cloud vs. privacy).
-3. Firm profile (name, partner count, jurisdictions, EU AI Act exposure).
-4. Pre-requisite check (`git`, `bw`, `gh`, `curl`, `jq`, plus track-specific).
-5. Hardware (privacy track only) — confirm always-on machine + UPS + FDE.
-6. Secrets vault — Bitwarden / 1Password org + canonical collections.
-7. GitHub setup — org + Ledger + 5 repo-level setup pre-requisites.
-8. Track-specific tools.
-9. The Curator install + first domain.
-10. Routine configuration (R5, R6, R1, R2).
-11. Klarna gate setup.
-12. Smoke test + summary.
+| Step | What it does |
+|---|---|
+| 0 | Welcome + framework overview |
+| 1 | Preflight — `git`, `python ≥3.11`, `curl`, `gpg`, `node`; per-OS install hints |
+| 2 | Python venv at `~/.oot/venv` + wizard/framework deps |
+| 3 | Locations — firm folder, Curator vault, Configuration A vs B |
+| 4 | Firm profile — name, partner count, jurisdictions, EU AI Act exposure, Klarna timing |
+| 5 | Module selection — Foundation / Curator / Skills / Routines / optional security |
+| 6 | GitHub plan-tier choice (Free vs Team vs public — the branch-protection enforcement trade-off) |
+| 7 | Anthropic check — Claude Desktop + Claude Code + plan tier |
+| 8 | Create the Ledger + Firm Brain GitHub repos (per ADR-002); scaffold + Excel templates + initial commit + push |
+| 9 | Generate GPG signing key, upload to GitHub, configure git to sign, verify with a signed commit |
+| 10 | Branch protection on `main` (Ledger + Firm Brain) |
+| 11 | Curator integration + Firm Brain admin/contributor wizards + Push→Synthesize→Pull verify |
+| 12 | Second Brain bridge — Curator GitHub sync so cloud Routines can read the Brain |
+| 13 | Configure Day-1 Routines (R5/R6/R7) + verify their first commits |
+| 14 | Smoke test — signed commit, Excel templates open, folder structure, bridge |
+| 15 | Install summary at `~/.oot/install-summary.md` |
 
 The wizard:
-- Explains *why* it's asking each question.
+- Explains *why* it's asking each question (per-step explainer panels).
 - Requires explicit consent for every consequential action.
-- Is **idempotent** — `--resume` skips completed steps.
-- Has a `--dry-run` flag that walks the questions without actions.
-- Stores credentials only in Bitwarden/keychain — never in the wizard's state file.
+- Is **idempotent** — `--resume` skips completed steps and can go back to revise an earlier answer.
+- Has a `--dry-run` flag that walks the questions without executing anything and **never writes the state file**.
+- Uses the `gh` CLI to automate GitHub actions when it's installed + authenticated; otherwise walks you through the github.com web UI.
+- Stores credentials only in your password manager / keychain — never in the wizard's state file (`~/.oot/wizard-state.yaml`).
 
-## v1.0 vs. v1.x
-
-In v1.0 (this release):
-- Wizard scaffold ships with steps 1-4 functional.
-- Steps 5-12 reference the corresponding sections in `docs/00-quickstart-cloud.md` / `docs/00-quickstart-privacy.md`.
-- Founders complete steps 5-12 manually using the docs.
-
-In v1.x:
-- Steps 5-12 are programmatic (Bitwarden via `bw` CLI, GitHub via `gh` CLI, Anthropic via API, etc.).
-- The wizard becomes a single end-to-end run.
+Programmatic where safe (folder creation, git operations, GPG key generation, file edits, smoke test); web-UI walkthrough where you must approve a third-party action (GitHub repo creation, branch protection, GPG public-key upload, MCP wiring in Claude Desktop).

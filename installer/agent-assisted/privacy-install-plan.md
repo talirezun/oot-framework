@@ -534,8 +534,18 @@ launchctl load ~/Library/LaunchAgents/oot.r5.plist
 ```
 
 ```bash
-crontab ~/oot-framework/routines/privacy/cron.txt
+# ⚠  `crontab <file>` REPLACES the machine's entire crontab — it wipes any
+#    existing entries. If the always-on machine already has cron jobs, MERGE
+#    instead of overwriting:
+crontab -l 2>/dev/null > /tmp/oot-crontab.merged || true
+cat ~/oot-framework/routines/privacy/cron.txt >> /tmp/oot-crontab.merged
+crontab /tmp/oot-crontab.merged
+crontab -l   # verify the ØØT lines AND any pre-existing lines are present
 ```
+
+If you're certain the crontab is empty (a fresh always-on machine), the direct
+`crontab ~/oot-framework/routines/privacy/cron.txt` is fine — but the merge form
+above is always safe.
 
 **Windows (Task Scheduler):** XML import — see `routines/privacy/r5-task.xml` template.
 

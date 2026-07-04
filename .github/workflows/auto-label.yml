@@ -1,7 +1,18 @@
 name: Auto-label PRs
 
+# Uses pull_request_target so PRs from forks can also be labelled: the default
+# pull_request event grants read-only, no-write GITHUB_TOKEN on fork PRs, which
+# means the label is never applied. pull_request_target runs in the BASE repo
+# context with a writable token.
+#
+# HARDENING: this workflow never checks out or executes any PR-head code. It
+# runs only actions/labeler@v5, which reads the PR's changed-file list via the
+# API. Do NOT add a checkout of the PR head (`ref: github.event.pull_request.head.*`)
+# or any build/test step here, or you reintroduce the pull_request_target
+# code-execution risk.
+
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:

@@ -75,6 +75,7 @@ steps_completed:
   step_7_branch_protection: done | failed | skipped
   step_8_curator: done | failed | skipped
   step_9_brain_first_ingest: done | failed | skipped
+  step_9b_secondbrain_sync: done | failed | skipped
   step_10_routines: done | failed | skipped
   step_11_klarna_gate: done | failed | skipped
   step_12_smoke_test: done | failed | skipped
@@ -808,8 +809,6 @@ If visible: continue. If not: troubleshoot — most likely the PAT is missing Co
 
 **What you're about to do (tell the user):** "Pick five existing documents that represent your firm's knowledge. The Curator ingests them into your domain. About 20 minutes."
 
-(Same content as Step 7 of the v1.0 plan — unchanged.)
-
 🟡 **ASK USER:** "Pick:
 1. A recent customer contract
 2. A strategic memo (your recent thinking)
@@ -997,7 +996,76 @@ Verify `<curator_domain>` is in the list. Confirm?"
 
 ## Step 13 — Write the install summary
 
-(Same as v1.0 plan Step 11 — extends the summary template with `github_plan_tier`, `curator_config`, and any deferred steps logged in `notes`.)
+**What you're about to do (tell the user):** "I'll write a summary of everything we set up to `~/.oot/install-summary.md`. You can review it, share it, or hand it to your accountant or counsel."
+
+Write `~/.oot/install-summary.md` using this template, filling every `<...>` from the install-state file. Never write secrets (tokens, PATs, key material) into the summary — record only whether each was saved to the password manager.
+
+```markdown
+# ØØT Install Summary — <FIRM_NAME>
+
+**Track:** cloud
+**Installed:** <ISO8601 timestamp>
+**Plan version:** cloud-install-plan.md v1.1.0
+
+## Firm profile
+
+- Firm: <FIRM_NAME>
+- Partner count: <partner_count>
+- Jurisdictions: <ISO codes>
+- EU high-risk (Annex III): <yes|no|not-sure>
+- Anthropic plan: <pro|max|team|enterprise>
+- GitHub plan tier: <free|team|public>   <!-- Finding 16: free = branch protection advisory only -->
+
+## Locations
+
+- Firm folder (Ledger clone): `<firm_folder>`
+- Curator vault: `<curator_vault or "= firm folder (Config B)">`
+- Curator domain: `<curator_domain>`
+- Curator configuration: <A_separate | B_unified>
+
+## Modules installed
+
+- Foundation: <list>
+- Skill packs: <list>
+- Routines configured now: <list; e.g. R5, R6>
+- Routines deferred (need partner data first): <list; e.g. R1, R2, R3, R4, R8>
+- Optional security: <list; e.g. branch_protection>
+
+## GitHub repos (two — per ADR-002)
+
+- **Ledger** (operational state — Excel, audit logs): <LEDGER_REPO_URL>
+- **Firm Brain** (Curator Shared Brain — synthesized firm IP): <FIRM_BRAIN_REPO_URL>
+
+## Signing + protection
+
+- GPG signing key ID: `<key_id>`
+- Branch protection on Ledger `main`: <applied | advisory-only (Free plan) | deferred>
+- Branch protection on Firm Brain `main`: <applied | deferred>
+
+## Second Brain bridge
+
+- Second Brain repo: <second_brain_repo_url or "n/a — Curator skipped / privacy track">
+- Curator domain scope: <wiki/<domain>>
+- Clone-test verified at Step 9b: <yes | no>
+- Read-only PAT: NOT stored in this summary — saved to <password manager>
+
+## Firm Brain configuration
+
+- IP mode: <organisational | contributor_retains>
+- admin_token saved to password manager: <yes | NO — DO THIS NOW>
+- Invite token (sbi_) saved to password manager: <yes | NO — DO THIS NOW>
+- First Synthesize verified: <yes | no>
+
+## Deferred / follow-ups
+
+<Any steps the user skipped, fallbacks taken, or open TODOs from `notes`.>
+
+## Next steps
+
+- Read `docs/03-onboarding-a-partner.md` for the first partner onboarding.
+- Read `docs/MODULES.md` for what to add over the next 30 / 90 / 180 days.
+- Re-run the install (or the wizard with `--resume`) if anything was deferred.
+```
 
 `step_13_install_summary: done`.
 

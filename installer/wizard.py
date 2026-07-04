@@ -71,6 +71,11 @@ OOT_HOME = Path(os.environ.get("OOT_HOME", Path.home() / ".oot"))
 STATE_FILE = OOT_HOME / "wizard-state.yaml"
 VENV_DIR = OOT_HOME / "venv"
 
+# Module-level dry-run flag. Set once in main() from --dry-run. When True,
+# save_state()/mark_step_done() become no-ops so a dry-run never persists
+# progress to ~/.oot/wizard-state.yaml (which would poison a later real run).
+DRY_RUN = False
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_EXCEL = REPO_ROOT / "templates" / "excel"
 
@@ -153,7 +158,18 @@ def ask_confirm(prompt: str, default: bool = True) -> bool:
 
 def ask_select(prompt: str, choices: list[str], default: Optional[str] = None) -> str:
     if _HAS_QUESTIONARY:
-        return questionary.select(prompt, choices=choices, default=default).ask()
+        # questionary.select(...).ask() returns None when the user hits Ctrl-C /
+        # Esc. Returning None here would crash every caller that does
+        # `.startswith(...)` on the result. Re-prompt once; a second cancel is
+        # treated as an intentional quit (progress is already saved).
+        answer = questionary.select(prompt, choices=choices, default=default).ask()
+        if answer is None:
+            warn("Cancelled. Press Ctrl-C again to quit, or pick an option.")
+            answer = questionary.select(prompt, choices=choices, default=default).ask()
+            if answer is None:
+                info("Exiting. Your progress is saved — resume with the same one-liner.")
+                sys.exit(0)
+        return answer
     info(prompt)
     for i, c in enumerate(choices, 1):
         info(f"  {i}. {c}")
@@ -340,9 +356,25 @@ def ask_path(prompt: str, default: Optional[str] = None, must_exist: bool = Fals
         return path
 
 
+def _mask_secrets_in_cmd(cmd_str: str) -> str:
+    """Redact credentials embedded in a URL before echoing a command.
+
+    Catches the `https://<token>@github.com/...` and `https://user:<token>@host`
+    forms we build for authenticated clones/pushes. Without this the PAT would
+    be printed verbatim in the `$ ...` echo and captured in any scrollback/log.
+    """
+    import re as _re
+    # https://TOKEN@host  or  https://user:TOKEN@host  → keep host, hide creds.
+    return _re.sub(
+        r"(https?://)([^/\s@]+)@",
+        lambda m: f"{m.group(1)}***@",
+        cmd_str,
+    )
+
+
 def run(cmd: list[str], dry_run: bool = False, capture: bool = False, check: bool = False) -> tuple[int, str]:
     """Run a shell command. Returns (returncode, stdout). On dry-run, prints and returns (0, '')."""
-    cmd_str = " ".join(cmd)
+    cmd_str = _mask_secrets_in_cmd(" ".join(cmd))
     if dry_run:
         info(f"  [dim](dry-run)[/dim] {cmd_str}" if _HAS_RICH else f"  (dry-run) {cmd_str}")
         return 0, ""
@@ -365,8 +397,76 @@ def run(cmd: list[str], dry_run: bool = False, capture: bool = False, check: boo
         return 127, ""
 
 
+def run_critical(cmd: list[str], what: str, dry_run: bool = False,
+                 capture: bool = False) -> bool:
+    """Run a command whose failure must NOT be silently swallowed.
+
+    Returns True on success (rc == 0), False on failure. On failure prints a
+    friendly, actionable message telling the user to fix the underlying problem
+    and re-run with --resume. Used for the money/trust-path commands: git push,
+    gpg --gen-key, git commit -S — where a silent failure would leave the
+    install in a broken-but-marked-done state.
+    """
+    rc, out = run(cmd, dry_run=dry_run, capture=capture, check=False)
+    if dry_run:
+        return True
+    if rc != 0:
+        err(f"{what} failed (exit {rc}).")
+        if capture and out:
+            info(out.strip())
+        warn("This step did NOT complete. Fix the problem above, then re-run the "
+             "installer with --resume to retry from here — we won't mark this step done.")
+        return False
+    return True
+
+
+def parse_gpg_key_ids(colon_output: str) -> list[str]:
+    """Extract long key IDs from `gpg --list-secret-keys --with-colons` output.
+
+    Each secret key is a `sec:` record; field 5 (0-indexed 4) is the long key ID.
+    Returns them most-recent-first as gpg lists them. Pure function — unit-tested
+    against a fixture so we never regress the field index.
+    """
+    ids: list[str] = []
+    for line in colon_output.splitlines():
+        fields = line.split(":")
+        if fields and fields[0] == "sec" and len(fields) > 4 and fields[4]:
+            ids.append(fields[4])
+    return ids
+
+
+def auto_detect_signing_key_id(dry_run: bool = False) -> Optional[str]:
+    """Return the machine's GPG signing key ID by parsing --with-colons output.
+
+    Returns the single key if exactly one exists, or None if zero / ambiguous
+    (multiple keys) so the caller can fall back to asking the user to pick.
+    """
+    rc, out = run(["gpg", "--list-secret-keys", "--with-colons"],
+                  dry_run=dry_run, capture=True, check=False)
+    if rc != 0:
+        return None
+    ids = parse_gpg_key_ids(out)
+    if len(ids) == 1:
+        return ids[0]
+    return None
+
+
 def which(cmd: str) -> Optional[str]:
     return shutil.which(cmd)
+
+
+def venv_bin(venv_dir: Path, exe: str) -> Path:
+    """Return the path to an executable inside a venv, cross-platform.
+
+    POSIX venvs put executables under `bin/`; Windows venvs use `Scripts\\` and
+    add a `.exe` suffix. Native Windows support for the wizard is only partial
+    (the install plans assume POSIX / WSL), but at least the venv paths resolve
+    correctly if someone runs it there.
+    """
+    if os.name == "nt":
+        name = exe if exe.endswith(".exe") else f"{exe}.exe"
+        return venv_dir / "Scripts" / name
+    return venv_dir / "bin" / exe
 
 
 # ----- explainer panels -----------------------------------------------------
@@ -663,6 +763,10 @@ def load_state() -> dict[str, Any]:
 
 
 def save_state(state: dict[str, Any]) -> None:
+    if DRY_RUN:
+        # Dry-run never touches the on-disk state file. In-memory `state`
+        # still carries answers forward so the walkthrough flows normally.
+        return
     if yaml is None:
         warn("pyyaml not installed; state file not persisted. Run `pip install pyyaml` to enable resumability.")
         return
@@ -679,6 +783,25 @@ def mark_step_done(state: dict[str, Any], step_key: str, outcome: str = "done") 
 
 def is_step_done(state: dict[str, Any], step_key: str) -> bool:
     return state.get("steps_completed", {}).get(step_key) == "done"
+
+
+def resolve_track(state: dict[str, Any], cli_track: str, resume: bool) -> dict[str, Any]:
+    """Return the firm_profile dict with a correctly-resolved `track`.
+
+    On --resume, a track already saved in the state file WINS over the argparse
+    default. Argparse always supplies a `--track` value (default "cloud"), so a
+    naive `profile["track"] = args.track` would silently flip a resumed
+    privacy-track install back to cloud. When resuming with an existing saved
+    track we keep it; otherwise (fresh run, or no saved track) we take the CLI
+    value. Pure function so it can be unit-tested without argparse/IO.
+    """
+    profile = dict(state.get("firm_profile", {}) or {})
+    saved = profile.get("track")
+    if resume and saved:
+        profile["track"] = saved
+    else:
+        profile["track"] = cli_track
+    return profile
 
 
 # ----- the 15 steps ---------------------------------------------------------
@@ -730,6 +853,11 @@ def step_00_welcome(state: dict[str, Any], dry_run: bool) -> None:
 
 def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
     """Returns the absolute path of the Python interpreter to use."""
+    if is_step_done(state, "step_01_preflight"):
+        # Resume path: reuse the interpreter we already validated + saved.
+        return (state.get("preflight", {}).get("python")
+                or state.get("oot_python")
+                or sys.executable)
     header("Step 1 / 15 — Preflight: required tools", level=2)
 
     explainer(
@@ -804,7 +932,7 @@ def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
     oot_python = state.get("preflight", {}).get("python") or state.get("oot_python") or sys.executable
     if not VENV_DIR.exists():
         run([oot_python, "-m", "venv", str(VENV_DIR)], dry_run=dry_run, check=True)
-    venv_pip = VENV_DIR / "bin" / "pip"
+    venv_pip = venv_bin(VENV_DIR, "pip")
     if not dry_run and venv_pip.exists():
         run([str(venv_pip), "install", "openpyxl", "pyyaml", "httpx", "questionary", "rich"],
             dry_run=False, capture=False, check=False)
@@ -842,9 +970,11 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
 
     firm_slug_default = ask_text("Firm slug (lowercase-hyphenated, e.g. 'acme-studio')",
                                   default=prior.get("firm_slug") or None)
-    if not firm_slug_default:
-        warn("Firm slug is required.")
-        sys.exit(1)
+    while not firm_slug_default.strip():
+        warn("Firm slug is required — it names your local folder and both GitHub repos.")
+        firm_slug_default = ask_text("Firm slug (lowercase-hyphenated, e.g. 'acme-studio')",
+                                     default=prior.get("firm_slug") or None)
+    firm_slug_default = firm_slug_default.strip()
     firm_folder_default = prior.get("firm_folder") or str(Path.home() / firm_slug_default)
     firm_folder = ask_path(
         f"Firm operational repo folder", default=firm_folder_default
@@ -867,7 +997,7 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
         cfg_default = (
             "A — Separate vault and firm repo (recommended for existing Curator users)"
             if curator_config == "A"
-            else "A — Separate vault and firm repo (recommended for existing Curator users)"
+            else "B — Unified: firm repo IS the Curator vault (recommended for greenfield)"
         )
         curator_config = ask_select(
             "Curator integration mode (see docs/MODULES.md for the trade-off):",
@@ -1266,7 +1396,7 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
     )
     state.setdefault("firm_profile", {})["anthropic_plan"] = plan
     profile = state["firm_profile"]
-    if plan == "pro" and (profile.get("partner_count_estimate", "").startswith("medium")
+    if plan == "pro" and (profile.get("partner_count_estimate", "").startswith(("medium", "large"))
                           or profile.get("klarna_gate_choice") == "now"):
         warn("Pro plan caps Routines at 5/day. With your firm size + Klarna gate, "
              "you'll exceed that. Strongly recommend Max plan.")
@@ -1311,15 +1441,18 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
 
     # --- Substep 1: local folder + git init -------------------------------
     info("\n[1/4] Local folder + git init")
-    if not firm_folder.exists():
-        firm_folder.mkdir(parents=True)
-        ok(f"Created {firm_folder}")
-    os.chdir(firm_folder)
-    if not (firm_folder / ".git").exists():
-        run(["git", "init", "-b", "main"], dry_run=dry_run, check=False)
-        ok("git init")
+    if dry_run:
+        info(f"  (dry-run) would create folder + git init at {firm_folder}")
     else:
-        info(f"  (Already a git repo at {firm_folder} — skipping init.)")
+        if not firm_folder.exists():
+            firm_folder.mkdir(parents=True)
+            ok(f"Created {firm_folder}")
+        os.chdir(firm_folder)
+        if not (firm_folder / ".git").exists():
+            run(["git", "init", "-b", "main"], dry_run=dry_run, check=False)
+            ok("git init")
+        else:
+            info(f"  (Already a git repo at {firm_folder} — skipping init.)")
 
     # --- Substep 2: author identity + scaffold + Excel templates ----------
     info("\n[2/4] Commit author identity + folder scaffold + Excel templates")
@@ -1340,20 +1473,23 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
 
     subfolders = ["excel", "output-logs", "audit-logs", "business-reviews",
                   "klarna-tests", "compensation", "brain-health", "partners"]
-    for sub in subfolders:
-        (firm_folder / "firm" / sub).mkdir(parents=True, exist_ok=True)
-        if sub != "excel":
-            gitkeep = firm_folder / "firm" / sub / ".gitkeep"
-            if not gitkeep.exists():
-                gitkeep.touch()
     excel_dst = firm_folder / "firm" / "excel"
-    if not dry_run:
+    if dry_run:
+        info(f"  (dry-run) would scaffold firm/ subfolders {subfolders} and copy "
+             f"{len(list(TEMPLATES_EXCEL.glob('*.xlsx')))} .xlsx templates into firm/excel/")
+    else:
+        for sub in subfolders:
+            (firm_folder / "firm" / sub).mkdir(parents=True, exist_ok=True)
+            if sub != "excel":
+                gitkeep = firm_folder / "firm" / sub / ".gitkeep"
+                if not gitkeep.exists():
+                    gitkeep.touch()
         for xlsx in TEMPLATES_EXCEL.glob("*.xlsx"):
             shutil.copy2(xlsx, excel_dst / xlsx.name)
         ok(f"Copied {len(list(excel_dst.glob('*.xlsx')))} .xlsx templates to firm/excel/")
 
     readme = firm_folder / "README.md"
-    if not readme.exists():
+    if not dry_run and not readme.exists():
         readme_text = (
             f"# {profile['name']} — operational Ledger\n\n"
             f"ØØT framework cloud-track install. Holds the firm's `.xlsx` "
@@ -1454,7 +1590,10 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             run(["git", "remote", "add", "origin", repo_url], check=False)
             ok("Added remote 'origin'.")
         if ask_confirm("Push to origin/main now? (May prompt for GitHub credentials.)", default=True):
-            run(["git", "push", "-u", "origin", "main"], dry_run=dry_run, check=False)
+            if not run_critical(["git", "push", "-u", "origin", "main"],
+                                "Push to origin/main", dry_run=dry_run, capture=True):
+                info("Pausing. Re-run the bootstrap with --resume once the push succeeds.")
+                sys.exit(0)
 
     # --- Substep 5: create the Firm Brain repo (empty) --------------------
     info("\n[5/5] Create the Firm Brain GitHub repo (empty — Curator populates it in Step 11)")
@@ -1558,9 +1697,20 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
     if not modules.get("install_signing_key", True):
         info("Existing GPG signing key detected at Step 5 — skipping key generation.")
         info("If you want to use a *different* key, run: gpg --gen-key, then re-run wizard from Step 9.\n"
-             "We'll still configure git to sign with your existing key. Listing your keys now:")
-        run(["gpg", "--list-secret-keys", "--keyid-format=long"], capture=False, check=False)
-        existing_key = ask_text("Paste the key ID (the long hex after 'sec rsa4096/' or 'sec ed25519/')").strip()
+             "We'll still configure git to sign with your existing key.")
+        existing_key = auto_detect_signing_key_id(dry_run=dry_run)
+        if existing_key:
+            ok(f"Detected exactly one signing key: {existing_key}")
+            if not ask_confirm(f"Use key {existing_key}?", default=True):
+                existing_key = None
+        if not existing_key:
+            rc, out = run(["gpg", "--list-secret-keys", "--keyid-format=long"],
+                          capture=True, check=False)
+            info_plain(out)
+            existing_key = ask_text(
+                "Paste the key ID (the long hex after 'sec rsa4096/' or 'sec ed25519/')").strip()
+        else:
+            existing_key = existing_key.strip()
         if existing_key:
             state["signing_key_id"] = existing_key
             locations = state["locations"]
@@ -1601,14 +1751,26 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
         )
         batch_path = Path("/tmp/oot-gpg-batch.txt")
         batch_path.write_text(batch)
-        run(["gpg", "--batch", "--gen-key", str(batch_path)], dry_run=False, check=False)
+        gen_ok = run_critical(["gpg", "--batch", "--gen-key", str(batch_path)],
+                              "GPG key generation", dry_run=False, capture=True)
         batch_path.unlink(missing_ok=True)
+        if not gen_ok:
+            info("Pausing. Fix the gpg error above, then re-run with --resume.")
+            return  # NOT marked done — --resume retries this step
 
-    rc, out = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG"],
-                  dry_run=dry_run, capture=True)
-    info(out)
-    info("\nFind the key ID — the 16-character hex string after `rsa4096/` on the `sec` line.")
-    key_id = ask_text("GPG key ID", default="")
+    # Auto-detect the key ID by parsing machine-readable colon output; only ask
+    # the user if we can't unambiguously determine it (0 or >1 secret keys).
+    key_id = auto_detect_signing_key_id(dry_run=dry_run)
+    if key_id:
+        ok(f"Detected your new signing key ID automatically: {key_id}")
+        if not ask_confirm(f"Use key {key_id} for signing?", default=True):
+            key_id = None
+    if not key_id:
+        rc, out = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG"],
+                      dry_run=dry_run, capture=True)
+        info_plain(out)
+        info("\nFind the key ID — the 16-character hex string after `rsa4096/` on the `sec` line.")
+        key_id = ask_text("GPG key ID", default="")
     state["signing_key_id"] = key_id
 
     pub_path: Optional[Path] = None
@@ -1672,16 +1834,25 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
         sig_test = firm_folder / "firm" / ".signing-test"
         sig_test.write_text(f"Signed-commit verification at {datetime.now(timezone.utc).isoformat()}\n")
         run(["git", "add", "firm/.signing-test"], check=False)
-        run(["git", "commit", "-S", "-m", "verify: signing key works"], check=False)
+        if not run_critical(["git", "commit", "-S", "-m", "verify: signing key works"],
+                            "Signed test commit", capture=True):
+            info("The signing key isn't working yet. Common causes: the key ID is wrong,\n"
+                 "gpg can't find the key, or git isn't pointed at the right gpg.program.\n"
+                 "Fix the error above, then re-run with --resume.")
+            return  # NOT marked done — --resume retries this step
         run(["git", "log", "--show-signature", "-1"], capture=False, check=False)
 
         if ask_confirm("Push the verification commit?", default=True):
-            run(["git", "push", "origin", "main"], check=False)
-            info(
-                f"\n→ Open {state.get('ledger_repo_url', '<repo>')}/commits/main in your browser.\n"
-                f"  The latest commit should have a green Verified badge.\n"
-                f"  If not: see docs/00-quickstart-cloud.md 'Step 6' troubleshooting."
-            )
+            if run_critical(["git", "push", "origin", "main"],
+                            "Push verification commit", capture=True):
+                info(
+                    f"\n→ Open {state.get('ledger_repo_url', '<repo>')}/commits/main in your browser.\n"
+                    f"  The latest commit should have a green Verified badge.\n"
+                    f"  If not: see docs/00-quickstart-cloud.md 'Step 6' troubleshooting."
+                )
+            else:
+                info("Pausing. Re-run with --resume once the push succeeds.")
+                return  # NOT marked done
     mark_step_done(state, "step_09_signing_key")
 
 
@@ -2477,12 +2648,15 @@ def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
         mark_step_done(state, "step_14_smoke_test")
         return
 
-    os.chdir(firm_folder)
     info("\n[1/3] Most recent commit signature:")
-    run(["git", "log", "--show-signature", "-1"], capture=False, check=False)
+    if dry_run:
+        info("  (dry-run) would run: git log --show-signature -1")
+    else:
+        os.chdir(firm_folder)
+        run(["git", "log", "--show-signature", "-1"], capture=False, check=False)
 
     info("\n[2/3] Excel templates open cleanly:")
-    venv_python = VENV_DIR / "bin" / "python"
+    venv_python = venv_bin(VENV_DIR, "python")
     if venv_python.exists() and not dry_run:
         cmd = [str(venv_python), "-c", (
             "import openpyxl\n"
@@ -2583,9 +2757,11 @@ def step_15_summary(state: dict[str, Any], dry_run: bool) -> None:
         f"- Curator domain: `{locations.get('curator_domain')}`\n"
         f"- Curator config: {locations.get('curator_config')}\n"
         f"\n## Modules\n\n"
-        f"- Required: {', '.join(modules.get('required', []))}\n"
-        f"- Recommended: {', '.join(modules.get('recommended', [])) or '(none)'}\n"
-        f"- Deferred: {', '.join(modules.get('deferred', [])) or '(none)'}\n"
+        f"- Foundation: {', '.join(modules.get('foundation', [])) or '(none)'}\n"
+        f"- Curator mode: {modules.get('curator_mode', '(none)')}\n"
+        f"- Skill packs: {', '.join(modules.get('skills', [])) or '(none)'}\n"
+        f"- Routines: {', '.join(modules.get('routines', [])) or '(none)'}\n"
+        f"- Security: {', '.join(modules.get('security', [])) or '(none)'}\n"
         f"\n## GitHub repos (two — per ADR-002)\n\n"
         f"- **Ledger** (operational state — Excel, audit logs):\n"
         f"  {state.get('ledger_repo_url', '<not configured>')}\n"
@@ -2628,6 +2804,13 @@ def main() -> int:
     _force_select_event_loop_on_macos()
     _reattach_stdin_to_tty_if_needed()
 
+    if os.name == "nt":
+        warn("Native Windows is only partially supported. The install plans and the\n"
+             "framework's bash provisioning scripts assume a POSIX shell. For a smooth\n"
+             "install, run this wizard inside WSL (Windows Subsystem for Linux):\n"
+             "  https://learn.microsoft.com/windows/wsl/install\n"
+             "Continuing on native Windows — some git/gpg steps may need manual fixups.")
+
     if not _HAS_QUESTIONARY:
         warn("`questionary` not installed. Falling back to plain input(). "
              "For nicer prompts, run: pip install questionary rich")
@@ -2646,7 +2829,7 @@ def main() -> int:
 
     state.setdefault("wizard_version", WIZARD_VERSION)
     state.setdefault("started_at", datetime.now(timezone.utc).isoformat())
-    state.setdefault("firm_profile", {})["track"] = args.track
+    state["firm_profile"] = resolve_track(state, args.track, args.resume)
     save_state(state)
 
     # Step navigator. Each entry: (state-key, human-label, fn).

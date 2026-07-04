@@ -5,6 +5,14 @@
 # Heuristic; the partner reviews within 24h, confirms or removes.
 # Dismissal reasons train the labeller (added via PR to this file).
 #
+# ─────────────────────────────────────────────────────────────────────────────
+# ADAPT FOR YOUR FIRM'S PRODUCT REPOS.
+# The `src/**` and `pages/api/**` globs below are commented out because this
+# framework repo has no product code — they would never match here. Uncomment
+# and point them at YOUR firm product's paths when you copy this file into a
+# repo that contains application code routing work to humans.
+# ─────────────────────────────────────────────────────────────────────────────
+#
 # See:
 #   - skills/code-qa/SKILL.md §4.8 (auto-labeller signatures)
 #   - .github/workflows/klarna-gate.yml (the gate this label triggers)
@@ -12,27 +20,32 @@
 
 ai-replaces-human:
   # Signature 1: PR removes a code path that previously routed work to a human.
-  # Heuristic: any deletion of files / functions matching keywords like
-  # 'manual_review', 'escalate_to_human', 'human_in_loop', 'requires_review'.
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/**/manual_review*'
-          - 'src/**/escalate*'
-          - 'src/**/human_review*'
-          - 'src/**/requires_review*'
-          - 'pages/api/**/manual_review*'
+  # Heuristic: any change to files matching keywords like 'manual_review',
+  # 'escalate_to_human', 'human_in_loop', 'requires_review'.
+  #
+  # FIRM PRODUCT GLOBS — adapt for your firm's product repos, then uncomment:
+  # - changed-files:
+  #     - any-glob-to-any-file:
+  #         - 'src/**/manual_review*'
+  #         - 'src/**/escalate*'
+  #         - 'src/**/human_review*'
+  #         - 'src/**/requires_review*'
+  #         - 'pages/api/**/manual_review*'
 
-  # Signature 2: PR modifies partner-output-ledger.xlsx.
-  # The Klarna gate is conservative: any modification to the source-of-truth ledger
-  # gets the label. Partner reviews + dismisses if false-positive.
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'templates/excel/partner-output-ledger.xlsx'
+  # Signature 2: PR modifies the firm's live partner-output ledger.
+  # In a firm Ledger repo this is firm/excel/partner-output-ledger.xlsx.
+  # NOTE: intentionally NOT matching templates/excel/partner-output-ledger.xlsx —
+  # that path is the framework's TEMPLATE, and Excel-regeneration PRs in this
+  # repo (scripts/build_excel.py output) must not be auto-labelled. Firms:
+  # uncomment and point at your live ledger path.
+  # - changed-files:
+  #     - any-glob-to-any-file:
+  #         - 'firm/excel/partner-output-ledger.xlsx'
 
-  # Signature 3: PR adds a new Skill folder under skills/ with frontmatter
-  # `automates: human_function: yes`.
-  # The labeller config can't grep file content; signature 3 requires
-  # a custom workflow step. Below: any new SKILL.md is at least a candidate.
+  # Signature 3: PR adds/edits a Skill folder SKILL.md.
+  # The labeller config can't grep file content; a full signature-3 match
+  # (frontmatter `automates: human_function: yes`) requires a custom workflow
+  # step. Here any non-template SKILL.md change is at least a candidate.
   - changed-files:
       - any-glob-to-any-file:
           - 'skills/*/SKILL.md'

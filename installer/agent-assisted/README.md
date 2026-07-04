@@ -25,7 +25,7 @@ This is the primary path because it best matches the framework's own discipline:
 1. You open a coding agent in your terminal or IDE — Claude Code, Augment Code, Aider against a local LM Studio model, or any agent that meets the [capability spec](AGENT-CAPABILITY-SPEC.md).
 2. You point it at the install plan for your track:
    - **Cloud track:** [`installer/agent-assisted/cloud-install-plan.md`](cloud-install-plan.md) — ~60-90 minutes wall-clock, mostly waiting for you to answer questions.
-   - **Privacy track:** [`installer/agent-assisted/privacy-install-plan.md`](privacy-install-plan.md) — ~6-8 hours wall-clock spread across 1-2 weekends, plus 1 week for hardware shipping.
+   - **Privacy track:** [`installer/agent-assisted/privacy-install-plan.md`](privacy-install-plan.md) — ~25 hours wall-clock spread across two weekends, plus ~1 week for hardware shipping.
 3. The agent reads the plan, walks the steps, and asks you the questions a human installer would have to answer (firm name, partner count, jurisdictions, which optional modules to skip).
 4. At the end, the agent produces an install summary at `~/.oot/install-summary.md` you can review, share, or hand to counsel.
 
@@ -38,10 +38,10 @@ You stay in control. Every consequential action (creating a GitHub repo, generat
 | | Path A (agent) | Path B (wizard) | Path C (manual docs) |
 |---|---|---|---|
 | **Best for** | Most founders, especially less-technical ones | Founders who explicitly avoid agent assistance | Founders who already know what they're doing |
-| **Time** | 60-90 min cloud / 6-8 hours privacy | similar | longer (you do every step yourself) |
+| **Time** | 60-90 min cloud / ~25 hours privacy | similar | longer (you do every step yourself) |
 | **You need** | A coding agent (Claude Code, Augment Code, Aider, …) | Just Python 3.13+ | Nothing beyond what the docs reference |
 | **Strength** | Agent does the JSON edits, signs commits, runs MCPs, verifies each step | Single Python entry point, no LLM dependency | Most transparent; nothing happens you didn't type |
-| **Weakness** | You need an agent that meets the [capability spec](AGENT-CAPABILITY-SPEC.md) | v1.0 ships steps 1-4; steps 5-12 are stubbed pending v1.x | Steepest learning curve; most error-prone for non-technical founders |
+| **Weakness** | You need an agent that meets the [capability spec](AGENT-CAPABILITY-SPEC.md) | Slightly slower than the agent path; you drive each web-UI step yourself | Steepest learning curve; most error-prone for non-technical founders |
 
 The framework recommends Path A for most founders because the most error-prone step in any install is "edit `claude_desktop_config.json` and paste this snippet" — that's where 60% of failed installs happen, and it's the step a coding agent can do flawlessly without the user touching the editor.
 
@@ -113,7 +113,7 @@ The privacy track plan starts with the hardware-acquisition pre-week (you order 
 
 You have two options:
 
-1. **Use Path B (the wizard)** at [`installer/wizard.py`](../wizard.py). It's a Python terminal wizard that asks you the same questions but does less of the work for you. Steps 1-4 are programmatic in v1.0; steps 5-12 reference [`docs/00-quickstart-cloud.md`](../../docs/00-quickstart-cloud.md) and you complete them manually following the docs.
+1. **Use Path B (the wizard)** at [`installer/wizard.py`](../wizard.py). It's a complete Python terminal wizard (v1.2.0, steps 0–15) that asks you the same questions and drives the whole install — programmatic where safe, web-UI walkthrough where you must approve a third-party action. It's resumable (`--resume`) and has a `--dry-run`. Start it via the bootstrap one-liner in the [installer README](../README.md).
 2. **Use Path C (the manual docs)** at [`docs/00-quickstart-cloud.md`](../../docs/00-quickstart-cloud.md). This is the original Weekend One / Weekend Two path. Slowest, but every step is something you typed yourself, so nothing is opaque.
 
 If your agent meets *most* of the capability spec but fails on one item, the install plans are written defensively: the agent reads the failure, asks you to do that step manually following the linked Path C section, and then resumes from the next step.

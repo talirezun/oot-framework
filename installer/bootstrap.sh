@@ -133,9 +133,9 @@ EOF
           git|curl) apt_pkgs+=("$t") ;;
         esac
       done
-      printf '  ${C_DIM}# Debian / Ubuntu / WSL:${C_RESET}\n'
+      printf "  ${C_DIM}# Debian / Ubuntu / WSL:${C_RESET}\n"
       printf '  sudo apt-get update && sudo apt-get install -y %s\n' "${apt_pkgs[*]}"
-      printf '\n  ${C_DIM}# Fedora / RHEL:${C_RESET}\n'
+      printf "\n  ${C_DIM}# Fedora / RHEL:${C_RESET}\n"
       local dnf_pkgs=()
       for t in "${missing[@]}"; do
         case "$t" in

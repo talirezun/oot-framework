@@ -117,26 +117,27 @@ For each output:
 
 **Implementation (the canonical Pattern C operation per ADR-001):**
 
-1. Clone the firm's Ledger to a working directory: `git clone <LEDGER_REPO_URL> /tmp/brain && cd /tmp/brain && git pull`.
+1. Clone the firm's Ledger to a fresh per-run working directory: `WORKDIR=$(mktemp -d) && git clone <LEDGER_REPO_URL> "$WORKDIR/ledger" && cd "$WORKDIR/ledger"`. Use a unique dir per run (not a fixed `/tmp/brain`) so concurrent or same-day re-runs never collide on a stale clone. A fresh clone is already current — no `git pull` needed after it.
 2. Open `firm/excel/partner-output-ledger.xlsx` (X1) with openpyxl in code execution.
 3. Find the next empty row in Output_Log using **column A (log_id) as the determinant**, NOT `ws.max_row`. The value_envelope_table embedded at O1:P5 makes `max_row` report 5 even when sample data only fills rows 2-4 — using `max_row + 1` would leave a permanent ghost gap. Pseudocode:
-   ```python
-   r = 2
-   while ws.cell(r, 1).value:
-       r += 1
-   # r is now the first empty row to append at
-   ```
+
+        r = 2
+        while ws.cell(r, 1).value:
+            r += 1
+        # r is now the first empty row to append at
+
+3a. **Dedupe against already-logged outputs (makes re-runs idempotent).** Before appending any candidate, read the existing Output_Log rows and collect the set of `output_ref` values (column E) from every row whose `date` (column B) is within the last 45 days. **Skip any candidate whose `output_ref` already appears in that set** — it was captured on a prior run. Running R1 twice on the same day (e.g. after an Anthropic-infra retry) must therefore append zero duplicate rows and pay nobody twice. Only genuinely new outputs get appended. Log the count of skipped-as-duplicate candidates in the daily Brain summary.
 4. Append the new rows starting at row `r`. Per row R appended:
    - **Columns A-I:** write the captured values directly to row R (log_id, date, partner_id, output_type, output_ref, output_spec_ref, value_tier, ai_authored_pct, rework_within_30d).
    - **Column J (`partner_multiplier`):** resolve by reading X2 (`firm/excel/reward-species-declaration.xlsx`) at write time per the v1.0 design decision (no cross-workbook formulas). Write the resolved number.
    - **Column K (`value_envelope`):** **MUST write the formula** `=VLOOKUP(G{R}, $O$2:$P$5, 2, FALSE)` (with `{R}` substituted to the row number). Without this formula the cell stays blank and contributes zero to Monthly_Variable's SUMIFS — silent failure mode that R3 will not catch. Do NOT leave K blank.
    - **Column L (`computed_variable`):** **MUST write the formula** `=K{R}*J{R}*IF(I{R}="Yes", 0, 1)` (with `{R}` substituted). Same discipline as K — blank L means zero variable pay for that output until someone manually patches it.
    - **Column M (`notes`):** write any human-readable annotation, optional.
-4. For any retroactive rework_within_30d updates, edit the corresponding Output_Log rows in place.
-5. Save X1.
-6. Write the daily Brain summary as a markdown file at `firm/output-logs/YYYY-MM-DD.md` following the template at `templates/brain/daily-output-log.md`. Include: total outputs captured, breakdown by partner, any anomalies (e.g., a partner with zero outputs for >3 consecutive days), any retroactive rework_within_30d updates.
-7. Stage and signed-commit both changes: `git add firm/excel/partner-output-ledger.xlsx firm/output-logs/YYYY-MM-DD.md && git commit -S -m "R1: append <N> outputs for <date>; <K> retroactive rework updates"`.
-8. Push to `main`: `git push origin main`. The bot identity is exempted from the `firm/audit-logs/*` reviewer rule per `[skip review]`; for `firm/excel/*` and `firm/output-logs/*` paths, no review is required (these paths are append-mostly Routine output, not audit log).
+5. For any retroactive rework_within_30d updates, edit the corresponding Output_Log rows in place.
+6. Save X1.
+7. Write the daily Brain summary as a markdown file at `firm/output-logs/YYYY-MM-DD.md` following the template at `templates/brain/daily-output-log.md`. Include: total outputs captured, breakdown by partner, count skipped as duplicates, any anomalies (e.g., a partner with zero outputs for >3 consecutive days), any retroactive rework_within_30d updates.
+8. Stage and signed-commit both changes: `git add firm/excel/partner-output-ledger.xlsx firm/output-logs/YYYY-MM-DD.md && git commit -S -m "R1: append <N> outputs for <date>; <K> retroactive rework updates"`.
+9. Push to `main`: `git push origin main`. The bot identity is exempted from the `firm/audit-logs/*` reviewer rule per `[skip review]`; for `firm/excel/*` and `firm/output-logs/*` paths, no review is required (these paths are append-mostly Routine output, not audit log).
 
 Post a short summary to Slack #output-log (or 4thtech dChat #output-log on privacy track): "{{TODAY}} captured {{N}} outputs from {{P}} partners. Anomalies: {{LIST_OR_NONE}}."
 
@@ -233,14 +234,12 @@ Your task: lock the previous month's Output_Log and produce per-partner variable
 
 5. For each partner, generate a personalised statement at firm/partners/{{partner_id}}/variable-statements/YYYY-MM.md following the template at `templates/brain/variable-statement.md`. Statement includes: month, total outputs (with the top 5 listed by value), variable computation with the multiplier, base pay, total compensation, list of any retroactive rework_within_30d zero-outs from prior months that affected this month's pool. The statement is the partner's official record of their variable for the month. The template ends with an explicit acknowledgement block:
 
-   ```markdown
-   ## Acknowledgement
+        ## Acknowledgement
 
-   - [ ] I have reviewed this statement and agree with the calculation.
-   - [ ] I dispute the calculation (open Tier 1 dispute per `governance/DECISION-RIGHTS.md`).
+        - [ ] I have reviewed this statement and agree with the calculation.
+        - [ ] I dispute the calculation (open Tier 1 dispute per `governance/DECISION-RIGHTS.md`).
 
-   _Sign by editing this page and ticking the appropriate box, then commit._
-   ```
+        _Sign by editing this page and ticking the appropriate box, then commit._
 
 6. Send the statement to each partner via email (cloud) or 4thtech dMail (privacy track). Subject: "Variable pay statement for {{LAST_MONTH}} — review by {{REVIEW_DEADLINE}}". Body links to the Ledger statement page.
 
@@ -370,7 +369,7 @@ Your task:
 2. For each decision, capture: timestamp, AI system identifier (which model + Skill), decision context (sanitised input summary), output, human reviewer if any, related use_case_id from eu-ai-act-mapping.xlsx.
 3. Append to firm/audit-logs/YYYY-MM-DD.md following the template at templates/brain/audit-log-day.md.
 4. Update eu-ai-act-mapping.xlsx Audit_Log_Index sheet with today's entry count and any anomalies flagged.
-5. Commit the audit log day file via GitHub MCP using a **signed commit** (GPG or SSH). This commit MUST land on the protected `main` branch (or the firm's chosen audit branch) which has the following branch-protection rules configured: (a) force-push disabled; (b) deletion disabled; (c) signed commits required; (d) at least one reviewer for any modification (Routine R6's commits are auto-approved by a designated bot account or use a `[skip review]` exemption only for append-only audit-log paths under `firm/audit-logs/`). These three protections together — append-only path, force-push block, signed commits — provide the practical immutability required by Article 12 record-keeping. (True triple-entry / external anchoring is Generation 2; see `GENERATIONS.md`.)
+5. Stage and signed-commit **both artifacts in one commit** via the git CLI in code execution (Pattern C, ADR-001): `git add firm/audit-logs/YYYY-MM-DD.md firm/excel/eu-ai-act-mapping.xlsx && git commit -S -m "R6: audit trail for <date>" && git push origin main`. One commit carries both the audit-log markdown and the X7 Audit_Log_Index update. This commit MUST land on the protected `main` branch (or the firm's chosen audit branch) which has the following branch-protection rules configured: (a) force-push disabled; (b) deletion disabled; (c) signed commits required; (d) at least one reviewer for any modification (Routine R6's commits are auto-approved by a designated bot account or use a `[skip review]` exemption only for append-only audit-log paths under `firm/audit-logs/`). These three protections together — append-only path, force-push block, signed commits — provide the practical immutability required by Article 12 record-keeping. (True triple-entry / external anchoring is Generation 2; see `GENERATIONS.md`.)
 
 Failure handling: if any source unreachable, append from available sources and flag the gap. The audit log MUST be appended every day; an empty day is a noted "no agent activity" entry, not a missing day. If the signed-commit step fails (signing key unavailable, branch protection rejects the push), R6 retries hourly; if still failing at 02:00 the next day, escalate to founder via Slack `#ops` — DO NOT downgrade to an unsigned commit silently.
 ```

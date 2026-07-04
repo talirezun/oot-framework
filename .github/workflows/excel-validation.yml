@@ -80,18 +80,68 @@ jobs:
           if errors:
               print("Validation errors:")
               for e in errors:
-                  print(f"  ✗ {e}")
+                  print(f"  x {e}")
               sys.exit(1)
-          print(f"✓ All 9 Excel templates validated.")
+          print("All 9 Excel templates validated.")
           EOF
 
-      - name: Verify generator script is current with files
+      # ── Real drift check ────────────────────────────────────────────────────
+      # Regenerate the templates from build_excel.py and compare the fresh output
+      # cell-by-cell against the committed files. build_excel.py writes in-place
+      # into templates/excel/, so we: (1) back the committed files up, (2) run
+      # the generator, (3) compare committed-vs-regenerated, (4) always restore
+      # the committed files via `git checkout` so the workspace is left clean.
+      #
+      # The _metadata sheet's generation_date cell (B3) legitimately changes on
+      # every run, so it is the only tolerated difference.
+      - name: Drift check — regenerate and compare cell-by-cell
         run: |
-          # Run the generator into a tmp dir and diff against committed files (if generator config changed, the diff catches drift).
-          # In v1.0 we're permissive — formula and structural changes pass; binary diffs allowed.
-          python3 -c "
-          import scripts.build_excel as bx
+          set -euo pipefail
+          mkdir -p /tmp/committed-xlsx
+          cp templates/excel/*.xlsx /tmp/committed-xlsx/
+          python3 scripts/build_excel.py
+          python3 << 'EOF'
           import sys
-          # Just verify the script runs without errors.
-          print('build_excel.py is importable.')
-          "
+          from pathlib import Path
+          from openpyxl import load_workbook
+
+          committed_dir = Path("/tmp/committed-xlsx")
+          regen_dir = Path("templates/excel")
+          names = sorted(p.name for p in committed_dir.glob("*.xlsx"))
+
+          errors = []
+          for name in names:
+              a = load_workbook(committed_dir / name, data_only=False)
+              b = load_workbook(regen_dir / name, data_only=False)
+              if a.sheetnames != b.sheetnames:
+                  errors.append(f"{name}: sheet names differ: {a.sheetnames} != {b.sheetnames}")
+                  continue
+              for sheet in a.sheetnames:
+                  wsa, wsb = a[sheet], b[sheet]
+                  max_row = max(wsa.max_row, wsb.max_row)
+                  max_col = max(wsa.max_column, wsb.max_column)
+                  for r in range(1, max_row + 1):
+                      for c in range(1, max_col + 1):
+                          # Tolerate the _metadata generation_date cell (B3).
+                          if sheet == "_metadata" and r == 3 and c == 2:
+                              continue
+                          va = wsa.cell(row=r, column=c).value
+                          vb = wsb.cell(row=r, column=c).value
+                          if va != vb:
+                              errors.append(
+                                  f"{name}[{sheet}]!{wsa.cell(row=r, column=c).coordinate}: "
+                                  f"committed={va!r} regenerated={vb!r}")
+          if errors:
+              print("Excel drift detected — committed files do not match build_excel.py output:")
+              for e in errors[:100]:
+                  print(f"  x {e}")
+              if len(errors) > 100:
+                  print(f"  ... and {len(errors) - 100} more")
+              sys.exit(1)
+          print(f"No drift: all {len(names)} templates match build_excel.py output "
+                "(cell values + formulas; _metadata generation_date tolerated).")
+          EOF
+
+      - name: Restore committed templates
+        if: always()
+        run: git checkout -- templates/excel/

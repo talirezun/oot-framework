@@ -1,6 +1,6 @@
 # START HERE — copy-paste this into your coding agent
 
-You're about to install the ØØT framework on your machine. This page gives you a single block of text to paste into your coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Continue, ChatGPT in code-execution mode, or any agent that meets the [capability spec](AGENT-CAPABILITY-SPEC.md)). The agent will read the install plan, walk through the steps, and ask you the questions when needed.
+You're about to install the ØØT framework on your machine. This page gives you a single block of text to paste into your coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Continue, or any agent that meets the [capability spec](AGENT-CAPABILITY-SPEC.md)). The agent will read the install plan, walk through the steps, and ask you the questions when needed.
 
 If you don't yet have a coding agent installed, see the [README](README.md) → "When to use Path A vs. the other paths" — for less-technical founders who don't want to use any agent, the manual track at [`docs/00-quickstart-cloud.md`](../../docs/00-quickstart-cloud.md) covers the same ground in plain English.
 
@@ -9,7 +9,9 @@ If you don't yet have a coding agent installed, see the [README](README.md) → 
 ## What to do
 
 1. Open your coding agent in your terminal or IDE.
-2. **Make sure your working directory is the cloned ØØT framework repo** (or the agent has access to the install plan files). If you haven't cloned the framework yet:
+2. **Make sure your working directory is the cloned ØØT framework repo** (or the agent has access to the install plan files).
+   - If you used the one-line bootstrap (the `curl ... | bash` in the [installer README](../README.md)), the repo is already cloned at `~/.oot/oot-framework` — `cd ~/.oot/oot-framework`.
+   - Otherwise, clone it yourself:
    ```bash
    git clone https://github.com/talirezun/oot-framework.git ~/oot-framework
    cd ~/oot-framework

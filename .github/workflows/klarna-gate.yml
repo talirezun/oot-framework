@@ -1,35 +1,75 @@
 name: Klarna Test Gate
 
-# This workflow is the framework's pre-merge gate for any PR labelled `ai-replaces-human`.
+# ─────────────────────────────────────────────────────────────────────────────
+# WHAT THIS IS
+# The framework's pre-merge gate for any PR labelled `ai-replaces-human`.
 # It posts the `oot/klarna-test` GitHub status check against the PR's head SHA.
-# The check is set to PASSING only when:
-#   - klarna-test.xlsx Klarna_Score for the matching test_id has total >= 14
-#   - scorer_signoff = Yes
-#   - non_beneficiary_signoff = Yes
 #
-# Branch protection on `main` (or your merge target) MUST require this status check.
-# Without that protection, the gate is advisory rather than enforcing.
+# Branch protection on `main` (or your merge target) MUST require the status
+# check named exactly `oot/klarna-test`. Without that protection the gate is
+# advisory rather than enforcing.
+#
+# The check is set PASSING only when, for the matching test_id:
+#   - klarna-test.xlsx Klarna_Score total (L) >= 14   (recomputed from Q1..Q10
+#     if the workbook has no cached value — openpyxl writes formulas with no
+#     cached result, so data_only=True returns None)
+#   - scorer_signoff (N) = Yes
+#   - non_beneficiary_signoff (O) = Yes
+# When the label is ABSENT the check is posted as SUCCESS with an explicit
+# "no ai-replaces-human decision" description. This is deliberate: a required
+# status check that is never posted deadlocks the PR, so we always post.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# WHAT A FIRM MUST ADAPT WHEN COPYING THIS INTO ITS LEDGER REPO
+#   1. XLSX PATH. In the framework repo the workbook lives at
+#      templates/excel/klarna-test.xlsx (it is a TEMPLATE here). In a firm's
+#      Ledger repo the live workbook lives at firm/excel/klarna-test.xlsx
+#      (per ADR-001). Change WORKBOOK_PATH below.
+#   2. REPO GUARD. The `if:` guard on the scoring step short-circuits scoring
+#      when running inside talirezun/oot-framework, because this repo ships the
+#      gate as a template and has no live firm Klarna data. Remove that guard
+#      (or change the repo name) in your firm repo so scoring actually runs.
+#   3. LABELER GLOBS. .github/labeler.yml decides which PRs get the
+#      `ai-replaces-human` label. Its globs are framework-repo-scoped; adapt
+#      them to your firm's product paths (src/**, pages/api/**, etc.).
+#
+# The workbook is read from the PR's BASE branch (not the PR head) so a PR
+# cannot self-approve by editing the scores in its own diff.
 #
 # See:
 #   - governance/KLARNA-TEST.md (the rubric)
 #   - skills/code-qa/SKILL.md §4.0 (the 5 setup pre-requisites)
 #   - routines/cloud/R7.md (the trigger Routine)
+#   - docs/internal/ADR-001-cloud-routine-excel-writeback.md (firm xlsx paths)
+# ─────────────────────────────────────────────────────────────────────────────
 
 on:
   pull_request:
-    types: [labeled, unlabeled, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
 
 jobs:
   klarna-gate:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'ai-replaces-human')
-    permissions:
-      contents: read
-      pull-requests: read
-      statuses: write
+    env:
+      # Framework repo: this is a template with no live firm Klarna data.
+      # Firms: set this to your own repo, or delete the guard on the scoring step.
+      FRAMEWORK_REPO: talirezun/oot-framework
+      # Framework template path. Firms: change to firm/excel/klarna-test.xlsx (ADR-001).
+      WORKBOOK_PATH: templates/excel/klarna-test.xlsx
     steps:
-      - uses: actions/checkout@v4
+      # ── Checkout the PR BASE branch into ./base (closes the self-approval hole) ──
+      # We never read the PR head's copy of the workbook — a PR must not be able
+      # to raise its own score by editing klarna-test.xlsx in its own diff.
+      - name: Checkout base branch
+        uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
           fetch-depth: 1
 
       - name: Set up Python
@@ -40,42 +80,77 @@ jobs:
       - name: Install openpyxl
         run: pip install openpyxl
 
-      - name: Read Klarna_Score for the PR's test_id
+      # ── Decide the gate result ──────────────────────────────────────────────
+      # This step ALWAYS produces status + description outputs. It handles four
+      # cases: framework-repo template, label-absent, entry-not-found/unscored,
+      # and real scoring.
+      - name: Evaluate Klarna gate
         id: klarna-check
+        env:
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'ai-replaces-human') }}
+          IS_FRAMEWORK_REPO: ${{ github.repository == 'talirezun/oot-framework' }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_FULL_NAME: ${{ github.repository }}
         run: |
           python3 << 'EOF'
-          import os, sys, re
+          import os
+
+          def emit(status, description, test_id=""):
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write(f"status={status}\n")
+                  f.write(f"description={description}\n")
+                  f.write(f"test_id={test_id}\n")
+
+          has_label = os.environ.get("HAS_LABEL", "false") == "true"
+          is_framework_repo = os.environ.get("IS_FRAMEWORK_REPO", "false") == "true"
+
+          # (1) Framework-repo guard: the gate ships here as a template; there is
+          # no live firm Klarna data to score. Post success so the required check
+          # never deadlocks the framework's own template PRs.
+          if is_framework_repo:
+              emit("success",
+                   "framework repo — gate is a template; adapt paths for your firm Ledger")
+              raise SystemExit(0)
+
+          # (2) No decision on this PR: post success so the required check is
+          # satisfied. This is the deadlock-killer for the common case.
+          if not has_label:
+              emit("success", "no ai-replaces-human decision on this PR")
+              raise SystemExit(0)
+
+          # (3) Labelled: score against the BASE-branch workbook.
           from openpyxl import load_workbook
 
-          # Find the test_id by looking at the most recent KT-YYYY-NNN entry whose trigger_ref matches this PR.
-          # In a real deployment, R7 records the PR URL in trigger_ref; we match against the PR number.
-          pr_number = "${{ github.event.pull_request.number }}"
-          repo = "${{ github.event.repository.full_name }}"
+          workbook_path = os.path.join("base", os.environ["WORKBOOK_PATH"])
+          pr_number = os.environ["PR_NUMBER"]
+          repo = os.environ["REPO_FULL_NAME"]
           pr_url = f"https://github.com/{repo}/pull/{pr_number}"
 
-          wb = load_workbook("templates/excel/klarna-test.xlsx")
+          if not os.path.exists(workbook_path):
+              emit("failure",
+                   f"Klarna workbook not found at {os.environ['WORKBOOK_PATH']} on the base branch")
+              raise SystemExit(0)
+
+          wb = load_workbook(workbook_path, data_only=True)
           decision_log = wb["Decision_Log"]
           klarna_score = wb["Klarna_Score"]
 
+          # Match the test by trigger_ref (Decision_Log column E) containing the PR URL.
           test_id = None
           for row in decision_log.iter_rows(min_row=2, values_only=True):
               if not row or not row[0]:
                   continue
-              if row[4] and pr_url in str(row[4]):
+              if len(row) > 4 and row[4] and pr_url in str(row[4]):
                   test_id = row[0]
                   break
 
           if not test_id:
-              print(f"::warning::No Klarna Test entry found for PR {pr_url}.")
-              print(f"::warning::R7 should have created an entry. Check klarna-test.xlsx Decision_Log column E (trigger_ref).")
-              # The status check stays failing until R7 creates the entry.
-              # Output GitHub Actions output for downstream step
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write("status=pending\n")
-                  f.write("description=Klarna Test entry not yet created by R7\n")
-              sys.exit(0)
+              emit("failure",
+                   "No Klarna Test entry for this PR (R7 must record the PR URL "
+                   "in Decision_Log trigger_ref)")
+              raise SystemExit(0)
 
-          # Find the Klarna_Score row for this test_id
+          # Find the Klarna_Score row for this test_id.
           score_row = None
           for row in klarna_score.iter_rows(min_row=2):
               if row[0].value == test_id:
@@ -83,18 +158,19 @@ jobs:
                   break
 
           if not score_row:
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write("status=pending\n")
-                  f.write(f"description=Klarna Test {test_id} created but not yet scored\n")
-              sys.exit(0)
+              emit("failure", f"Klarna Test {test_id} created but not yet scored", test_id)
+              raise SystemExit(0)
 
-          # Read total + signoffs (columns B-K = Q1-Q10; L = total; N = scorer; O = non-beneficiary)
+          # Columns: B-K = Q1-Q10; L = total; N = scorer_signoff; O = non_beneficiary_signoff.
           total = score_row[11].value  # column L
           scorer_signoff = score_row[13].value  # column N
           nb_signoff = score_row[14].value  # column O
 
+          # openpyxl-authored workbooks carry no cached formula result, so
+          # data_only=True yields None for L. Recompute from Q1..Q10 (B2:K2).
           if total is None:
-              total = sum((r.value or 0) for r in score_row[1:11])
+              total = sum((cell.value or 0) for cell in score_row[1:11]
+                          if isinstance(cell.value, (int, float)))
 
           passed = (
               isinstance(total, (int, float)) and total >= 14
@@ -102,34 +178,41 @@ jobs:
               and nb_signoff == "Yes"
           )
 
-          status = "success" if passed else "failure"
           if passed:
-              description = f"Klarna Test {test_id}: PROCEED ({total}/20)"
+              emit("success", f"Klarna Test {test_id}: PROCEED ({total}/20)", test_id)
           else:
-              description = f"Klarna Test {test_id}: HOLD ({total or 0}/20, scorer={scorer_signoff}, NB={nb_signoff})"
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"status={status}\n")
-              f.write(f"description={description}\n")
-              f.write(f"test_id={test_id}\n")
+              emit("failure",
+                   f"Klarna Test {test_id}: HOLD ({total or 0}/20, "
+                   f"scorer={scorer_signoff}, NB={nb_signoff})",
+                   test_id)
           EOF
 
-      - name: Post status check
+      # ── Post the status check ───────────────────────────────────────────────
+      # All dynamic strings arrive via env: (never inline ${{ }} inside the JS)
+      # to close the script-injection hole.
+      - name: Post oot/klarna-test status
         uses: actions/github-script@v7
+        env:
+          GATE_STATUS: ${{ steps.klarna-check.outputs.status }}
+          GATE_DESCRIPTION: ${{ steps.klarna-check.outputs.description }}
+          GATE_TEST_ID: ${{ steps.klarna-check.outputs.test_id }}
         with:
           script: |
-            const status = '${{ steps.klarna-check.outputs.status }}' || 'pending';
-            const description = '${{ steps.klarna-check.outputs.description }}' || 'Klarna Test in progress';
-            const testId = '${{ steps.klarna-check.outputs.test_id }}' || '';
+            const status = process.env.GATE_STATUS || 'failure';
+            const description = process.env.GATE_DESCRIPTION || 'Klarna gate could not evaluate';
+            const testId = process.env.GATE_TEST_ID || '';
+            const { owner, repo } = context.repo;
+
+            const targetUrl = testId
+              ? `https://github.com/${owner}/${repo}/blob/main/firm/klarna-tests/${testId}.md`
+              : 'https://github.com/talirezun/oot-framework/blob/main/governance/KLARNA-TEST.md';
 
             await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               sha: context.payload.pull_request.head.sha,
               state: status,
-              target_url: testId
-                ? `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/firm/klarna-tests/${testId}.md`
-                : 'https://github.com/talirezun/oot-framework/blob/main/governance/KLARNA-TEST.md',
+              target_url: targetUrl,
               description: description.substring(0, 140),
               context: 'oot/klarna-test',
             });

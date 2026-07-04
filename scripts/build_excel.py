@@ -27,13 +27,12 @@ Output: `templates/excel/*.xlsx`.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 from openpyxl import Workbook
 from openpyxl.formatting.rule import CellIsRule, ColorScaleRule, FormulaRule
-from openpyxl.styles import Alignment, Font, PatternFill, Protection
-from openpyxl.utils import get_column_letter
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
@@ -259,8 +258,8 @@ DO NOT
 - Aggregate values in ways that obscure individual partner attribution.
 - Modify column J via formula — the cross-workbook discipline requires Routine writes.
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X1")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "partner-output-ledger.xlsx"
     wb.save(out_path)
@@ -325,12 +324,13 @@ def build_x2() -> None:
 
     # Validation: variable weights C+D+E = 1.0; bonus splits G+H+I = 1.0
     # Conditional formatting: highlight red if sum != 1.0
+    # Guard with COUNT>0 so blank rows (sum 0) are not painted red — only populated rows.
     ws2.conditional_formatting.add(
         "C2:E1000",
-        FormulaRule(formula=["ROUND(SUM($C2:$E2),3)<>1"], fill=RED_FILL))
+        FormulaRule(formula=["AND(COUNT($C2:$E2)>0,ROUND(SUM($C2:$E2),3)<>1)"], fill=RED_FILL))
     ws2.conditional_formatting.add(
         "G2:I1000",
-        FormulaRule(formula=["ROUND(SUM($G2:$I2),3)<>1"], fill=RED_FILL))
+        FormulaRule(formula=["AND(COUNT($G2:$I2)>0,ROUND(SUM($G2:$I2),3)<>1)"], fill=RED_FILL))
 
     dv_species = DataValidation(
         type="list",
@@ -412,8 +412,8 @@ DO NOT
 - Alter Long_Tail_Schedule retroactively without a new Renegotiation_Log entry.
 - Activate Unit_Fund_Eligibility before Gen 2 (sheet is password-protected by design).
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X2")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "reward-species-declaration.xlsx"
     wb.save(out_path)
@@ -531,8 +531,8 @@ DO NOT
 - Auto-publish BR summaries externally — they may contain sensitive partner-level data.
 - Take a decision in the BR without creating a corresponding firm/decisions/D-YYYY-NNN.md page during the meeting.
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X3")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "business-review.xlsx"
     wb.save(out_path)
@@ -562,14 +562,16 @@ def build_x4() -> None:
         "Replace manual customer-onboarding email step with AI-drafted version",
         "pr_label", "https://github.com/firm/firm-saas/pull/1502",
         "davor-krznar", "mira-tek",
-        None, None, None, "2026-08-12", None,
+        None, None, None, date(2026, 8, 12), None,
     ])
     # H total_score: VLOOKUP from Klarna_Score
     ws["H2"] = "=IFERROR(VLOOKUP(A2,Klarna_Score!A:L,12,FALSE),\"\")"
     # I decision: =IF(H>=14,"PROCEED","HOLD")
     ws["I2"] = '=IF(ISBLANK(H2),"",IF(H2>=14,"PROCEED","HOLD"))'
-    # K review_date_90d: =B+90 (if not manually overridden)
-    # Already populated for sample; formula option available
+    # K review_date_90d (R7 contract: column K = the 90-day review date). Written as a REAL
+    # date cell (not text) so the review-overdue CF's `K2<TODAY()` comparison actually fires —
+    # a text date sorts greater than any number and would silently never trigger.
+    ws["K2"].number_format = "yyyy-mm-dd"
 
     # Conditional formatting
     ws.conditional_formatting.add(
@@ -578,10 +580,11 @@ def build_x4() -> None:
     ws.conditional_formatting.add(
         "I2:I1000",
         CellIsRule(operator="equal", formula=['"HOLD"'], fill=RED_FILL))
-    # Review-overdue formatting on K
+    # Review-overdue formatting on K: past the review date AND no post_review_outcome (L) yet.
+    # Guarded on K non-blank so empty rows aren't flagged.
     ws.conditional_formatting.add(
         "K2:K1000",
-        FormulaRule(formula=["AND(K2<TODAY(),L2=\"\")"], fill=RED_FILL))
+        FormulaRule(formula=["AND(K2<>\"\",K2<TODAY(),L2=\"\")"], fill=RED_FILL))
 
     dv_trigger = DataValidation(type="list",
                                 formula1='"pr_label,manual,pre_rollout"', allow_blank=False)
@@ -625,13 +628,14 @@ def build_x4() -> None:
         ws2.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=["0"], fill=RED_FILL))
         ws2.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=["1"], fill=YELLOW_FILL))
         ws2.conditional_formatting.add(rng, CellIsRule(operator="equal", formula=["2"], fill=GREEN_FILL))
-    # L (total) red if <14, green if >=14
+    # L (total) red if <14, green if >=14 — guarded on populated row (test_id A non-blank)
+    # so blank rows (SUM formula absent → treated as 0) are not painted red.
     ws2.conditional_formatting.add(
         "L2:L1000",
-        CellIsRule(operator="lessThan", formula=["14"], fill=RED_FILL))
+        FormulaRule(formula=["AND($A2<>\"\",L2<14)"], fill=RED_FILL))
     ws2.conditional_formatting.add(
         "L2:L1000",
-        CellIsRule(operator="greaterThanOrEqual", formula=["14"], fill=GREEN_FILL))
+        FormulaRule(formula=["AND($A2<>\"\",L2>=14)"], fill=GREEN_FILL))
 
     dv_yn = DataValidation(type="list", formula1='"Yes,No"', allow_blank=False)
     ws2.add_data_validation(dv_yn)
@@ -696,8 +700,8 @@ DO NOT
 - Flip total_score >= 14 by rationalising 1s into 2s. The pre-committed remediation flow exists for tests that score below threshold.
 - Modify completed (signed-off) Klarna_Score rows. Re-scores after remediation update the SAME row; do not create a new test_id.
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X4")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "klarna-test.xlsx"
     wb.save(out_path)
@@ -840,8 +844,8 @@ DO NOT
 - Reconstruct a baseline from memory after-the-fact. The pack flags this as a discipline failure.
 - Confront a perception gap directly. Surface the data; let the partner adjust (per S6 §4.6).
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X5")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "metr-baseline.xlsx"
     wb.save(out_path)
@@ -941,8 +945,8 @@ DO NOT
 - Change cost-attribution methodology without a Brain ADR (changes affect ROI calculations partners can see).
 - Inflate `hours_saved_estimated` to make a Skill Pack rollout look favourable. Use the rolling 90-day baseline (per S6 §4.1) as the comparator.
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X6")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "agent-skill-roi.xlsx"
     wb.save(out_path)
@@ -1091,8 +1095,8 @@ DO NOT
 - Claim EU AI Act compliance without counsel review.
 - Modify a use case's Annex III classification without re-running counsel review.
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X7")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "eu-ai-act-mapping.xlsx"
     wb.save(out_path)
@@ -1153,14 +1157,15 @@ def build_x8() -> None:
     ])
     ws3["D2"] = "=IFERROR(B2/C2,0)"
     ws3["G2"] = '=IFERROR(B2/IF(F2=0,1,F2),0)'
-    # Conditional formatting: D red if <6 months
+    # Conditional formatting: D red if <6 months — guard on populated row (A non-blank)
+    # so blank rows (CellIs treats empty as 0) are not painted red.
     ws3.conditional_formatting.add(
         "D2:D1000",
-        CellIsRule(operator="lessThan", formula=["6"], fill=RED_FILL))
-    # G red if <1.0
+        FormulaRule(formula=["AND($A2<>\"\",D2<6)"], fill=RED_FILL))
+    # G red if <1.0 — same populated-row guard.
     ws3.conditional_formatting.add(
         "G2:G1000",
-        CellIsRule(operator="lessThan", formula=["1"], fill=RED_FILL))
+        FormulaRule(formula=["AND($A2<>\"\",G2<1)"], fill=RED_FILL))
     # Comment / note about burn-average source
     ws3["H1"] = "Note"
     ws3["H2"] = ("monthly_burn_average is derived from rolling 3-month Cash_Position deltas "
@@ -1200,8 +1205,8 @@ DO NOT
 - Change Reserve_Discipline parameters without a Brain ADR.
 - Bypass treasury runway discipline once the Unit Fund is open.
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X8")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "treasury-runway.xlsx"
     wb.save(out_path)
@@ -1329,13 +1334,15 @@ def build_x9() -> None:
     ws2.append(["TOTAL", None, 40, None])
     ws2["B6"] = "=SUM(B2:B5)"
     ws2["D6"] = "=B6/C6"
-    # Conditional formatting: D6 (total_pct) — red <60%, yellow 60–75%, green ≥75%
-    ws2.conditional_formatting.add(
-        "D6", CellIsRule(operator="lessThan", formula=["0.60"], fill=RED_FILL))
-    ws2.conditional_formatting.add(
-        "D6", CellIsRule(operator="between", formula=["0.60", "0.75"], fill=YELLOW_FILL))
+    # Conditional formatting: D6 (total_pct) — green ≥75%, yellow 60–<75%, red <60%.
+    # Green is added FIRST so it takes priority at exactly 0.75 (the >=0.75 and the
+    # 0.60–0.75 ranges both matched at the boundary; earlier-added rule wins in Excel).
     ws2.conditional_formatting.add(
         "D6", CellIsRule(operator="greaterThanOrEqual", formula=["0.75"], fill=GREEN_FILL))
+    ws2.conditional_formatting.add(
+        "D6", CellIsRule(operator="between", formula=["0.60", "0.7499"], fill=YELLOW_FILL))
+    ws2.conditional_formatting.add(
+        "D6", CellIsRule(operator="lessThan", formula=["0.60"], fill=RED_FILL))
     # Format D column as percentage
     for row_idx in range(2, 7):
         ws2.cell(row=row_idx, column=4).number_format = "0%"
@@ -1383,8 +1390,8 @@ DO NOT
 
 This is a diagnostic, not a gate. Founders may proceed below 60% with documented mitigation, but the framework's authors recommend honestly addressing gaps before sunk-cost dynamics make later course correction harder.
 """
-    _add_readme_sheet(wb, readme)
     _add_metadata_sheet(wb, "X9")
+    _add_readme_sheet(wb, readme)
 
     out_path = TEMPLATE_DIR / "oot-readiness.xlsx"
     wb.save(out_path)

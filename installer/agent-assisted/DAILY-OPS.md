@@ -1,7 +1,7 @@
 # Daily operations — agent-runnable playbook
 
 **Audience:** Founder, every day they open their laptop. The framework's daily-driver assistant.
-**Read by:** the founder's coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Continue, ChatGPT in code-execution mode — any agent meeting the [capability spec](AGENT-CAPABILITY-SPEC.md)).
+**Read by:** the founder's coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Continue — any agent meeting the [capability spec](AGENT-CAPABILITY-SPEC.md)).
 **You will end with:** local clone synced from GitHub, today's state summarised, any anomalies flagged.
 
 > 🚀 **One-line prompt to feed your agent:**
