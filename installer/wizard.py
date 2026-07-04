@@ -48,15 +48,15 @@ except ImportError:
 
 try:
     import questionary  # type: ignore[import-untyped]
+
     _HAS_QUESTIONARY = True
 except ImportError:
     _HAS_QUESTIONARY = False
 
 try:
     from rich.console import Console
-    from rich.markdown import Markdown
     from rich.panel import Panel
-    from rich.table import Table
+
     _HAS_RICH = True
     _CONSOLE = Console()
 except ImportError:
@@ -84,6 +84,7 @@ PYTHON_CANDIDATES = ["python3.13", "python3.12", "python3.11", "python3"]
 
 
 # ----- helpers --------------------------------------------------------------
+
 
 def header(text: str, level: int = 1) -> None:
     """Print a section header, styled if rich is available."""
@@ -174,7 +175,9 @@ def ask_select(prompt: str, choices: list[str], default: Optional[str] = None) -
     for i, c in enumerate(choices, 1):
         info(f"  {i}. {c}")
     while True:
-        a = input(f"Pick 1-{len(choices)}{f' (default {choices.index(default)+1})' if default and default in choices else ''}: ").strip()
+        a = input(
+            f"Pick 1-{len(choices)}{f' (default {choices.index(default)+1})' if default and default in choices else ''}: "
+        ).strip()
         if not a and default:
             return default
         try:
@@ -306,6 +309,7 @@ def ask_checkbox(prompt: str, choices: list[tuple[str, str, bool]]) -> list[str]
 
 # ----- back-navigation between steps ----------------------------------------
 
+
 class _GoBack(Exception):
     """Raised by a step to request the wizard return to the previous step.
 
@@ -364,6 +368,7 @@ def _mask_secrets_in_cmd(cmd_str: str) -> str:
     be printed verbatim in the `$ ...` echo and captured in any scrollback/log.
     """
     import re as _re
+
     # https://TOKEN@host  or  https://user:TOKEN@host  → keep host, hide creds.
     return _re.sub(
         r"(https?://)([^/\s@]+)@",
@@ -372,7 +377,9 @@ def _mask_secrets_in_cmd(cmd_str: str) -> str:
     )
 
 
-def run(cmd: list[str], dry_run: bool = False, capture: bool = False, check: bool = False) -> tuple[int, str]:
+def run(
+    cmd: list[str], dry_run: bool = False, capture: bool = False, check: bool = False
+) -> tuple[int, str]:
     """Run a shell command. Returns (returncode, stdout). On dry-run, prints and returns (0, '')."""
     cmd_str = _mask_secrets_in_cmd(" ".join(cmd))
     if dry_run:
@@ -397,8 +404,7 @@ def run(cmd: list[str], dry_run: bool = False, capture: bool = False, check: boo
         return 127, ""
 
 
-def run_critical(cmd: list[str], what: str, dry_run: bool = False,
-                 capture: bool = False) -> bool:
+def run_critical(cmd: list[str], what: str, dry_run: bool = False, capture: bool = False) -> bool:
     """Run a command whose failure must NOT be silently swallowed.
 
     Returns True on success (rc == 0), False on failure. On failure prints a
@@ -414,8 +420,10 @@ def run_critical(cmd: list[str], what: str, dry_run: bool = False,
         err(f"{what} failed (exit {rc}).")
         if capture and out:
             info(out.strip())
-        warn("This step did NOT complete. Fix the problem above, then re-run the "
-             "installer with --resume to retry from here — we won't mark this step done.")
+        warn(
+            "This step did NOT complete. Fix the problem above, then re-run the "
+            "installer with --resume to retry from here — we won't mark this step done."
+        )
         return False
     return True
 
@@ -441,8 +449,9 @@ def auto_detect_signing_key_id(dry_run: bool = False) -> Optional[str]:
     Returns the single key if exactly one exists, or None if zero / ambiguous
     (multiple keys) so the caller can fall back to asking the user to pick.
     """
-    rc, out = run(["gpg", "--list-secret-keys", "--with-colons"],
-                  dry_run=dry_run, capture=True, check=False)
+    rc, out = run(
+        ["gpg", "--list-secret-keys", "--with-colons"], dry_run=dry_run, capture=True, check=False
+    )
     if rc != 0:
         return None
     ids = parse_gpg_key_ids(out)
@@ -471,6 +480,7 @@ def venv_bin(venv_dir: Path, exe: str) -> Path:
 
 # ----- explainer panels -----------------------------------------------------
 
+
 def explainer(title: str, body: str, tone: str = "info") -> None:
     """Render a small bordered "what is this step / why does it matter" panel.
 
@@ -482,8 +492,15 @@ def explainer(title: str, body: str, tone: str = "info") -> None:
     """
     colour = {"info": "cyan", "warn": "yellow", "danger": "red"}.get(tone, "cyan")
     if _HAS_RICH:
-        _CONSOLE.print(Panel(body.strip(), title=f"  {title}  ", title_align="left",
-                              border_style=colour, padding=(0, 2)))
+        _CONSOLE.print(
+            Panel(
+                body.strip(),
+                title=f"  {title}  ",
+                title_align="left",
+                border_style=colour,
+                padding=(0, 2),
+            )
+        )
         return
     bar = "─" * 70
     print(f"\n┌─ {title} {bar[: max(0, 67 - len(title))]}")
@@ -512,7 +529,10 @@ def gh_available_and_authed() -> bool:
     # Direct subprocess to skip the run() helper's command-echo for this probe.
     try:
         result = subprocess.run(
-            ["gh", "auth", "status"], capture_output=True, text=True, check=False,
+            ["gh", "auth", "status"],
+            capture_output=True,
+            text=True,
+            check=False,
         )
         _GH_STATUS_CACHE["ok"] = result.returncode == 0
     except FileNotFoundError:
@@ -529,7 +549,9 @@ def gh_user_login() -> Optional[str]:
     try:
         result = subprocess.run(
             ["gh", "api", "user", "--jq", ".login"],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         login = result.stdout.strip() if result.returncode == 0 else None
     except FileNotFoundError:
@@ -554,6 +576,7 @@ def offer_gh_automation(action_description: str, default: bool = True) -> bool:
 
 
 # ----- macOS asyncio + stdin fixups -----------------------------------------
+
 
 def _force_select_event_loop_on_macos() -> None:
     """Make asyncio use select() instead of kqueue on macOS.
@@ -616,6 +639,7 @@ def _reattach_stdin_to_tty_if_needed() -> None:
 
 # ----- detection of existing installs ---------------------------------------
 
+
 def detect_existing_modules(state: dict[str, Any]) -> dict[str, Any]:
     """Probe the machine for components the framework cares about.
 
@@ -626,7 +650,10 @@ def detect_existing_modules(state: dict[str, Any]) -> dict[str, Any]:
 
     # Claude Desktop (macOS-only check; Linux/Windows just records 'unknown').
     macos_app = Path("/Applications/Claude.app")
-    found["claude_desktop"] = {"present": macos_app.exists(), "path": str(macos_app) if macos_app.exists() else None}
+    found["claude_desktop"] = {
+        "present": macos_app.exists(),
+        "path": str(macos_app) if macos_app.exists() else None,
+    }
 
     # Claude Code CLI.
     claude_cli = which("claude")
@@ -642,15 +669,23 @@ def detect_existing_modules(state: dict[str, Any]) -> dict[str, Any]:
     found["curator"] = {
         "app_present": curator_app.exists(),
         "app_path": str(curator_app) if curator_app.exists() else None,
-        "vault_known": bool(curator_vault) and Path(curator_vault).exists() if curator_vault else False,
+        "vault_known": (
+            bool(curator_vault) and Path(curator_vault).exists() if curator_vault else False
+        ),
         "vault_path": curator_vault,
         "user_said_existing": bool(has_existing),
     }
 
     # Signing key (gpg).
     rc, out = run(["gpg", "--list-secret-keys", "--keyid-format=long"], capture=True, check=False)
-    sec_keys = [ln.strip() for ln in out.splitlines() if ln.strip().startswith("sec ")] if rc == 0 else []
-    found["gpg_signing_key"] = {"present": bool(sec_keys), "count": len(sec_keys), "lines": sec_keys[:3]}
+    sec_keys = (
+        [ln.strip() for ln in out.splitlines() if ln.strip().startswith("sec ")] if rc == 0 else []
+    )
+    found["gpg_signing_key"] = {
+        "present": bool(sec_keys),
+        "count": len(sec_keys),
+        "lines": sec_keys[:3],
+    }
 
     # Global git identity.
     rc, email = run(["git", "config", "--global", "user.email"], capture=True, check=False)
@@ -684,17 +719,46 @@ def render_detection_report(found: dict[str, Any]) -> None:
     """Pretty-print what we found on the user's machine."""
     info("\nWhat we found already installed on your machine:\n")
     rows = [
-        ("Claude Desktop",     found["claude_desktop"]["present"],   found["claude_desktop"].get("path") or "—"),
-        ("Claude Code CLI",    found["claude_cli"]["present"],       found["claude_cli"].get("path") or "—"),
-        ("The Curator app",    found["curator"]["app_present"] or found["curator"]["user_said_existing"],
-                                                                     found["curator"].get("app_path") or (found["curator"].get("vault_path") or "—")),
-        ("GPG signing key",    found["gpg_signing_key"]["present"],
-                                                                     f"{found['gpg_signing_key']['count']} key(s)" if found['gpg_signing_key']['count'] else "—"),
-        ("Git identity",       found["git_identity"]["configured"],  f"{found['git_identity'].get('name') or '?'} <{found['git_identity'].get('email') or '?'}>"),
-        ("GitHub CLI (gh)",    found["gh_auth"]["installed"] and found["gh_auth"]["authenticated"],
-                                                                     "authenticated" if found["gh_auth"]["authenticated"] else ("installed" if found["gh_auth"]["installed"] else "—")),
-        ("Bitwarden CLI",      found["bitwarden_cli"]["present"],    found["bitwarden_cli"].get("path") or "—"),
-        ("Node.js",            found["node"]["present"],             found["node"].get("version") or "—"),
+        (
+            "Claude Desktop",
+            found["claude_desktop"]["present"],
+            found["claude_desktop"].get("path") or "—",
+        ),
+        ("Claude Code CLI", found["claude_cli"]["present"], found["claude_cli"].get("path") or "—"),
+        (
+            "The Curator app",
+            found["curator"]["app_present"] or found["curator"]["user_said_existing"],
+            found["curator"].get("app_path") or (found["curator"].get("vault_path") or "—"),
+        ),
+        (
+            "GPG signing key",
+            found["gpg_signing_key"]["present"],
+            (
+                f"{found['gpg_signing_key']['count']} key(s)"
+                if found["gpg_signing_key"]["count"]
+                else "—"
+            ),
+        ),
+        (
+            "Git identity",
+            found["git_identity"]["configured"],
+            f"{found['git_identity'].get('name') or '?'} <{found['git_identity'].get('email') or '?'}>",
+        ),
+        (
+            "GitHub CLI (gh)",
+            found["gh_auth"]["installed"] and found["gh_auth"]["authenticated"],
+            (
+                "authenticated"
+                if found["gh_auth"]["authenticated"]
+                else ("installed" if found["gh_auth"]["installed"] else "—")
+            ),
+        ),
+        (
+            "Bitwarden CLI",
+            found["bitwarden_cli"]["present"],
+            found["bitwarden_cli"].get("path") or "—",
+        ),
+        ("Node.js", found["node"]["present"], found["node"].get("version") or "—"),
     ]
     for label, present, detail in rows:
         mark = "✓" if present else "·"
@@ -713,10 +777,10 @@ _STATE_KEY_RENAMES = {
     # Internal state keys keep backward compat — old keys are silently
     # promoted to the new keys at load time so anyone with mid-install state
     # from before the rename doesn't lose progress.
-    "brain_repo_url":    "ledger_repo_url",
-    "brain_repo_owner":  "ledger_repo_owner",
-    "brain_repo_name":   "ledger_repo_name",
-    "brain_repo_email":  "ledger_repo_email",
+    "brain_repo_url": "ledger_repo_url",
+    "brain_repo_owner": "ledger_repo_owner",
+    "brain_repo_name": "ledger_repo_name",
+    "brain_repo_email": "ledger_repo_email",
 }
 
 # v1.0.1 → v1.1.0: a new Second Brain bridge step was inserted between Curator
@@ -724,9 +788,9 @@ _STATE_KEY_RENAMES = {
 # step_13_smoke_test / step_14_summary marked done; renumber so the navigator
 # keeps resuming at the right place.
 _STATE_STEP_RENAMES = {
-    "step_12_routines":    "step_13_routines",
-    "step_13_smoke_test":  "step_14_smoke_test",
-    "step_14_summary":     "step_15_summary",
+    "step_12_routines": "step_13_routines",
+    "step_13_smoke_test": "step_14_smoke_test",
+    "step_14_summary": "step_15_summary",
 }
 
 
@@ -744,8 +808,7 @@ def _migrate_state_keys(state: dict[str, Any]) -> dict[str, Any]:
     # but the new bridge step isn't done, reset step_13_routines so they re-
     # configure the Routines with the new Second Brain connector. Stale
     # connectors won't have the new repo wired.
-    if ("step_13_routines" in steps_completed
-            and "step_12_secondbrain_sync" not in steps_completed):
+    if "step_13_routines" in steps_completed and "step_12_secondbrain_sync" not in steps_completed:
         steps_completed.pop("step_13_routines", None)
     return state
 
@@ -768,7 +831,9 @@ def save_state(state: dict[str, Any]) -> None:
         # still carries answers forward so the walkthrough flows normally.
         return
     if yaml is None:
-        warn("pyyaml not installed; state file not persisted. Run `pip install pyyaml` to enable resumability.")
+        warn(
+            "pyyaml not installed; state file not persisted. Run `pip install pyyaml` to enable resumability."
+        )
         return
     OOT_HOME.mkdir(parents=True, exist_ok=True)
     state["last_updated"] = datetime.now(timezone.utc).isoformat()
@@ -805,6 +870,7 @@ def resolve_track(state: dict[str, Any], cli_track: str, resume: bool) -> dict[s
 
 
 # ----- the 17 steps ---------------------------------------------------------
+
 
 def step_00_welcome(state: dict[str, Any], dry_run: bool) -> None:
     if is_step_done(state, "step_00_welcome"):
@@ -855,9 +921,7 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
     """Returns the absolute path of the Python interpreter to use."""
     if is_step_done(state, "step_01_preflight"):
         # Resume path: reuse the interpreter we already validated + saved.
-        return (state.get("preflight", {}).get("python")
-                or state.get("oot_python")
-                or sys.executable)
+        return state.get("preflight", {}).get("python") or state.get("oot_python") or sys.executable
     header("Step 1 / 17 — Preflight: required tools", level=2)
 
     explainer(
@@ -885,11 +949,18 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
         else:
             info(f"  not found: {cand}")
     if not found_python:
-        err("No Python ≥3.11 found. Install Python 3.13 from https://www.python.org/downloads/ "
-            "or via Homebrew on macOS: brew install python@3.13")
+        err(
+            "No Python ≥3.11 found. Install Python 3.13 from https://www.python.org/downloads/ "
+            "or via Homebrew on macOS: brew install python@3.13"
+        )
         sys.exit(1)
 
-    required = {"git": "version control", "curl": "HTTP client", "gpg": "signed commits", "node": "MCP runtime"}
+    required = {
+        "git": "version control",
+        "curl": "HTTP client",
+        "gpg": "signed commits",
+        "node": "MCP runtime",
+    }
     missing = []
     for tool, desc in required.items():
         path = which(tool)
@@ -902,8 +973,16 @@ def step_01_preflight(state: dict[str, Any], dry_run: bool) -> str:
 
     if missing:
         warn(f"\nMissing required tools: {missing}")
-        info("Install on macOS:\n  brew install " + " ".join(t for t in missing if t in {"gpg": 1, "node": 1}.keys() or t in ["git", "curl"]))
-        info("Install on Debian/Ubuntu:\n  sudo apt install " + " ".join("gnupg" if t == "gpg" else "nodejs" if t == "node" else t for t in missing))
+        info(
+            "Install on macOS:\n  brew install "
+            + " ".join(
+                t for t in missing if t in {"gpg": 1, "node": 1}.keys() or t in ["git", "curl"]
+            )
+        )
+        info(
+            "Install on Debian/Ubuntu:\n  sudo apt install "
+            + " ".join("gnupg" if t == "gpg" else "nodejs" if t == "node" else t for t in missing)
+        )
         if ask_confirm("Install missing tools and re-run wizard?", default=True):
             sys.exit(0)
         warn("Continuing without missing tools — some steps will fail.")
@@ -929,13 +1008,19 @@ def step_02_python_venv(state: dict[str, Any], dry_run: bool) -> None:
         "If you ran the bootstrap one-liner, this is mostly already done — we just\n"
         "verify it's healthy.",
     )
-    oot_python = state.get("preflight", {}).get("python") or state.get("oot_python") or sys.executable
+    oot_python = (
+        state.get("preflight", {}).get("python") or state.get("oot_python") or sys.executable
+    )
     if not VENV_DIR.exists():
         run([oot_python, "-m", "venv", str(VENV_DIR)], dry_run=dry_run, check=True)
     venv_pip = venv_bin(VENV_DIR, "pip")
     if not dry_run and venv_pip.exists():
-        run([str(venv_pip), "install", "openpyxl", "pyyaml", "httpx", "questionary", "rich"],
-            dry_run=False, capture=False, check=False)
+        run(
+            [str(venv_pip), "install", "openpyxl", "pyyaml", "httpx", "questionary", "rich"],
+            dry_run=False,
+            capture=False,
+            check=False,
+        )
     state["venv_path"] = str(VENV_DIR)
     ok(f"venv ready at {VENV_DIR}")
     mark_step_done(state, "step_02_python_venv")
@@ -962,23 +1047,27 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
         "      a greenfield install — everything in one place.",
     )
 
-    info("Three folder questions: where the firm's operational stuff lives, where your\n"
-         "knowledge graph (Curator) lives, and how the two relate.\n")
+    info(
+        "Three folder questions: where the firm's operational stuff lives, where your\n"
+        "knowledge graph (Curator) lives, and how the two relate.\n"
+    )
 
     # Pull prior answers (if any) as defaults so going-back is friction-free.
     prior = state.get("locations", {})
 
-    firm_slug_default = ask_text("Firm slug (lowercase-hyphenated, e.g. 'acme-studio')",
-                                  default=prior.get("firm_slug") or None)
+    firm_slug_default = ask_text(
+        "Firm slug (lowercase-hyphenated, e.g. 'acme-studio')",
+        default=prior.get("firm_slug") or None,
+    )
     while not firm_slug_default.strip():
         warn("Firm slug is required — it names your local folder and both GitHub repos.")
-        firm_slug_default = ask_text("Firm slug (lowercase-hyphenated, e.g. 'acme-studio')",
-                                     default=prior.get("firm_slug") or None)
+        firm_slug_default = ask_text(
+            "Firm slug (lowercase-hyphenated, e.g. 'acme-studio')",
+            default=prior.get("firm_slug") or None,
+        )
     firm_slug_default = firm_slug_default.strip()
     firm_folder_default = prior.get("firm_folder") or str(Path.home() / firm_slug_default)
-    firm_folder = ask_path(
-        f"Firm operational repo folder", default=firm_folder_default
-    )
+    firm_folder = ask_path("Firm operational repo folder", default=firm_folder_default)
 
     has_curator = ask_confirm(
         "Do you already have the Curator desktop app installed with a populated second-brain?",
@@ -992,7 +1081,9 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
             Path.home() / "Documents" / "second-brain",
         ]
         found = next((g for g in guesses if g.exists()), None)
-        cv_default = prior.get("curator_vault") or (str(found) if found else str(Path.home() / "second-brain"))
+        cv_default = prior.get("curator_vault") or (
+            str(found) if found else str(Path.home() / "second-brain")
+        )
         curator_vault = ask_path("Curator vault folder path", default=cv_default, must_exist=True)
         cfg_default = (
             "A — Separate vault and firm repo (recommended for existing Curator users)"
@@ -1009,7 +1100,9 @@ def step_03_locations(state: dict[str, Any], dry_run: bool) -> dict[str, str]:
         )[0]
     else:
         curator_vault = firm_folder
-        info("No existing Curator detected — defaulting to Configuration B (firm folder = Curator vault root).")
+        info(
+            "No existing Curator detected — defaulting to Configuration B (firm folder = Curator vault root)."
+        )
 
     curator_domain = ask_text(
         "Curator domain slug for this firm",
@@ -1052,8 +1145,7 @@ def step_04_firm_profile(state: dict[str, Any], dry_run: bool) -> dict[str, Any]
 
     prior = state.get("firm_profile", {})
     profile: dict[str, Any] = {}
-    profile["name"] = ask_text("Firm full name (e.g. 'Acme Studio')",
-                                default=prior.get("name", ""))
+    profile["name"] = ask_text("Firm full name (e.g. 'Acme Studio')", default=prior.get("name", ""))
     profile["partner_count_estimate"] = ask_select(
         "Partner count over next 12 months:",
         choices=["solo", "small (2-5)", "medium (5-10)", "large (10+)"],
@@ -1110,10 +1202,10 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
         """
         prior = prior or {}
         prior_foundation = set(prior.get("foundation", [])) if prior else set()
-        prior_skills     = set(prior.get("skills", []))     if prior else set()
-        prior_routines   = set(prior.get("routines", []))   if prior else set()
-        prior_security   = set(prior.get("security", []))   if prior else set()
-        prior_curator    = prior.get("curator_mode")
+        prior_skills = set(prior.get("skills", [])) if prior else set()
+        prior_routines = set(prior.get("routines", [])) if prior else set()
+        prior_security = set(prior.get("security", [])) if prior else set()
+        prior_curator = prior.get("curator_mode")
 
         def _pre(key: str, default: bool, prior_set: set[str]) -> bool:
             return key in prior_set if prior_set else default
@@ -1122,23 +1214,38 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
         # OR explicitly opts to continue "advanced".
         while True:
             foundation_choices: list[tuple[str, str, bool]] = [
-                ("github_brain_repo",
+                (
+                    "github_brain_repo",
                     "GitHub Ledger (your firm's operational data — the heart of the framework)",
-                    _pre("github_brain_repo", True, prior_foundation)),
-                ("signing_key",
+                    _pre("github_brain_repo", True, prior_foundation),
+                ),
+                (
+                    "signing_key",
                     "GPG signing key for signed commits "
-                    + ("(found one already — will reuse)" if found["gpg_signing_key"]["present"]
-                       else "(will create a new one in Step 9)"),
-                    _pre("signing_key", True, prior_foundation)),
-                ("my_curator_mcp",
+                    + (
+                        "(found one already — will reuse)"
+                        if found["gpg_signing_key"]["present"]
+                        else "(will create a new one in Step 9)"
+                    ),
+                    _pre("signing_key", True, prior_foundation),
+                ),
+                (
+                    "my_curator_mcp",
                     "my-curator MCP wired into Claude Desktop (lets Claude read your Brain)",
-                    _pre("my_curator_mcp", True, prior_foundation)),
-                ("spreadsheet_app",
+                    _pre("my_curator_mcp", True, prior_foundation),
+                ),
+                (
+                    "spreadsheet_app",
                     "Spreadsheet viewer (Excel / Numbers / LibreOffice / Sheets) — you almost certainly already have one",
-                    _pre("spreadsheet_app", True, prior_foundation)),
+                    _pre("spreadsheet_app", True, prior_foundation),
+                ),
             ]
-            foundation = ask_checkbox("FOUNDATION — minimum for a working ØØT install", foundation_choices)
-            missing_required = [m for m in ("github_brain_repo", "my_curator_mcp") if m not in foundation]
+            foundation = ask_checkbox(
+                "FOUNDATION — minimum for a working ØØT install", foundation_choices
+            )
+            missing_required = [
+                m for m in ("github_brain_repo", "my_curator_mcp") if m not in foundation
+            ]
             if not missing_required:
                 break
             warn(f"⚠  You unchecked: {', '.join(missing_required)}.")
@@ -1169,8 +1276,10 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
             "install-fresh     (run Curator's one-line installer in Step 11)",
             "skip-for-now      (install later yourself — most steps still work, R5 won't)",
         ]
-        curator_default = next((c for c in curator_choices_labels if c.startswith(curator_default_key)),
-                                curator_choices_labels[0])
+        curator_default = next(
+            (c for c in curator_choices_labels if c.startswith(curator_default_key)),
+            curator_choices_labels[0],
+        )
         curator_choice = ask_select(
             "THE CURATOR — second-brain desktop app — how should we handle it?",
             choices=curator_choices_labels,
@@ -1180,66 +1289,118 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
 
         # Skill packs
         skill_choices: list[tuple[str, str, bool]] = [
-            ("S1",  "S1  my-curator (Brain operations)",                      _pre("S1",  True,  prior_skills)),
-            ("S2",  "S2  context-engineering",                                _pre("S2",  True,  prior_skills)),
-            ("S3",  "S3  compensation-attribution (variable pay)",            _pre("S3",  True,  prior_skills)),
-            ("S4",  "S4  code-qa",                                            _pre("S4",  True,  prior_skills)),
-            ("S5",  "S5  reporting-business-review",                          _pre("S5",  True,  prior_skills)),
-            ("S6",  "S6  change-management",                                  _pre("S6",  True,  prior_skills)),
-            ("S12", "S12 privacy-self-sovereign",                             _pre("S12", profile.get("track") == "privacy", prior_skills)),
-            ("S7",  "S7  governance-compliance (Tier-2 scaffold)",            _pre("S7",  eu, prior_skills)),
-            ("S8",  "S8  legal-operations (Tier-2 scaffold)",                 _pre("S8",  big_firm, prior_skills)),
-            ("S9",  "S9  marketing (Tier-2 scaffold)",                        _pre("S9",  False, prior_skills)),
-            ("S10", "S10 finance-treasury (Tier-2 scaffold)",                 _pre("S10", big_firm, prior_skills)),
-            ("S11", "S11 sales-bd (Tier-2 scaffold)",                         _pre("S11", False, prior_skills)),
+            ("S1", "S1  my-curator (Brain operations)", _pre("S1", True, prior_skills)),
+            ("S2", "S2  context-engineering", _pre("S2", True, prior_skills)),
+            ("S3", "S3  compensation-attribution (variable pay)", _pre("S3", True, prior_skills)),
+            ("S4", "S4  code-qa", _pre("S4", True, prior_skills)),
+            ("S5", "S5  reporting-business-review", _pre("S5", True, prior_skills)),
+            ("S6", "S6  change-management", _pre("S6", True, prior_skills)),
+            (
+                "S12",
+                "S12 privacy-self-sovereign",
+                _pre("S12", profile.get("track") == "privacy", prior_skills),
+            ),
+            ("S7", "S7  governance-compliance (Tier-2 scaffold)", _pre("S7", eu, prior_skills)),
+            ("S8", "S8  legal-operations (Tier-2 scaffold)", _pre("S8", big_firm, prior_skills)),
+            ("S9", "S9  marketing (Tier-2 scaffold)", _pre("S9", False, prior_skills)),
+            ("S10", "S10 finance-treasury (Tier-2 scaffold)", _pre("S10", big_firm, prior_skills)),
+            ("S11", "S11 sales-bd (Tier-2 scaffold)", _pre("S11", False, prior_skills)),
         ]
-        skills = ask_checkbox("SKILL PACKS — domain knowledge bundles your Routines + agents use", skill_choices)
+        skills = ask_checkbox(
+            "SKILL PACKS — domain knowledge bundles your Routines + agents use", skill_choices
+        )
 
         # Routines
         routine_choices: list[tuple[str, str, bool]] = [
-            ("R5", "R5 Brain Health Check (Sunday 09:00) — recommended for every firm",   _pre("R5", True, prior_routines)),
-            ("R6", "R6 EU AI Act Audit Trail (daily 23:00) — recommended; required if EU exposure",
-                                                                                            _pre("R6", True, prior_routines)),
-            ("R7", "R7 Klarna Test gate (PR webhook) — only if you're configuring Klarna now",
-                                                                                            _pre("R7", klarna_now, prior_routines)),
-            ("R1", "R1 Daily Output Capture — needs first partner onboarded (set up later)", _pre("R1", False, prior_routines)),
-            ("R2", "R2 Weekly BR Prep — needs R1 to have ≥7 days of data (set up later)",   _pre("R2", False, prior_routines)),
-            ("R3", "R3 Partner Acknowledgement Polling — month-1+ (set up later)",          _pre("R3", False, prior_routines)),
-            ("R4", "R4 Monthly Compensation Calc — month-1+ (set up later)",                _pre("R4", False, prior_routines)),
-            ("R8", "R8 Quarterly Sentiment Sweep — quarter-1+ (set up later)",              _pre("R8", False, prior_routines)),
+            (
+                "R5",
+                "R5 Brain Health Check (Sunday 09:00) — recommended for every firm",
+                _pre("R5", True, prior_routines),
+            ),
+            (
+                "R6",
+                "R6 EU AI Act Audit Trail (daily 23:00) — recommended; required if EU exposure",
+                _pre("R6", True, prior_routines),
+            ),
+            (
+                "R7",
+                "R7 Klarna Test gate (PR webhook) — only if you're configuring Klarna now",
+                _pre("R7", klarna_now, prior_routines),
+            ),
+            (
+                "R1",
+                "R1 Daily Output Capture — needs first partner onboarded (set up later)",
+                _pre("R1", False, prior_routines),
+            ),
+            (
+                "R2",
+                "R2 Weekly BR Prep — needs R1 to have ≥7 days of data (set up later)",
+                _pre("R2", False, prior_routines),
+            ),
+            (
+                "R3",
+                "R3 Partner Acknowledgement Polling — month-1+ (set up later)",
+                _pre("R3", False, prior_routines),
+            ),
+            (
+                "R4",
+                "R4 Monthly Compensation Calc — month-1+ (set up later)",
+                _pre("R4", False, prior_routines),
+            ),
+            (
+                "R8",
+                "R8 Quarterly Sentiment Sweep — quarter-1+ (set up later)",
+                _pre("R8", False, prior_routines),
+            ),
         ]
-        routines_picked = ask_checkbox("ROUTINES — Claude Code Routines running on schedule", routine_choices)
+        routines_picked = ask_checkbox(
+            "ROUTINES — Claude Code Routines running on schedule", routine_choices
+        )
 
         # Optional security
         sec_choices: list[tuple[str, str, bool]] = [
-            ("branch_protection",
+            (
+                "branch_protection",
                 "GitHub branch protection on main "
-                + ("(enforced — Team plan)" if profile.get("github_plan_tier") == "team"
-                   else "(advisory only on Free — still worth setting)"),
-                _pre("branch_protection", True, prior_security)),
-            ("bitwarden",
+                + (
+                    "(enforced — Team plan)"
+                    if profile.get("github_plan_tier") == "team"
+                    else "(advisory only on Free — still worth setting)"
+                ),
+                _pre("branch_protection", True, prior_security),
+            ),
+            (
+                "bitwarden",
                 "Bitwarden password manager + CLI"
                 + (" (CLI already installed)" if found["bitwarden_cli"]["present"] else ""),
-                _pre("bitwarden", found["bitwarden_cli"]["present"], prior_security)),
-            ("yubikey",
+                _pre("bitwarden", found["bitwarden_cli"]["present"], prior_security),
+            ),
+            (
+                "yubikey",
                 "Yubikey for org-admin 2FA (recommended with ≥2 admins)",
-                _pre("yubikey", big_firm, prior_security)),
-            ("trezor",
+                _pre("yubikey", big_firm, prior_security),
+            ),
+            (
+                "trezor",
                 "Trezor for crypto-key storage (Gen-2 — not used in v1.0)",
-                _pre("trezor", False, prior_security)),
+                _pre("trezor", False, prior_security),
+            ),
         ]
-        security = ask_checkbox("OPTIONAL SECURITY — recommended-but-optional in Gen 1", sec_choices)
+        security = ask_checkbox(
+            "OPTIONAL SECURITY — recommended-but-optional in Gen 1", sec_choices
+        )
 
         return {
-            "foundation":      foundation,
-            "curator_mode":    curator_mode,
-            "skills":          skills,
-            "routines":        routines_picked,
-            "security":        security,
+            "foundation": foundation,
+            "curator_mode": curator_mode,
+            "skills": skills,
+            "routines": routines_picked,
+            "security": security,
             "install_curator": curator_mode == "install-fresh",
-            "skip_curator":    curator_mode == "skip-for-now",
+            "skip_curator": curator_mode == "skip-for-now",
             "use_existing_curator": curator_mode == "use-existing",
-            "install_signing_key": "signing_key" in foundation and not found["gpg_signing_key"]["present"],
+            "install_signing_key": "signing_key" in foundation
+            and not found["gpg_signing_key"]["present"],
             "install_branch_protection": "branch_protection" in security,
         }
 
@@ -1264,15 +1425,19 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
             and "R5" in modules["routines"]
         )
         if will_bridge:
-            info(f"  Second Brain:      bridge will be set up at Step 13 "
-                 f"(R5 will reach the Curator graph via GitHub-sync)")
+            info(
+                "  Second Brain:      bridge will be set up at Step 13 "
+                "(R5 will reach the Curator graph via GitHub-sync)"
+            )
         elif track == "privacy":
-            info(f"  Second Brain:      not needed — privacy MCP runs alongside Routines")
+            info("  Second Brain:      not needed — privacy MCP runs alongside Routines")
         elif modules["curator_mode"] == "skip-for-now":
-            info(f"  Second Brain:      skipped — no Curator means no Second Brain to bridge")
+            info("  Second Brain:      skipped — no Curator means no Second Brain to bridge")
         elif "R5" not in modules["routines"]:
-            info(f"  Second Brain:      not set up (no R5 selected — R5 is the only "
-                 f"Day-1 Routine that needs it)")
+            info(
+                "  Second Brain:      not set up (no R5 selected — R5 is the only "
+                "Day-1 Routine that needs it)"
+            )
         info("")
 
         next_step = ask_select(
@@ -1288,7 +1453,7 @@ def step_05_module_selection(state: dict[str, Any], dry_run: bool) -> dict[str, 
         if next_step.startswith("→"):
             break
         if next_step.startswith("↻"):
-            continue   # rerun the cycle with current modules as defaults
+            continue  # rerun the cycle with current modules as defaults
         if next_step.startswith("←"):
             state["modules_chosen"] = modules  # save current draft so re-entry can default to it
             save_state(state)
@@ -1343,11 +1508,17 @@ def step_06_github_plan_tier(state: dict[str, Any], dry_run: bool) -> str:
     )
     state.setdefault("firm_profile", {})["github_plan_tier"] = choice
     if choice == "free":
-        warn("Branch protection will be advisory only. Plan to upgrade to Team within 90 days "
-             "or before adding a third committer, whichever comes first.")
+        warn(
+            "Branch protection will be advisory only. Plan to upgrade to Team within 90 days "
+            "or before adding a third committer, whichever comes first."
+        )
     elif choice == "team":
-        info("If not yet on Team: upgrade at https://github.com/settings/billing/plans before continuing.")
-        if not ask_confirm("Confirm you have GitHub Team active (or will upgrade now)?", default=True):
+        info(
+            "If not yet on Team: upgrade at https://github.com/settings/billing/plans before continuing."
+        )
+        if not ask_confirm(
+            "Confirm you have GitHub Team active (or will upgrade now)?", default=True
+        ):
             warn("Continuing — you can come back to this step.")
     mark_step_done(state, "step_06_github_plan_tier")
     ask_navigation("GitHub plan choice")
@@ -1386,7 +1557,9 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
         ok(f"Claude Code CLI: {which('claude')}")
     else:
         warn("Claude Code CLI not found. Install per https://docs.claude.com/en/docs/claude-code")
-        info("(Optional — you can configure Routines via the web dashboard at https://claude.ai/code/routines instead. Routines run on Anthropic's cloud either way; CLI is just one of three management interfaces.)")
+        info(
+            "(Optional — you can configure Routines via the web dashboard at https://claude.ai/code/routines instead. Routines run on Anthropic's cloud either way; CLI is just one of three management interfaces.)"
+        )
 
     prior_plan = state.get("firm_profile", {}).get("anthropic_plan") or "pro"
     plan = ask_select(
@@ -1396,10 +1569,14 @@ def step_07_anthropic_check(state: dict[str, Any], dry_run: bool) -> None:
     )
     state.setdefault("firm_profile", {})["anthropic_plan"] = plan
     profile = state["firm_profile"]
-    if plan == "pro" and (profile.get("partner_count_estimate", "").startswith(("medium", "large"))
-                          or profile.get("klarna_gate_choice") == "now"):
-        warn("Pro plan caps Routines at 5/day. With your firm size + Klarna gate, "
-             "you'll exceed that. Strongly recommend Max plan.")
+    if plan == "pro" and (
+        profile.get("partner_count_estimate", "").startswith(("medium", "large"))
+        or profile.get("klarna_gate_choice") == "now"
+    ):
+        warn(
+            "Pro plan caps Routines at 5/day. With your firm size + Klarna gate, "
+            "you'll exceed that. Strongly recommend Max plan."
+        )
     mark_step_done(state, "step_07_anthropic_check")
     info("\nNext: Step 8 will start creating real things (Ledger on disk + on GitHub).")
     info("After Step 8 launches, going back gets harder — it would mean undoing side effects.")
@@ -1471,12 +1648,22 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
         run(["git", "config", "--local", "user.email", email], dry_run=False, check=False)
         run(["git", "config", "--local", "user.name", name], dry_run=False, check=False)
 
-    subfolders = ["excel", "output-logs", "audit-logs", "business-reviews",
-                  "klarna-tests", "compensation", "brain-health", "partners"]
+    subfolders = [
+        "excel",
+        "output-logs",
+        "audit-logs",
+        "business-reviews",
+        "klarna-tests",
+        "compensation",
+        "brain-health",
+        "partners",
+    ]
     excel_dst = firm_folder / "firm" / "excel"
     if dry_run:
-        info(f"  (dry-run) would scaffold firm/ subfolders {subfolders} and copy "
-             f"{len(list(TEMPLATES_EXCEL.glob('*.xlsx')))} .xlsx templates into firm/excel/")
+        info(
+            f"  (dry-run) would scaffold firm/ subfolders {subfolders} and copy "
+            f"{len(list(TEMPLATES_EXCEL.glob('*.xlsx')))} .xlsx templates into firm/excel/"
+        )
     else:
         for sub in subfolders:
             (firm_folder / "firm" / sub).mkdir(parents=True, exist_ok=True)
@@ -1506,14 +1693,22 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
 
     # --- Substep 3: initial commit ----------------------------------------
     info("\n[3/4] Initial unsigned commit")
-    info("  (The first commit is unsigned. Step 9 generates the signing key + reconfigures\n"
-         "   git to sign every subsequent commit. All Routine-written commits will be signed.)")
+    info(
+        "  (The first commit is unsigned. Step 9 generates the signing key + reconfigures\n"
+        "   git to sign every subsequent commit. All Routine-written commits will be signed.)"
+    )
     if not dry_run:
         run(["git", "add", "."], check=False)
         # If nothing to commit, this is a no-op (existing repo).
-        run(["git", "commit", "-m",
-             "scaffold: initial Ledger folder + Excel templates from framework v1.0.0"],
-            check=False)
+        run(
+            [
+                "git",
+                "commit",
+                "-m",
+                "scaffold: initial Ledger folder + Excel templates from framework v1.0.0",
+            ],
+            check=False,
+        )
 
     # --- Substep 4: create the GitHub repo + push -------------------------
     info("\n[4/5] Create the Ledger GitHub repo + push")
@@ -1532,13 +1727,23 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
         ):
             info(f"  Creating {full_repo}...")
             rc, out = run(
-                ["gh", "repo", "create", full_repo,
-                 f"--{visibility}",
-                 "--description", f"ØØT Ledger for {profile['name']}",
-                 "--source", str(firm_folder),
-                 "--remote", "origin",
-                 "--push"],
-                dry_run=dry_run, capture=True, check=False,
+                [
+                    "gh",
+                    "repo",
+                    "create",
+                    full_repo,
+                    f"--{visibility}",
+                    "--description",
+                    f"ØØT Ledger for {profile['name']}",
+                    "--source",
+                    str(firm_folder),
+                    "--remote",
+                    "origin",
+                    "--push",
+                ],
+                dry_run=dry_run,
+                capture=True,
+                check=False,
             )
             if rc == 0:
                 ok(f"Repo created: https://github.com/{full_repo}")
@@ -1558,8 +1763,10 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             info("  `gh` CLI not installed. We'll walk through the github.com web UI instead.")
             info("  (Install gh anytime via `brew install gh` for one-command repo creation.)")
         else:
-            info("  `gh` is installed but not authenticated. Run `gh auth login` separately to\n"
-                 "  enable automation next time. For now we'll walk through the web UI.")
+            info(
+                "  `gh` is installed but not authenticated. Run `gh auth login` separately to\n"
+                "  enable automation next time. For now we'll walk through the web UI."
+            )
 
     if not repo_created_via_gh:
         info(
@@ -1589,9 +1796,15 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             run(["git", "remote", "remove", "origin"], capture=True, check=False)  # idempotent
             run(["git", "remote", "add", "origin", repo_url], check=False)
             ok("Added remote 'origin'.")
-        if ask_confirm("Push to origin/main now? (May prompt for GitHub credentials.)", default=True):
-            if not run_critical(["git", "push", "-u", "origin", "main"],
-                                "Push to origin/main", dry_run=dry_run, capture=True):
+        if ask_confirm(
+            "Push to origin/main now? (May prompt for GitHub credentials.)", default=True
+        ):
+            if not run_critical(
+                ["git", "push", "-u", "origin", "main"],
+                "Push to origin/main",
+                dry_run=dry_run,
+                capture=True,
+            ):
                 info("Pausing. Re-run the bootstrap with --resume once the push succeeds.")
                 sys.exit(0)
 
@@ -1614,8 +1827,10 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
             f"repo name. They MUST be different. Picking '{fb_repo_name_default}-firm' instead — \n"
             f"or you can override with another name."
         )
-        fb_repo_name = ask_text("Firm Brain repository name (must differ from Ledger)",
-                                default=f"{firm_slug}-firm-brain")
+        fb_repo_name = ask_text(
+            "Firm Brain repository name (must differ from Ledger)",
+            default=f"{firm_slug}-firm-brain",
+        )
 
     fb_repo_created_via_gh = False
     if gh_available_and_authed():
@@ -1628,10 +1843,18 @@ def step_08_brain_repo(state: dict[str, Any], dry_run: bool) -> None:
         ):
             info(f"  Creating {fb_full_repo}...")
             rc, out = run(
-                ["gh", "repo", "create", fb_full_repo,
-                 "--private",
-                 "--description", f"ØØT Firm Brain for {profile['name']} — Curator Shared Brain (synthesized firm IP)"],
-                dry_run=dry_run, capture=True, check=False,
+                [
+                    "gh",
+                    "repo",
+                    "create",
+                    fb_full_repo,
+                    "--private",
+                    "--description",
+                    f"ØØT Firm Brain for {profile['name']} — Curator Shared Brain (synthesized firm IP)",
+                ],
+                dry_run=dry_run,
+                capture=True,
+                check=False,
             )
             if rc == 0:
                 ok(f"Firm Brain repo created: https://github.com/{fb_full_repo}")
@@ -1696,19 +1919,23 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
         return
     if not modules.get("install_signing_key", True):
         info("Existing GPG signing key detected at Step 5 — skipping key generation.")
-        info("If you want to use a *different* key, run: gpg --gen-key, then re-run wizard from Step 9.\n"
-             "We'll still configure git to sign with your existing key.")
+        info(
+            "If you want to use a *different* key, run: gpg --gen-key, then re-run wizard from Step 9.\n"
+            "We'll still configure git to sign with your existing key."
+        )
         existing_key = auto_detect_signing_key_id(dry_run=dry_run)
         if existing_key:
             ok(f"Detected exactly one signing key: {existing_key}")
             if not ask_confirm(f"Use key {existing_key}?", default=True):
                 existing_key = None
         if not existing_key:
-            rc, out = run(["gpg", "--list-secret-keys", "--keyid-format=long"],
-                          capture=True, check=False)
+            rc, out = run(
+                ["gpg", "--list-secret-keys", "--keyid-format=long"], capture=True, check=False
+            )
             info_plain(out)
             existing_key = ask_text(
-                "Paste the key ID (the long hex after 'sec rsa4096/' or 'sec ed25519/')").strip()
+                "Paste the key ID (the long hex after 'sec rsa4096/' or 'sec ed25519/')"
+            ).strip()
         else:
             existing_key = existing_key.strip()
         if existing_key:
@@ -1751,8 +1978,12 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
         )
         batch_path = Path("/tmp/oot-gpg-batch.txt")
         batch_path.write_text(batch)
-        gen_ok = run_critical(["gpg", "--batch", "--gen-key", str(batch_path)],
-                              "GPG key generation", dry_run=False, capture=True)
+        gen_ok = run_critical(
+            ["gpg", "--batch", "--gen-key", str(batch_path)],
+            "GPG key generation",
+            dry_run=False,
+            capture=True,
+        )
         batch_path.unlink(missing_ok=True)
         if not gen_ok:
             info("Pausing. Fix the gpg error above, then re-run with --resume.")
@@ -1766,8 +1997,9 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
         if not ask_confirm(f"Use key {key_id} for signing?", default=True):
             key_id = None
     if not key_id:
-        rc, out = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG"],
-                      dry_run=dry_run, capture=True)
+        rc, out = run(
+            ["gpg", "--list-secret-keys", "--keyid-format", "LONG"], dry_run=dry_run, capture=True
+        )
         info_plain(out)
         info("\nFind the key ID — the 16-character hex string after `rsa4096/` on the `sec` line.")
         key_id = ask_text("GPG key ID", default="")
@@ -1789,8 +2021,9 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
             "(recommended — no copy-paste, no opening browser)",
             default=True,
         ):
-            rc, out = run(["gh", "gpg-key", "add", str(pub_path)],
-                          dry_run=dry_run, capture=True, check=False)
+            rc, out = run(
+                ["gh", "gpg-key", "add", str(pub_path)], dry_run=dry_run, capture=True, check=False
+            )
             if rc == 0:
                 ok("GPG key uploaded to GitHub.")
                 uploaded_via_gh = True
@@ -1802,12 +2035,20 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
 
     if not uploaded_via_gh:
         if pub_path:
-            opener = "open" if sys.platform == "darwin" else ("xdg-open" if sys.platform.startswith("linux") else None)
+            opener = (
+                "open"
+                if sys.platform == "darwin"
+                else ("xdg-open" if sys.platform.startswith("linux") else None)
+            )
             if opener:
                 run([opener, str(pub_path)], dry_run=False, check=False)
-                info(f"\nThe key is now open in your text editor. Cmd+A, Cmd+C to copy the whole block.")
+                info(
+                    "\nThe key is now open in your text editor. Cmd+A, Cmd+C to copy the whole block."
+                )
             else:
-                info(f"\nThe key is at {pub_path}. Open it in any text editor and copy the entire block.")
+                info(
+                    f"\nThe key is at {pub_path}. Open it in any text editor and copy the entire block."
+                )
         info(
             "\nUpload the public key to GitHub manually:\n"
             "  1. Open https://github.com/settings/gpg/new in your browser.\n"
@@ -1832,19 +2073,27 @@ def step_09_signing_key(state: dict[str, Any], dry_run: bool) -> None:
     if not dry_run:
         os.chdir(firm_folder)
         sig_test = firm_folder / "firm" / ".signing-test"
-        sig_test.write_text(f"Signed-commit verification at {datetime.now(timezone.utc).isoformat()}\n")
+        sig_test.write_text(
+            f"Signed-commit verification at {datetime.now(timezone.utc).isoformat()}\n"
+        )
         run(["git", "add", "firm/.signing-test"], check=False)
-        if not run_critical(["git", "commit", "-S", "-m", "verify: signing key works"],
-                            "Signed test commit", capture=True):
-            info("The signing key isn't working yet. Common causes: the key ID is wrong,\n"
-                 "gpg can't find the key, or git isn't pointed at the right gpg.program.\n"
-                 "Fix the error above, then re-run with --resume.")
+        if not run_critical(
+            ["git", "commit", "-S", "-m", "verify: signing key works"],
+            "Signed test commit",
+            capture=True,
+        ):
+            info(
+                "The signing key isn't working yet. Common causes: the key ID is wrong,\n"
+                "gpg can't find the key, or git isn't pointed at the right gpg.program.\n"
+                "Fix the error above, then re-run with --resume."
+            )
             return  # NOT marked done — --resume retries this step
         run(["git", "log", "--show-signature", "-1"], capture=False, check=False)
 
         if ask_confirm("Push the verification commit?", default=True):
-            if run_critical(["git", "push", "origin", "main"],
-                            "Push verification commit", capture=True):
+            if run_critical(
+                ["git", "push", "origin", "main"], "Push verification commit", capture=True
+            ):
                 info(
                     f"\n→ Open {state.get('ledger_repo_url', '<repo>')}/commits/main in your browser.\n"
                     f"  The latest commit should have a green Verified badge.\n"
@@ -1880,12 +2129,14 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
         "  ✗ Allow deletions             — main branch can't be deleted\n"
         "  ✗ Require pull request        — Routines can commit directly (turn on later)\n\n"
         f"Your GitHub plan: {plan_tier}.\n"
-        + ("⚠  GitHub Free + private repos do NOT enforce these rules — they're\n"
-           "   advisory only. We configure them anyway so your repo is structurally\n"
-           "   correct the day you upgrade to Team ($4/user/month). Per ADR-001 the\n"
-           "   audit-trail-immutability claim requires enforced protection."
-           if plan_tier == "free" else
-           "Enforcement is active on your plan — these rules will actually be enforced."),
+        + (
+            "⚠  GitHub Free + private repos do NOT enforce these rules — they're\n"
+            "   advisory only. We configure them anyway so your repo is structurally\n"
+            "   correct the day you upgrade to Team ($4/user/month). Per ADR-001 the\n"
+            "   audit-trail-immutability claim requires enforced protection."
+            if plan_tier == "free"
+            else "Enforcement is active on your plan — these rules will actually be enforced."
+        ),
     )
 
     applied_via_gh = False
@@ -1909,20 +2160,40 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
             }
             payload_path = Path("/tmp/oot-branch-protection.json")
             import json as _json
+
             payload_path.write_text(_json.dumps(payload))
             rc, out = run(
-                ["gh", "api", "-X", "PUT",
-                 f"repos/{owner}/{repo_name}/branches/main/protection",
-                 "-H", "Accept: application/vnd.github+json",
-                 "--input", str(payload_path)],
-                dry_run=dry_run, capture=True, check=False,
+                [
+                    "gh",
+                    "api",
+                    "-X",
+                    "PUT",
+                    f"repos/{owner}/{repo_name}/branches/main/protection",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    "--input",
+                    str(payload_path),
+                ],
+                dry_run=dry_run,
+                capture=True,
+                check=False,
             )
             # required_signatures sometimes needs a follow-up call on newer API versions
             if rc == 0:
-                run(["gh", "api", "-X", "POST",
-                     f"repos/{owner}/{repo_name}/branches/main/protection/required_signatures",
-                     "-H", "Accept: application/vnd.github.zzzax-preview+json"],
-                    dry_run=dry_run, capture=True, check=False)
+                run(
+                    [
+                        "gh",
+                        "api",
+                        "-X",
+                        "POST",
+                        f"repos/{owner}/{repo_name}/branches/main/protection/required_signatures",
+                        "-H",
+                        "Accept: application/vnd.github.zzzax-preview+json",
+                    ],
+                    dry_run=dry_run,
+                    capture=True,
+                    check=False,
+                )
                 ok("Branch protection applied on main.")
                 applied_via_gh = True
             else:
@@ -1980,23 +2251,43 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
             }
             fb_payload_path = Path("/tmp/oot-firm-brain-branch-protection.json")
             import json as _json
+
             fb_payload_path.write_text(_json.dumps(fb_payload))
             rc, out = run(
-                ["gh", "api", "-X", "PUT",
-                 f"repos/{fb_owner}/{fb_name}/branches/main/protection",
-                 "-H", "Accept: application/vnd.github+json",
-                 "--input", str(fb_payload_path)],
-                dry_run=dry_run, capture=True, check=False,
+                [
+                    "gh",
+                    "api",
+                    "-X",
+                    "PUT",
+                    f"repos/{fb_owner}/{fb_name}/branches/main/protection",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    "--input",
+                    str(fb_payload_path),
+                ],
+                dry_run=dry_run,
+                capture=True,
+                check=False,
             )
             # On a freshly-created empty Firm Brain repo without a `main` branch yet,
             # branch protection cannot be applied. Curator's admin wizard (Step 11)
             # will create the initial commit on main; THEN we can apply protection.
             # If `gh api` fails with 404 here, surface that and defer.
             if rc == 0:
-                run(["gh", "api", "-X", "POST",
-                     f"repos/{fb_owner}/{fb_name}/branches/main/protection/required_signatures",
-                     "-H", "Accept: application/vnd.github.zzzax-preview+json"],
-                    dry_run=dry_run, capture=True, check=False)
+                run(
+                    [
+                        "gh",
+                        "api",
+                        "-X",
+                        "POST",
+                        f"repos/{fb_owner}/{fb_name}/branches/main/protection/required_signatures",
+                        "-H",
+                        "Accept: application/vnd.github.zzzax-preview+json",
+                    ],
+                    dry_run=dry_run,
+                    capture=True,
+                    check=False,
+                )
                 ok("Branch protection applied on Firm Brain main.")
                 fb_applied_via_gh = True
             else:
@@ -2014,7 +2305,9 @@ def step_10_branch_protection(state: dict[str, Any], dry_run: bool) -> None:
             fb_payload_path.unlink(missing_ok=True)
 
     if not fb_applied_via_gh and not state.get("firm_brain_protection_deferred"):
-        fb_settings_url = (fb_url.removesuffix(".git") or "<firm-brain-repo>") + "/settings/branches"
+        fb_settings_url = (
+            fb_url.removesuffix(".git") or "<firm-brain-repo>"
+        ) + "/settings/branches"
         info(
             f"\nManual branch-protection setup (Firm Brain):\n"
             f"  1. After Curator's admin wizard (Step 11) makes the first commit on the\n"
@@ -2034,7 +2327,9 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     header("Step 11 / 17 — Curator integration (the second-brain app)", level=2)
     locations = state["locations"]
     modules = state.get("modules_chosen", {})
-    mode = modules.get("curator_mode", "install-fresh" if not locations.get("existing_curator") else "use-existing")
+    mode = modules.get(
+        "curator_mode", "install-fresh" if not locations.get("existing_curator") else "use-existing"
+    )
 
     if mode == "skip-for-now":
         info(
@@ -2089,23 +2384,36 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
             "(Recommended — saves opening a new Terminal. Downloads + installs the app.)",
             default=True,
         ):
-            info("  Fetching Curator's installer (this is the same one-liner from the project's README)...")
+            info(
+                "  Fetching Curator's installer (this is the same one-liner from the project's README)..."
+            )
             # We can't `curl | bash` directly without giving up our wizard's stdin/stdout
             # cleanly, but we CAN download the script and exec it as a child process.
-            installer_url = "https://raw.githubusercontent.com/talirezun/the-curator/main/install.sh"
+            installer_url = (
+                "https://raw.githubusercontent.com/talirezun/the-curator/main/install.sh"
+            )
             tmp_installer = Path("/tmp/oot-curator-install.sh")
-            rc, _ = run(["curl", "-fsSL", "-o", str(tmp_installer), installer_url],
-                        dry_run=dry_run, capture=True, check=False)
+            rc, _ = run(
+                ["curl", "-fsSL", "-o", str(tmp_installer), installer_url],
+                dry_run=dry_run,
+                capture=True,
+                check=False,
+            )
             if rc == 0 and tmp_installer.exists():
                 ok(f"Downloaded → {tmp_installer}")
-                info("  Running the installer now (3-5 minutes; you may see Curator's own progress output)...\n")
-                rc2, _ = run(["bash", str(tmp_installer)],
-                             dry_run=dry_run, capture=False, check=False)
+                info(
+                    "  Running the installer now (3-5 minutes; you may see Curator's own progress output)...\n"
+                )
+                rc2, _ = run(
+                    ["bash", str(tmp_installer)], dry_run=dry_run, capture=False, check=False
+                )
                 if rc2 == 0:
                     ok("Curator app installed.")
                     installed = True
                 else:
-                    warn("Curator installer returned non-zero. Check its output above for the failure mode.")
+                    warn(
+                        "Curator installer returned non-zero. Check its output above for the failure mode."
+                    )
             else:
                 warn("Could not download the Curator installer (no network? GitHub rate-limit?).")
             tmp_installer.unlink(missing_ok=True)
@@ -2175,13 +2483,13 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
 
     # Curator admin wizard (manual — runs in Curator's GUI)
     info("\n[11b/2] Run Curator's admin wizard")
-    info(f"  In the Curator desktop app: Shared Brain → Admin Setup.")
-    info(f"  Configure with these values:")
+    info("  In the Curator desktop app: Shared Brain → Admin Setup.")
+    info("  Configure with these values:")
     info(f"    - GitHub repo URL:     {fb_url or '<your Firm Brain repo URL>'}")
     info(f"    - Brain name:          {state['firm_profile'].get('name', '<firm name>')}")
     info(f"    - data_handling_terms: {ip_mode}")
-    info(f"    - allow_name_attribution: ☐ unchecked (UUID-pseudonymous baseline)")
-    info(f"    - attribute_by_name (self):  ☐ unchecked")
+    info("    - allow_name_attribution: ☐ unchecked (UUID-pseudonymous baseline)")
+    info("    - attribute_by_name (self):  ☐ unchecked")
     info("  Click 'Generate admin token + invite token'. Two values appear:")
     info("    - admin_token (gates GDPR Article 17 revoke endpoint)")
     info("    - invite token (sbi_...) — what you share with each partner during onboarding")
@@ -2195,9 +2503,9 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     info("  Open Bitwarden and create two new entries in the 'founders' collection:")
     firm_slug = state.get("locations", {}).get("firm_slug", "<firm-slug>")
     info(f"    1. Name: '{firm_slug} — Curator Shared Brain admin_token'")
-    info(f"       Paste the admin_token into the password field.")
+    info("       Paste the admin_token into the password field.")
     info(f"    2. Name: '{firm_slug} — Firm Brain invite token (sbi_)'")
-    info(f"       Paste the invite token (you'll share this with each partner).")
+    info("       Paste the invite token (you'll share this with each partner).")
 
     if not ask_confirm("Both tokens saved to Bitwarden founders collection?", default=True):
         warn("Tokens MUST be saved before continuing — losing the admin_token means you")
@@ -2214,7 +2522,9 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     info("    2. Verify GitHub collaborator access (you own the repo, so this passes)")
     info(f"    3. Create a fine-grained PAT scoped to {fb_url or '<firm-brain-repo>'}")
     info("       (Contents: read+write; Metadata: read).")
-    info(f"    4. Select your opted-in domain: {state.get('locations', {}).get('curator_domain', '<domain>')}")
+    info(
+        f"    4. Select your opted-in domain: {state.get('locations', {}).get('curator_domain', '<domain>')}"
+    )
     info(f"    5. Consent to the IP-mode terms ({ip_mode}).")
     info("    6. Save. Connection card with Push/Pull buttons appears.")
 
@@ -2229,7 +2539,9 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     info("  In Curator (your opted-in domain), create a one-line page:")
     info("    concepts/theses.md  →  'First thesis: <something simple>'")
     info("  Click Push. Then verify on GitHub:")
-    info(f"    {fb_url.removesuffix('.git') if fb_url else '<firm-brain-repo>'}/tree/main/contributions/")
+    info(
+        f"    {fb_url.removesuffix('.git') if fb_url else '<firm-brain-repo>'}/tree/main/contributions/"
+    )
     info("  You should see one JSON file (your DeltaSummary payload).")
     if not ask_confirm("First Push verified (JSON file visible in contributions/)?", default=True):
         warn("Push didn't land. Common causes: PAT missing Contents:write; branch protection")
@@ -2239,8 +2551,12 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
     info("\n  Now run Synthesize (admin-only):")
     info("    In Curator: Shared Brain → Run Synthesize.")
     info("  Verify:")
-    info(f"    {fb_url.removesuffix('.git') if fb_url else '<firm-brain-repo>'}/tree/main/collective/")
-    info(f"    You should see the synthesized concepts/theses.md page with a Provenance block (UUID-attributed).")
+    info(
+        f"    {fb_url.removesuffix('.git') if fb_url else '<firm-brain-repo>'}/tree/main/collective/"
+    )
+    info(
+        "    You should see the synthesized concepts/theses.md page with a Provenance block (UUID-attributed)."
+    )
     if not ask_confirm("First Synthesize verified (collective/ folder populated)?", default=True):
         sys.exit(0)
     state["firm_brain_first_synthesize_ok"] = True
@@ -2274,13 +2590,23 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
                 }
                 fb_payload_path = Path("/tmp/oot-firm-brain-branch-protection-deferred.json")
                 import json as _json
+
                 fb_payload_path.write_text(_json.dumps(fb_payload))
                 rc, out = run(
-                    ["gh", "api", "-X", "PUT",
-                     f"repos/{fb_owner}/{fb_name}/branches/main/protection",
-                     "-H", "Accept: application/vnd.github+json",
-                     "--input", str(fb_payload_path)],
-                    dry_run=dry_run, capture=True, check=False,
+                    [
+                        "gh",
+                        "api",
+                        "-X",
+                        "PUT",
+                        f"repos/{fb_owner}/{fb_name}/branches/main/protection",
+                        "-H",
+                        "Accept: application/vnd.github+json",
+                        "--input",
+                        str(fb_payload_path),
+                    ],
+                    dry_run=dry_run,
+                    capture=True,
+                    check=False,
                 )
                 if rc == 0:
                     ok("Branch protection applied on Firm Brain main.")
@@ -2289,8 +2615,12 @@ def step_11_curator(state: dict[str, Any], dry_run: bool) -> None:
                     warn(f"`gh api` failed: {out}")
                 fb_payload_path.unlink(missing_ok=True)
         if not applied:
-            fb_settings_url = (fb_url.removesuffix(".git") or "<firm-brain-repo>") + "/settings/branches"
-            info(f"  Manual: open {fb_settings_url} and apply the same checkbox configuration as Step 10.")
+            fb_settings_url = (
+                fb_url.removesuffix(".git") or "<firm-brain-repo>"
+            ) + "/settings/branches"
+            info(
+                f"  Manual: open {fb_settings_url} and apply the same checkbox configuration as Step 10."
+            )
             ask_confirm("Firm Brain branch protection applied?", default=True)
         state.pop("firm_brain_protection_deferred", None)
 
@@ -2405,7 +2735,9 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
         mark_step_done(state, "step_12_secondbrain_sync")
         return
 
-    curator_domain = locations.get("curator_domain") or profile.get("name", "<firm>").lower().replace(" ", "-")
+    curator_domain = locations.get("curator_domain") or profile.get(
+        "name", "<firm>"
+    ).lower().replace(" ", "-")
 
     explainer(
         "What this step does and why",
@@ -2445,6 +2777,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     if sync_config_path:
         try:
             import json as _json
+
             data = _json.loads(sync_config_path.read_text())
             existing_sync_url = (
                 data.get("remoteUrl")
@@ -2466,14 +2799,18 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
         info("  In the Curator app:")
         info("    1. Open the Sync tab in Settings (or Preferences → Sync).")
         info("    2. Click 'Enable GitHub sync' / 'Connect to GitHub'.")
-        info(f"    3. Create a NEW private repository called  "
-             f"  {profile.get('name', 'firm').lower().replace(' ', '-')}-secondbrain")
+        info(
+            f"    3. Create a NEW private repository called  "
+            f"  {profile.get('name', 'firm').lower().replace(' ', '-')}-secondbrain"
+        )
         info("       (or pick an existing private repo you want to sync to).")
         info("    4. Generate a PAT with `repo` scope (Curator uses this for two-way sync).")
         info("    5. Paste the PAT into Curator. Curator saves it locally in .sync-config.json.")
         info("    6. Click 'Sync Up' to do the initial push.")
         info("")
-        if not ask_confirm("Curator sync is configured and the initial push succeeded?", default=True):
+        if not ask_confirm(
+            "Curator sync is configured and the initial push succeeded?", default=True
+        ):
             info("Pausing here. When sync is configured, re-run with --resume.")
             sys.exit(0)
         default_url = f"https://github.com/<you>/{profile.get('name', 'firm').lower().replace(' ', '-')}-secondbrain"
@@ -2491,6 +2828,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     try:
         # crude URL parse for github.com/<owner>/<name>(.git)
         import re
+
         m = re.search(r"github\.com[:/](?P<owner>[^/]+)/(?P<name>[^/.]+)(\.git)?$", sync_url)
         if m:
             sb_owner = m.group("owner")
@@ -2511,8 +2849,10 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     info("    2. Token name: 'oot-routines-secondbrain-read' (or similar)")
     info("    3. Expiration: 1 year (renew at expiry)")
     info("    4. Resource owner: yourself (or the firm's org, if relevant)")
-    info("    5. Repository access: 'Only select repositories' → "
-         + (f"{sb_owner}/{sb_name}" if sb_owner else "the Second Brain repo above"))
+    info(
+        "    5. Repository access: 'Only select repositories' → "
+        + (f"{sb_owner}/{sb_name}" if sb_owner else "the Second Brain repo above")
+    )
     info("    6. Permissions → Repository permissions → Contents: Read-only")
     info("       (leave everything else as 'No access')")
     info("    7. Generate token. Copy it immediately — GitHub only shows it once.")
@@ -2523,21 +2863,26 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     info("")
 
     pat_for_test = ""
-    if ask_confirm("Paste the PAT here ONLY for a one-time clone verification? "
-                   "(We won't write it to disk — it's used in memory then discarded.)",
-                   default=True):
+    if ask_confirm(
+        "Paste the PAT here ONLY for a one-time clone verification? "
+        "(We won't write it to disk — it's used in memory then discarded.)",
+        default=True,
+    ):
         pat_for_test = ask_text("PAT (will be used once then forgotten)", default="").strip()
 
     # ----- 3. Verify clone works -----------------------------------------
     info("\n[3/4] Verifying clone access...")
     verified = False
     if pat_for_test and sb_owner and sb_name and not dry_run:
-        test_dir = Path("/tmp") / f"oot-sb-clone-test-{datetime.now(timezone.utc).strftime('%H%M%S')}"
+        test_dir = (
+            Path("/tmp") / f"oot-sb-clone-test-{datetime.now(timezone.utc).strftime('%H%M%S')}"
+        )
         try:
             clone_url = f"https://{pat_for_test}@github.com/{sb_owner}/{sb_name}.git"
             rc, _ = run(
                 ["git", "clone", "--depth", "1", "--quiet", clone_url, str(test_dir)],
-                capture=True, check=False,
+                capture=True,
+                check=False,
             )
             if rc == 0:
                 # Check that the curator domain folder exists in the synced repo.
@@ -2559,6 +2904,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
             # Scrub the working directory regardless of outcome (it never contained
             # the PAT itself, but defence in depth).
             import shutil as _shutil
+
             if test_dir.exists():
                 _shutil.rmtree(test_dir, ignore_errors=True)
         # Discard the PAT from local scope — never written to state.
@@ -2577,7 +2923,7 @@ def step_12_secondbrain_sync(state: dict[str, Any], dry_run: bool) -> None:
     info("Summary of what's saved (to state file):")
     info(f"  Second Brain repo URL:     {sync_url}")
     info(f"  Curator domain scope:      wiki/{curator_domain}")
-    info(f"  PAT:                       NOT saved (you'll paste it at Step 14)")
+    info("  PAT:                       NOT saved (you'll paste it at Step 14)")
     info(f"  Clone-test verified:       {'yes' if verified else 'no (do this manually later)'}")
     info("")
     info("At Step 14 we'll configure R5 (and any other Routine that needs Second Brain")
@@ -2596,14 +2942,14 @@ def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
     chosen = modules.get("routines", [])
 
     schedules = {
-        "R5": ("Sunday 09:00",      "Brain Health Check",         "firm/brain-health"),
-        "R6": ("daily 23:00",       "EU AI Act Audit Trail",      "firm/audit-logs"),
-        "R7": ("PR webhook",        "Klarna Test gate",           None),  # verified differently
-        "R1": ("daily 18:00",       "Daily Output Capture",       "firm/output-logs"),
-        "R2": ("Friday 08:00",      "Weekly BR Prep",             "firm/business-reviews"),
-        "R3": ("monthly 1st",       "Partner Acknowledgement",    "firm/partners"),
-        "R4": ("monthly 1st",       "Monthly Compensation Calc",  "firm/compensation"),
-        "R8": ("quarterly",         "Quarterly Sentiment Sweep",  "firm/brain-health"),
+        "R5": ("Sunday 09:00", "Brain Health Check", "firm/brain-health"),
+        "R6": ("daily 23:00", "EU AI Act Audit Trail", "firm/audit-logs"),
+        "R7": ("PR webhook", "Klarna Test gate", None),  # verified differently
+        "R1": ("daily 18:00", "Daily Output Capture", "firm/output-logs"),
+        "R2": ("Friday 08:00", "Weekly BR Prep", "firm/business-reviews"),
+        "R3": ("monthly 1st", "Partner Acknowledgement", "firm/partners"),
+        "R4": ("monthly 1st", "Monthly Compensation Calc", "firm/compensation"),
+        "R8": ("quarterly", "Quarterly Sentiment Sweep", "firm/brain-health"),
     }
     day1_chosen = [r for r in chosen if r in ("R5", "R6", "R7")]
     deferred = [r for r in chosen if r not in ("R5", "R6", "R7")]
@@ -2627,13 +2973,19 @@ def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
         info("No Day-1 Routines selected at Step 5. Skipping the walkthrough.")
         if deferred:
             info(f"Deferred (need partner data first): {', '.join(deferred)}.")
-        info("You can configure Routines anytime via Claude Code → /schedule or https://claude.ai/code/routines")
+        info(
+            "You can configure Routines anytime via Claude Code → /schedule or https://claude.ai/code/routines"
+        )
         mark_step_done(state, "step_13_routines")
         return
 
     info(
         f"\nYou selected: {', '.join(day1_chosen)} for Day-1."
-        + (f"\nDeferred (will set up later when prerequisites are met): {', '.join(deferred)}." if deferred else "")
+        + (
+            f"\nDeferred (will set up later when prerequisites are met): {', '.join(deferred)}."
+            if deferred
+            else ""
+        )
     )
 
     owner = state.get("ledger_repo_owner")
@@ -2648,16 +3000,18 @@ def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
     for r in day1_chosen:
         sched, name, watch_dir = schedules[r]
         info(f"\n--- {r} ({name}) — setup ---")
-        info(f"  Routine prompt body:  routines/cloud/{r}.md  ({REPO_ROOT / 'routines' / 'cloud' / (r + '.md')})")
+        info(
+            f"  Routine prompt body:  routines/cloud/{r}.md  ({REPO_ROOT / 'routines' / 'cloud' / (r + '.md')})"
+        )
         info(f"  Schedule:             {sched}")
-        info(f"  Primary GitHub connector (Ledger, read+write):")
+        info("  Primary GitHub connector (Ledger, read+write):")
         info(f"    {state.get('ledger_repo_url', '<repo>')} — signing key from Step 9")
         if r in routines_needing_secondbrain and sb_url:
-            info(f"  Secondary GitHub connector (Second Brain, READ-ONLY):")
+            info("  Secondary GitHub connector (Second Brain, READ-ONLY):")
             info(f"    {sb_url}")
             info(f"    Scope:  {sb_subfolder}/")
-            info(f"    PAT:    the fine-grained Contents:Read PAT you created at Step 13")
-            info(f"            (paste it from your password manager when prompted)")
+            info("    PAT:    the fine-grained Contents:Read PAT you created at Step 13")
+            info("            (paste it from your password manager when prompted)")
         info("\n  In Claude Code (CLI or desktop app):")
         info("    /schedule  →  New Routine  →  upload the prompt body file above")
         info("    Attach the my-curator MCP (privacy-track only — cloud Routines use")
@@ -2675,28 +3029,48 @@ def step_13_routines(state: dict[str, Any], dry_run: bool) -> None:
         if can_verify_via_gh and watch_dir:
             info(f"\n  Verifying {r} by checking {watch_dir}/ in your Ledger...")
             rc, out = run(
-                ["gh", "api", f"repos/{owner}/{repo_name}/contents/{watch_dir}",
-                 "--jq", ".[] | .name"],
-                capture=True, check=False,
+                [
+                    "gh",
+                    "api",
+                    f"repos/{owner}/{repo_name}/contents/{watch_dir}",
+                    "--jq",
+                    ".[] | .name",
+                ],
+                capture=True,
+                check=False,
             )
             if rc == 0 and out.strip():
                 files = [ln for ln in out.strip().splitlines() if ln and ln != ".gitkeep"]
                 if files:
-                    ok(f"Found {len(files)} file(s) in {watch_dir}/ — Routine appears to be working.")
+                    ok(
+                        f"Found {len(files)} file(s) in {watch_dir}/ — Routine appears to be working."
+                    )
                     info(f"     Latest: {files[-1]}")
                 else:
                     warn(f"  {watch_dir}/ exists but has no Routine-written files yet.")
-                    info(f"     The Routine may still be running. Check logs at: https://claude.ai/code/routines")
-                    info(f"     Or verify manually: {state.get('ledger_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir}")
+                    info(
+                        "     The Routine may still be running. Check logs at: https://claude.ai/code/routines"
+                    )
+                    info(
+                        f"     Or verify manually: {state.get('ledger_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir}"
+                    )
             else:
-                warn(f"  Could not read {watch_dir}/ via gh API (it may not exist yet, or the Routine errored).")
-                info(f"     Inspect logs: https://claude.ai/code/routines")
+                warn(
+                    f"  Could not read {watch_dir}/ via gh API (it may not exist yet, or the Routine errored)."
+                )
+                info("     Inspect logs: https://claude.ai/code/routines")
         elif r == "R7":
             info("  R7 verification: this is a PR-webhook routine; no file output to check.")
-            info("     Verify by opening a test PR with an AI-replaces-human label and watching for the oot/klarna-test status check.")
+            info(
+                "     Verify by opening a test PR with an AI-replaces-human label and watching for the oot/klarna-test status check."
+            )
         else:
-            info("  (Programmatic verification needs the `gh` CLI authenticated. Skip — manual verification:")
-            info(f"     Visit {state.get('ledger_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir or 'firm'}")
+            info(
+                "  (Programmatic verification needs the `gh` CLI authenticated. Skip — manual verification:"
+            )
+            info(
+                f"     Visit {state.get('ledger_repo_url', '<repo>').removesuffix('.git')}/tree/main/{watch_dir or 'firm'}"
+            )
             info("     and look for the file the Routine should have written.)")
 
     mark_step_done(state, "step_13_routines")
@@ -2743,13 +3117,15 @@ def step_klarna_gate(state: dict[str, Any], dry_run: bool) -> None:
     )
 
     # Honour the Step 4 choice, but always allow a skip here.
-    klarna_now = (profile.get("klarna_gate_choice") == "now"
-                  or "R7" in modules.get("routines", []))
+    klarna_now = profile.get("klarna_gate_choice") == "now" or "R7" in modules.get("routines", [])
     default_install = klarna_now
     if not ask_confirm(
         "Install the Klarna gate workflow + auto-labeller into your Ledger now?"
-        + (" (recommended — you chose 'now' at Step 4)" if klarna_now
-           else " (you can defer — most founders do)"),
+        + (
+            " (recommended — you chose 'now' at Step 4)"
+            if klarna_now
+            else " (you can defer — most founders do)"
+        ),
         default=default_install,
     ):
         info("Skipping the Klarna gate. Re-run with --resume to install it later,")
@@ -2765,11 +3141,13 @@ def step_klarna_gate(state: dict[str, Any], dry_run: bool) -> None:
 
     info("\n[1/3] Copy klarna-gate.yml + labeler.yml into the Ledger + push")
     if dry_run:
-        info(f"  (dry-run) would copy {src_workflow.name} → .github/workflows/ and "
-             f"{src_labeler.name} → .github/ in {firm_folder}, then signed-commit + push")
+        info(
+            f"  (dry-run) would copy {src_workflow.name} → .github/workflows/ and "
+            f"{src_labeler.name} → .github/ in {firm_folder}, then signed-commit + push"
+        )
     else:
         if not src_workflow.exists() or not src_labeler.exists():
-            warn(f"Could not find the source files in the framework repo:")
+            warn("Could not find the source files in the framework repo:")
             warn(f"  {src_workflow}  (exists: {src_workflow.exists()})")
             warn(f"  {src_labeler}   (exists: {src_labeler.exists()})")
             warn("Skipping the copy. Install the Klarna gate by hand later.")
@@ -2783,12 +3161,14 @@ def step_klarna_gate(state: dict[str, Any], dry_run: bool) -> None:
         run(["git", "add", ".github/"], check=False)
         if not run_critical(
             ["git", "commit", "-S", "-m", "config: Klarna gate workflow + auto-labeller"],
-            "Signed commit of Klarna gate files", capture=True,
+            "Signed commit of Klarna gate files",
+            capture=True,
         ):
             info("Pausing. Fix the signing/commit error above, then re-run with --resume.")
             return  # NOT marked done
-        if not run_critical(["git", "push", "origin", "main"],
-                            "Push Klarna gate files", capture=True):
+        if not run_critical(
+            ["git", "push", "origin", "main"], "Push Klarna gate files", capture=True
+        ):
             info("Pausing. Re-run with --resume once the push succeeds.")
             return  # NOT marked done
 
@@ -2836,13 +3216,23 @@ def step_klarna_gate(state: dict[str, Any], dry_run: bool) -> None:
             }
             payload_path = Path("/tmp/oot-klarna-status-check.json")
             import json as _json
+
             payload_path.write_text(_json.dumps(payload))
             rc, out = run(
-                ["gh", "api", "-X", "PATCH",
-                 f"repos/{owner}/{repo_name}/branches/main/protection/required_status_checks",
-                 "-H", "Accept: application/vnd.github+json",
-                 "--input", str(payload_path)],
-                dry_run=dry_run, capture=True, check=False,
+                [
+                    "gh",
+                    "api",
+                    "-X",
+                    "PATCH",
+                    f"repos/{owner}/{repo_name}/branches/main/protection/required_status_checks",
+                    "-H",
+                    "Accept: application/vnd.github+json",
+                    "--input",
+                    str(payload_path),
+                ],
+                dry_run=dry_run,
+                capture=True,
+                check=False,
             )
             if rc == 0:
                 ok("Required status check `oot/klarna-test` added to branch protection.")
@@ -2870,7 +3260,9 @@ def step_klarna_gate(state: dict[str, Any], dry_run: bool) -> None:
             warn("On GitHub Free + private repos, required status checks are advisory only —")
             warn("same enforcement caveat as branch protection (Step 6). Upgrade to Team for")
             warn("real enforcement of the gate.")
-        ask_confirm("Required status check configured (or noted to do after first PR)?", default=True)
+        ask_confirm(
+            "Required status check configured (or noted to do after first PR)?", default=True
+        )
 
     state["klarna_gate_installed"] = True
     mark_step_done(state, "step_klarna_gate")
@@ -2903,24 +3295,36 @@ def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
     info("\n[2/3] Excel templates open cleanly:")
     venv_python = venv_bin(VENV_DIR, "python")
     if venv_python.exists() and not dry_run:
-        cmd = [str(venv_python), "-c", (
-            "import openpyxl\n"
-            "from pathlib import Path\n"
-            f"brain = Path('{firm_folder}') / 'firm' / 'excel'\n"
-            "ok = fail = 0\n"
-            "for f in sorted(brain.glob('*.xlsx')):\n"
-            "    try:\n"
-            "        wb = openpyxl.load_workbook(f); n = len(wb.sheetnames); wb.close()\n"
-            "        ok += 1; print(f'  ✓ {f.name} — {n} sheets')\n"
-            "    except Exception as e:\n"
-            "        fail += 1; print(f'  ✗ {f.name} — {e}')\n"
-            "print(f'Result: {ok} ok, {fail} fail')\n"
-        )]
+        cmd = [
+            str(venv_python),
+            "-c",
+            (
+                "import openpyxl\n"
+                "from pathlib import Path\n"
+                f"brain = Path('{firm_folder}') / 'firm' / 'excel'\n"
+                "ok = fail = 0\n"
+                "for f in sorted(brain.glob('*.xlsx')):\n"
+                "    try:\n"
+                "        wb = openpyxl.load_workbook(f); n = len(wb.sheetnames); wb.close()\n"
+                "        ok += 1; print(f'  ✓ {f.name} — {n} sheets')\n"
+                "    except Exception as e:\n"
+                "        fail += 1; print(f'  ✗ {f.name} — {e}')\n"
+                "print(f'Result: {ok} ok, {fail} fail')\n"
+            ),
+        ]
         run(cmd, capture=False, check=False)
 
     info("\n[3/4] Ledger folder structure:")
-    for sub in ["excel", "output-logs", "audit-logs", "business-reviews",
-                "klarna-tests", "compensation", "brain-health", "partners"]:
+    for sub in [
+        "excel",
+        "output-logs",
+        "audit-logs",
+        "business-reviews",
+        "klarna-tests",
+        "compensation",
+        "brain-health",
+        "partners",
+    ]:
         path = firm_folder / "firm" / sub
         marker = "✓" if path.exists() else "✗"
         info(f"  {marker} firm/{sub}/")
@@ -2945,32 +3349,49 @@ def step_14_smoke_test(state: dict[str, Any], dry_run: bool) -> None:
         info(f"  ✓ Second Brain repo:  {sb_url}")
         info(f"  ✓ Domain scope:        {sb_subfolder or '(unset)'}")
         if sb_verified:
-            info(f"  ✓ Clone verification:  passed at Step 13.")
+            info("  ✓ Clone verification:  passed at Step 13.")
         else:
-            warn(f"  Clone verification:  NOT verified at Step 13.")
-            info(f"    Test manually: open the repo URL above in your browser. You should")
+            warn("  Clone verification:  NOT verified at Step 13.")
+            info("    Test manually: open the repo URL above in your browser. You should")
             info(f"    see a `{sb_subfolder or 'wiki/<domain>'}/` folder with markdown files.")
         if gh_available_and_authed() and not dry_run:
             sb_owner = state.get("second_brain_repo_owner")
             sb_name = state.get("second_brain_repo_name")
             if sb_owner and sb_name:
-                domain = (sb_subfolder or "wiki").split("/", 1)[-1] if "/" in (sb_subfolder or "") else ""
-                api_path = f"repos/{sb_owner}/{sb_name}/contents/{sb_subfolder}" if sb_subfolder else f"repos/{sb_owner}/{sb_name}/contents/wiki"
-                rc, out = run(["gh", "api", api_path, "--jq", ".[].name"],
-                               capture=True, check=False)
+                domain = (
+                    (sb_subfolder or "wiki").split("/", 1)[-1]
+                    if "/" in (sb_subfolder or "")
+                    else ""
+                )
+                api_path = (
+                    f"repos/{sb_owner}/{sb_name}/contents/{sb_subfolder}"
+                    if sb_subfolder
+                    else f"repos/{sb_owner}/{sb_name}/contents/wiki"
+                )
+                rc, out = run(
+                    ["gh", "api", api_path, "--jq", ".[].name"], capture=True, check=False
+                )
                 if rc == 0 and out.strip():
                     pages = [p for p in out.strip().splitlines() if p.endswith(".md")]
-                    info(f"  ✓ Live API read:        found {len(pages)} markdown page(s) at "
-                         f"{sb_subfolder or 'wiki/'}")
+                    info(
+                        f"  ✓ Live API read:        found {len(pages)} markdown page(s) at "
+                        f"{sb_subfolder or 'wiki/'}"
+                    )
                     if pages:
                         sample = ", ".join(pages[:3])
                         info(f"     Sample:             {sample}{'...' if len(pages) > 3 else ''}")
                 elif rc == 0:
-                    warn(f"  Live API read:         folder exists but no pages yet. Add pages to your")
-                    info(f"    Curator domain '{domain or '<firm>'}' and Sync Up to populate the bridge.")
+                    warn(
+                        "  Live API read:         folder exists but no pages yet. Add pages to your"
+                    )
+                    info(
+                        f"    Curator domain '{domain or '<firm>'}' and Sync Up to populate the bridge."
+                    )
                 else:
-                    info(f"  · Live API read:         skipped (gh API call failed — repo might be private)")
-                    info(f"    Verify manually in your browser.")
+                    info(
+                        "  · Live API read:         skipped (gh API call failed — repo might be private)"
+                    )
+                    info("    Verify manually in your browser.")
 
     mark_step_done(state, "step_14_smoke_test")
 
@@ -3034,14 +3455,25 @@ def step_15_summary(state: dict[str, Any], dry_run: bool) -> None:
 
 # ----- main -----------------------------------------------------------------
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="ØØT installer wizard v" + WIZARD_VERSION)
-    parser.add_argument("--resume", action="store_true",
-                        help="Resume from the first incomplete step in ~/.oot/wizard-state.yaml")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Walk through prompts without executing consequential actions")
-    parser.add_argument("--track", choices=["cloud", "privacy"], default="cloud",
-                        help="Track. Cloud is the default; privacy track support is partial in v1.1 (most steps still apply).")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from the first incomplete step in ~/.oot/wizard-state.yaml",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Walk through prompts without executing consequential actions",
+    )
+    parser.add_argument(
+        "--track",
+        choices=["cloud", "privacy"],
+        default="cloud",
+        help="Track. Cloud is the default; privacy track support is partial in v1.1 (most steps still apply).",
+    )
     args = parser.parse_args()
 
     # Must run BEFORE any questionary / prompt_toolkit call. Avoids macOS
@@ -3050,18 +3482,24 @@ def main() -> int:
     _reattach_stdin_to_tty_if_needed()
 
     if os.name == "nt":
-        warn("Native Windows is only partially supported. The install plans and the\n"
-             "framework's bash provisioning scripts assume a POSIX shell. For a smooth\n"
-             "install, run this wizard inside WSL (Windows Subsystem for Linux):\n"
-             "  https://learn.microsoft.com/windows/wsl/install\n"
-             "Continuing on native Windows — some git/gpg steps may need manual fixups.")
+        warn(
+            "Native Windows is only partially supported. The install plans and the\n"
+            "framework's bash provisioning scripts assume a POSIX shell. For a smooth\n"
+            "install, run this wizard inside WSL (Windows Subsystem for Linux):\n"
+            "  https://learn.microsoft.com/windows/wsl/install\n"
+            "Continuing on native Windows — some git/gpg steps may need manual fixups."
+        )
 
     if not _HAS_QUESTIONARY:
-        warn("`questionary` not installed. Falling back to plain input(). "
-             "For nicer prompts, run: pip install questionary rich")
+        warn(
+            "`questionary` not installed. Falling back to plain input(). "
+            "For nicer prompts, run: pip install questionary rich"
+        )
     if not _HAS_RICH:
-        warn("`rich` not installed. Falling back to plain print(). "
-             "For nicer output, run: pip install rich")
+        warn(
+            "`rich` not installed. Falling back to plain print(). "
+            "For nicer output, run: pip install rich"
+        )
 
     state = load_state() if args.resume else {}
     if not args.resume and STATE_FILE.exists():
@@ -3081,24 +3519,24 @@ def main() -> int:
     # `_GoBack` raised from a step rewinds one position; later steps' state is
     # preserved so the user only re-confirms what they want to change.
     steps = [
-        ("step_00_welcome",          "Welcome",               step_00_welcome),
-        ("step_01_preflight",        "Preflight",             step_01_preflight),
-        ("step_02_python_venv",      "Python venv",           step_02_python_venv),
-        ("step_03_locations",        "Locations",             step_03_locations),
-        ("step_04_firm_profile",     "Firm profile",          step_04_firm_profile),
-        ("step_05_module_selection", "Module selection",      step_05_module_selection),
-        ("step_06_github_plan_tier", "GitHub plan tier",      step_06_github_plan_tier),
-        ("step_07_anthropic_check",  "Anthropic check",       step_07_anthropic_check),
-        ("step_08_brain_repo",       "Ledger",            step_08_brain_repo),
-        ("step_09_signing_key",      "Signing key",           step_09_signing_key),
-        ("step_10_branch_protection","Branch protection",     step_10_branch_protection),
-        ("step_11_curator",          "Curator",               step_11_curator),
-        ("step_12_brain_ingest",     "Brain ingest",          step_12_brain_ingest),
-        ("step_12_secondbrain_sync", "Second Brain bridge",   step_12_secondbrain_sync),
-        ("step_13_routines",         "Routines",              step_13_routines),
-        ("step_klarna_gate",         "Klarna gate",           step_klarna_gate),
-        ("step_14_smoke_test",       "Smoke test",            step_14_smoke_test),
-        ("step_15_summary",          "Summary",               step_15_summary),
+        ("step_00_welcome", "Welcome", step_00_welcome),
+        ("step_01_preflight", "Preflight", step_01_preflight),
+        ("step_02_python_venv", "Python venv", step_02_python_venv),
+        ("step_03_locations", "Locations", step_03_locations),
+        ("step_04_firm_profile", "Firm profile", step_04_firm_profile),
+        ("step_05_module_selection", "Module selection", step_05_module_selection),
+        ("step_06_github_plan_tier", "GitHub plan tier", step_06_github_plan_tier),
+        ("step_07_anthropic_check", "Anthropic check", step_07_anthropic_check),
+        ("step_08_brain_repo", "Ledger", step_08_brain_repo),
+        ("step_09_signing_key", "Signing key", step_09_signing_key),
+        ("step_10_branch_protection", "Branch protection", step_10_branch_protection),
+        ("step_11_curator", "Curator", step_11_curator),
+        ("step_12_brain_ingest", "Brain ingest", step_12_brain_ingest),
+        ("step_12_secondbrain_sync", "Second Brain bridge", step_12_secondbrain_sync),
+        ("step_13_routines", "Routines", step_13_routines),
+        ("step_klarna_gate", "Klarna gate", step_klarna_gate),
+        ("step_14_smoke_test", "Smoke test", step_14_smoke_test),
+        ("step_15_summary", "Summary", step_15_summary),
     ]
 
     try:
@@ -3118,7 +3556,11 @@ def main() -> int:
                 continue
             i += 1
     except KeyboardInterrupt:
-        warn("\nInterrupted. State saved at " + str(STATE_FILE) + ". Re-run with --resume to continue.")
+        warn(
+            "\nInterrupted. State saved at "
+            + str(STATE_FILE)
+            + ". Re-run with --resume to continue."
+        )
         return 130
     return 0
 

@@ -122,7 +122,9 @@ If **PROCEED**:
 If **HOLD**:
 - Status check stays red. PR cannot merge.
 - R7 posts the remediation list to `#klarna-test` automatically.
-- The test_id row stays open in scoring; re-score after remediation (do NOT create a new test_id).
+- The test_id row stays open; re-score after remediation (do NOT create a new test_id).
+
+> **Column I (`decision`) vs column M (`status`) — ADR-004.** Column I is the *threshold verdict* the formula above computes (PROCEED at ≥14, else HOLD). The separate column **M `status`** tracks where the *process* is in its lifecycle — `scoring` → `remediation` / `held` / `proceeded`, and `proceeded` rows become `monitoring` until the 90-day review date (column K) passes. They can differ on purpose: a row can read I=`PROCEED` while M=`monitoring` during the review window. The `oot/klarna-test` gate reads Klarna_Score directly and never consults `status`.
 
 ![GitHub PR with oot/klarna-test status check passed](../images/W5-4-status-check-green.png)
 

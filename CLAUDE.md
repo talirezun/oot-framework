@@ -91,43 +91,48 @@ oot-framework/
 │   └── sales-bd/                     (S11 — Tier-2 scaffold)
 │       └── per-pack: SPEC.md, SKILL.md, examples/, references/
 ├── templates/
-│   ├── excel/                        (SPEC.md + 9 .xlsx files)
-│   ├── brain/                        (FIRM-ONTOLOGY.md, SPEC.md, 14 page templates)
+│   ├── excel/                        (SPEC.md + 9 .xlsx files; X1 now A–N, X2 partner_id-keyed, X4 A–M per ADR-004/005)
+│   ├── brain/                        (FIRM-ONTOLOGY.md, SPEC.md, 15 page templates incl. brain-health-week.md)
 │   ├── partner-charter.md
-│   ├── output-spec.md                (tutorial copy with inline guidance)
+│   ├── output-spec.md                (tutorial copy with inline guidance; optional attribution_split field per ADR-005)
 │   └── partner-onboarding/           (PROVISIONING-SPEC.md, checklist.md, provisioning-script.sh, first-90-days.md)
 ├── routines/
 │   ├── SPEC.md
 │   ├── README.md                     (16-file index + install order)
 │   ├── cloud/                        (R1.md – R8.md)
-│   └── privacy/                      (R1.md – R8.md)
+│   └── privacy/                      (R1.md – R8.md; OpenCode-headless invocation per Phase 4)
 ├── docs/
 │   ├── SPEC.md                       (doc generation spec)
-│   ├── ECOSYSTEM.md                  (plain-language ecosystem index)
-│   ├── 00-quickstart-cloud.md ... 08-faq.md  (12 Tier-1 user guides)
+│   ├── ECOSYSTEM.md                  (plain-language ecosystem index; #cost-summary canonical cost tables)
+│   ├── MODULES.md                    (module dependency map; #community-track section)
+│   ├── AUTOMATION-PIPELINE.md        (cloud + privacy pipeline diagrams)
+│   ├── 00-quickstart-cloud.md ... 08-faq.md  (12 Tier-1 user guides; 02 split cloud/privacy)
 │   ├── glossary.md                   (alias of /GLOSSARY.md)
-│   ├── walkthroughs/                 (W1.md – W6.md, screenshot-rich UI walkthroughs)
+│   ├── walkthroughs/                 (W1.md – W6.md, UI walkthroughs; screenshot binaries land in v1.x)
 │   ├── images/                       (screenshot placeholders; binaries land in v1.x)
-│   └── internal/MANIFEST.md          (build provenance)
+│   └── internal/                     (MANIFEST.md build provenance; ADR-001…ADR-005; agent-compatibility-log; install-test-report)
 ├── research/
 │   ├── README.md                     (research index)
 │   ├── external-resources.md         (curated ecosystem index)
 │   ├── articles/                     (2 stubs)
 │   └── papers/                       (3 paper summaries)
 ├── scripts/
-│   ├── build_excel.py                (Phase 5 generator)
-│   └── validate_skills.py            (Phase 8 validator)
+│   ├── build_excel.py                (Excel generator — regenerates the 9 .xlsx from the SPEC)
+│   └── validate_skills.py            (SKILL.md frontmatter + tier/status/uniqueness validator, hardened Phase 5B)
+├── tests/                            (pytest suite — 51 tests: validator round-trip, build_excel structural, wizard state machine)
 ├── installer/
-│   ├── README.md
-│   ├── wizard.py                     (steps 1-4 functional; 5-12 in v1.x)
-│   ├── cloud/install.sh              (fallback)
-│   └── privacy/install.sh            (fallback)
+│   ├── README.md                     (18-step wizard index, 0–17)
+│   ├── bootstrap.sh                  (one-line curl installer → clone + venv → hands off to wizard)
+│   ├── wizard.py                     (18 steps, branded /17; steps 1–4 + 12 + klarna-gate functional; remainder reference the docs)
+│   ├── agent-assisted/              (Path A: START-HERE, DAILY/WEEKLY/MONTHLY-OPS, cloud/privacy install plans, AGENT-CAPABILITY-SPEC, OPENCODE-SETUP.md [community track])
+│   ├── cloud/install.sh              (thin pointer to Paths A/B/C)
+│   └── privacy/install.sh            (thin pointer to Paths A/B/C)
 └── examples/
     ├── README.md
     ├── SPEC.md                       (reference org spec)
-    ├── small-org/                    (Solunar Studio, 3 partners — scaffold)
-    ├── medium-org/                   (Brda Cooperative, 12 partners — scaffold)
-    └── regulated-eu-org/             (AdriaLex AI, 6 partners — scaffold)
+    ├── small-org/                    (Solunar Studio, 3 partners — POPULATED: 25 firm/ pages, 2-week slice, Phase 5C)
+    ├── medium-org/                   (Brda Cooperative, 12 partners — README-only; population lands in v1.x)
+    └── regulated-eu-org/            (AdriaLex AI, 6 partners — README-only; population lands in v1.x)
 ```
 
 ---
@@ -152,6 +157,9 @@ These were debated, decided, and committed during the v1.0 build. Future agents 
 14. **The Firm Brain is a Curator Shared Brain instance, in a separate GitHub repo from the Ledger. The framework provisions exactly two firm repos per firm: `<firm>-ledger` and `<firm>-brain`.** Three distinct primitives: **Ledger** (`<firm>-ledger`, Excel + audit logs, written by Routines per ADR-001), **Firm Brain** (`<firm>-brain`, Curator Shared Brain v3.0.0-beta+, written by partners Push-ing from their personal Curators, synthesized weekly by the admin), **Second Brain** (each partner's *personal* Curator wiki on their own machine; one of its domains is opted-in to contribute to the Firm Brain). The pre-v1.0.1 `<firm>-secondbrain` repo is **retired as a framework concept** — cloud Routines that need firm context read `collective/<firm-domain>/wiki/` in the Firm Brain repo; personal Curator backup-to-GitHub is a personal-tooling choice, not framework-orchestrated. Existing v1.0 `<firm>-secondbrain` repos may stay as personal backup, be archived, or be deleted at firm discretion. Recorded in [`docs/internal/ADR-002-firm-brain-curator-shared-brain.md`](docs/internal/ADR-002-firm-brain-curator-shared-brain.md). Don't conflate these three terms; don't collapse the Firm Brain and the Ledger into one repo without an ADR superseding ADR-002.
 15. **IP mode default for ØØT firms = `organisational`** (partners assign IP to the operating LLC per their partner charter); **`contributor_retains` for advisors / contractors / outside collaborators**. Both Curator attribution flags (`allow_name_attribution` org-side, `attribute_by_name` contributor-side) default to **`false`** — UUID-pseudonymous attribution is the safe baseline; real names surface only when both sides explicitly opt in. The `data_handling_terms` field locks at admin setup and cannot be changed after invites go out. The partner charter ([`templates/partner-charter.md`](templates/partner-charter.md)) must carry an explicit IP-assignment clause for `organisational` mode to be defensible — Tier-2 follow-up to verify.
 16. **GitHub plan-tier guidance now applies to *two* protected repos per firm** (Ledger + Firm Brain). GitHub Free private repos do not enforce branch protection on either (Finding #16, amplified). **3+ partner firms: GitHub Team minimum.** **EU firms requiring GDPR data residency: GitHub Enterprise Cloud with EU residency option** on the Firm Brain repo (and ideally the Ledger too). Curator v3.1's Cloudflare R2 backend (with per-bucket `jurisdiction = "eu"`) will relieve this in the future; firms launching today on EU residency must use Enterprise Cloud.
+17. **A third operating configuration exists: the community track** (free-to-start, no Anthropic subscription, no dedicated hardware, no sovereignty claims). Harness + daily-ops agent is **OpenCode** (free built-in / own-key / local models); Ledger + Firm Brain are GitHub unchanged (ADR-001/002 verbatim); Brain ingest is Curator + Gemini Flash Lite pay-as-you-go; scheduled Routines run on a **three-rung automation ladder** — manual playbook runs → laptop cron running `opencode run` on the substrate-neutral prompt bodies → GitHub Actions scheduled workflows (laptop-closed). Routines/Skill Packs/Excel/governance are **byte-identical across all three tracks**; only harness and scheduler differ (any divergence is a bug). Budget-motivated founders use this; sovereignty-motivated founders use the privacy track. Recorded in [`docs/internal/ADR-003-community-track-no-subscription.md`](docs/internal/ADR-003-community-track-no-subscription.md). Harness setup: [`installer/agent-assisted/OPENCODE-SETUP.md`](installer/agent-assisted/OPENCODE-SETUP.md).
+18. **X4 Decision_Log gains column M — `status`** (ADR-004). Literal enum, never a formula: `scoring | remediation | monitoring | proceeded | held`. It answers a *different* question than column I (`decision`): I is the **threshold verdict** (what the score says: PROCEED at ≥14, else HOLD); M is the **lifecycle state** (where the process is). They may disagree transiently (I=PROCEED while M=monitoring during the 90-day window). The `oot/klarna-test` gate is unaffected — it reads Klarna_Score directly, never `status`. **The appended-row contract is now a required per-workbook SPEC section:** every workbook whose rows a Routine appends carries an "Appended-row contract" block in `templates/excel/SPEC.md` listing per column — literal / formula-the-routine-MUST-write / human-only. This generalises the Finding-6 fix (R1 previously left K/L formulas blank → silent zero-pay); R7 replicated the same bug on X4 and is now bound by the contract. Recorded in [`docs/internal/ADR-004-klarna-status-column.md`](docs/internal/ADR-004-klarna-status-column.md).
+19. **`partner_id` (`P-NNN`) is the universal Excel join key; X1 gains column N `weight`** (ADR-005). `Base_Variable_Split` and `Long_Tail_Schedule` each gain a **leading `partner_id` column** (all other columns shift right by one — weights are now D:F, `output_multiplier` is G, bonus splits H:J; Long_Tail's `partner_share_pct` is D, `total_settled_to_date` is H). Both stay **single shared sheets** (one row per partner / per partner-artifact) — per-partner *sheets* are explicitly rejected. R1/R3/R4 join on `partner_id`. X1 Output_Log gains column **N `weight`** (number in (0,1], default 1.0); the L formula becomes `=K*J*N*IF(rework)` so co-authored outputs **share** the envelope (one row per co-author with `weight=1/N` or the output spec's optional `attribution_split`) instead of double-paying. Recorded in [`docs/internal/ADR-005-partner-join-key-and-output-weight.md`](docs/internal/ADR-005-partner-join-key-and-output-weight.md).
 
 ---
 
@@ -239,14 +247,17 @@ If the agent's harness has the Anthropic public skills available (`xlsx`, `docx`
 
 After any substantive change:
 
-1. Run `python3 scripts/validate_skills.py` if SKILL.md files were touched.
-2. Run `python3 scripts/build_excel.py` if Excel SPEC was touched, then verify the regenerated `.xlsx` files.
-3. Commit with `<phase|fix|feat>-<n>: <what>` convention. Examples:
+1. Run `python3 scripts/validate_skills.py` if SKILL.md files were touched (must be 12/12).
+2. Run `python3 scripts/build_excel.py` if the Excel SPEC was touched, then verify the regenerated `.xlsx` files (the `excel-validation.yml` CI job does a cell-level drift check).
+3. Run the pytest suite: `python3 -m pytest tests/ -q` (51 tests — validator round-trip, build_excel structural asserts incl. the ADR-004/005 schema checks, wizard state machine). CI runs this as a **hard gate** in `python-tests.yml`; `ruff`/`black` cover `scripts/` + `installer/` but stay `continue-on-error` until a formatting pass clears pre-existing F401/F541.
+4. Run `python3 -m py_compile installer/wizard.py scripts/*.py` and `bash -n installer/*/install.sh installer/bootstrap.sh` for glue-code / shell changes.
+5. Check links: `lychee --offline --no-progress .` (0 errors) if docs were touched.
+6. Commit with `<phase|fix|feat>-<n>: <what>` convention. Examples:
    - `fix-skill-s7: harden EU AI Act §4.1 with worked example`
    - `feat-routine-r9: add monthly Brain semantic-duplicate scan`
    - `phase-11: tier-2 hardening pass for S7-S11` (if a future phase is named).
-4. AI-authored commits use `Co-authored-by: Claude Opus 4.x <noreply@anthropic.com>` trailer per `skills/code-qa/SKILL.md` §4.6.
-5. Push to GitHub. Branch protection on `main` requires signed commits.
+7. AI-authored commits use the `Co-Authored-By:` trailer per `skills/code-qa/SKILL.md` §4.6.
+8. Push to GitHub. (Note: this framework repo's own commits are *not* GPG-signed — the "requires signed commits" discipline applies to the *firm's* Ledger + Firm Brain repos, not to `oot-framework` itself.)
 
 ---
 
@@ -280,18 +291,23 @@ Then identify what the user wants to do:
 
 This section is intended for ephemeral state across sessions.
 
-**As of 2026-07-03 (post-v1.2.0 — audit + improvement effort in flight):**
+**As of 2026-07-04 (post-v1.2.0 — audit-driven improvement effort: Phases 0–5 complete):**
 
-**Release state reconciled 2026-07-03.** The Shared Brain branch was merged to `main` (fast-forward); tags `v1.1.0` + `v1.2.0` now live on main. `v1.0.1` was tagged retroactively at the bridge-complete commit (`c59595e`) so the many "v1.0.1" references across the docs resolve to a real release. CHANGELOG restructured into v1.0.1 / v1.1.0 / v1.2.0 sections. Stale worktree branches deleted.
+**Release state reconciled 2026-07-03.** The Shared Brain branch was merged to `main` (fast-forward); tags `v1.1.0` + `v1.2.0` now live on main. `v1.0.1` was tagged retroactively at the bridge-complete commit (`c59595e`). CHANGELOG restructured into v1.0.1 / v1.1.0 / v1.2.0 sections + an `## Unreleased` section holding the improvement-effort work. Stale worktree branches deleted.
 
-**Full-repo audit completed 2026-07-03** (five parallel deep reviews: installer, routines/Excel layer, docs/user journey, skills/governance, CI/examples). A phased improvement effort is now being executed. **The working plan lives in `IMPROVEMENT-PLAN.md` at the repo root — LOCAL ONLY, gitignored, the cross-session memory for this effort. Read it first in any session continuing this work.** Phases: 0 release-state untangle (DONE 2026-07-03), 1 trust-critical bug fixes (installer state machine, klarna-gate workflow, R1 dedupe, real CI tests), 2 doc-truth sweep (Second Brain bridge into Path C, contradiction kill-list), 3 OpenCode as first-class harness + no-subscription track (ADR-003), 4 privacy-track verification, 5 structural hardening (X4 status column, X2 partner join key, appended-row formula contracts).
+**Full-repo audit completed 2026-07-03** (five parallel deep reviews). The phased improvement effort is now **done through Phase 5 and pushed to `main`**. **The working plan lives in `IMPROVEMENT-PLAN.md` at the repo root — LOCAL ONLY, gitignored, the cross-session memory for this effort. Read it first in any session continuing this work.** Phases and their commits:
 
-**Known open items (deliberate, tracked in IMPROVEMENT-PLAN.md):**
+- **Phase 0 — release-state untangle** — DONE, `ffcdb8d`.
+- **Phase 1 — trust-critical bug fixes** — DONE, `cdf0fd8` (installer state machine; klarna-gate reworked to always-post / read base branch / framework-repo guard; R1 output_ref dedupe; real CI test suite; money-path routine fixes).
+- **Phase 2 — doc-truth sweep** — DONE, `001e2af` (Second Brain bridge into Path C; contradiction kill-list; ECOSYSTEM canonical cost tables; wizard grew to 18 steps; 88 visible Tier-2 TODOs).
+- **Phase 3 — community track (ADR-003)** — DONE, `1a1778e` (OpenCode as first-class harness; `OPENCODE-SETUP.md`; community track threaded through all entry docs).
+- **Phase 4 — privacy-track grounding** — DONE, `f01f460` (privacy Routines invoke **OpenCode headless** — `opencode run --model lmstudio/<model>` — against the llmster-hosted LM Studio server; the fabricated `--skill`/`--prompt-file`/`--backfill` flag interface is gone; `lms` for model management; scoped-unattended `opencode.json`; install.sh files shrunk to thin pointers).
+- **Phase 5 — structural hardening + docs-sync sweep** — DONE, this commit (ADR-004 X4 `status` column + appended-row contract; ADR-005 `partner_id` join key + X1 `weight` column; validator hardened with 6 new checks; Klarna per-question 0/1/2 anchors; small-org populated; 51-test suite with hard-gating lint; full documentation sync).
 
-- **Legacy secondbrain bridge half-retired.** ADR-002 retired `<firm>-secondbrain` as a framework primitive, but `routines/cloud/R5.md`, `installer/wizard.py` (`step_12_secondbrain_sync`), `docs/AUTOMATION-PIPELINE.md`, and cloud-install-plan Step 9b still implement the legacy bridge. Migration-note banners added 2026-07-03 in all four (new installs: point the bridge at the Firm Brain repo, scan `collective/<firm-domain>/wiki/`). Full rewrite to the Firm Brain read-path targets v1.3.
-- **R9 collision fixed 2026-07-03**: `routines/README.md` had reserved R9 for a Gen-2 semantic-duplicate scan while v1.1.0 introduced R9 Firm Brain Synthesize. Gen-2 scan renumbered to R10; Cotrugli anchoring to R11.
-- **The Klarna gate workflow (`.github/workflows/klarna-gate.yml`) is known-broken** — it reads a formula string instead of the computed total (can never pass) and deadlocks all unlabeled PRs if `oot/klarna-test` is made a required check. Fix scheduled in Phase 1. Until it lands, do NOT instruct firms to enable the required status check.
-- **Privacy track likely never executed end-to-end** — it depends on a `llmster` CLI that appears not to exist (LM Studio's real CLI is `lms`). Verification + rename is Phase 4.
+**Remaining open items (deliberate, tracked in IMPROVEMENT-PLAN.md):**
+
+- **The live-test session** (needs the maintainer at the keyboard, on the test instance): the privacy-track end-to-end run (LM Studio + OpenCode + the test company) **and** the OpenCode community-track e2e install. Everything above is author-verified but not yet run against real accounts. Bundled as one queued session.
+- **v1.3 roadmap:** full retirement of the legacy `<firm>-secondbrain` bridge to the Firm Brain read-path (migration banners are in place in `routines/cloud/R5.md`, `installer/wizard.py` step_12, `docs/AUTOMATION-PIPELINE.md`, cloud-install-plan Step 9b); the Rung-3 routine-runner GitHub Actions workflow template (`templates/ci/routine-runner.yml` candidate per ADR-003); the 25 walkthrough screenshots + installer web-UI choke-point captures; medium-org + regulated-eu-org population (small-org shipped Phase 5C); Tier-2 Skill Pack hardening (S7 first — owns the R6/Article-12 chain); the remaining ADR-001 amendment items (binary-xlsx conflict recovery, timezone pinning, R3 polling-window semantics, R6 hourly-retry unschedulability).
 
 Test instance preserved for e2e work:
 - GitHub: `talirezun/oot-test-company` (private)

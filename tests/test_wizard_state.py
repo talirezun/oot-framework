@@ -13,6 +13,7 @@ These lock in the Phase-1A trust-critical fixes so they can't silently regress:
       required/recommended/deferred keys).
   Plus: run()'s command echo masks credentials embedded in a URL.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -23,6 +24,7 @@ import installer.wizard as wiz
 # ---------------------------------------------------------------------------
 # (a) --dry-run must not persist state
 # ---------------------------------------------------------------------------
+
 
 def test_dry_run_does_not_write_state(tmp_path, monkeypatch):
     """save_state() is a no-op when DRY_RUN is True."""
@@ -46,6 +48,7 @@ def test_real_run_does_write_state(tmp_path, monkeypatch):
     """Sanity counterpart: with DRY_RUN False the file is written."""
     if wiz.yaml is None:  # pragma: no cover - pyyaml is a hard test dep here
         import pytest
+
         pytest.skip("pyyaml not installed")
     state_file = tmp_path / "wizard-state.yaml"
     monkeypatch.setattr(wiz, "OOT_HOME", tmp_path)
@@ -61,6 +64,7 @@ def test_real_run_does_write_state(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 # (b) mark_step_done / is_step_done round-trip
 # ---------------------------------------------------------------------------
+
 
 def test_mark_and_is_step_done_roundtrip(tmp_path, monkeypatch):
     state_file = tmp_path / "wizard-state.yaml"
@@ -81,6 +85,7 @@ def test_mark_and_is_step_done_roundtrip(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 # (c) --resume must prefer the saved track over the argparse default
 # ---------------------------------------------------------------------------
+
 
 def test_resume_keeps_saved_privacy_track():
     """A resumed privacy install must NOT be flipped back to the cloud default."""
@@ -148,6 +153,7 @@ def test_parse_gpg_key_ids_ignores_public_key_records():
 # (e) install summary uses the real modules_chosen keys
 # ---------------------------------------------------------------------------
 
+
 def test_step15_summary_uses_real_module_keys(tmp_path, monkeypatch):
     """Regression for the required/recommended/deferred key mismatch.
 
@@ -187,6 +193,7 @@ def test_step15_summary_uses_real_module_keys(tmp_path, monkeypatch):
 # bonus: run() masks credentials in its command echo
 # ---------------------------------------------------------------------------
 
+
 def test_mask_secrets_in_url():
     masked = wiz._mask_secrets_in_cmd(
         "git clone https://ghp_supersecrettoken123@github.com/acme/brain.git /tmp/x"
@@ -220,9 +227,11 @@ def test_module_imports_without_optional_deps():
 # (f) the two Phase-2 wizard steps exist and are registered in the navigator
 # ---------------------------------------------------------------------------
 
+
 def _steps_list_source() -> str:
     """Return the source of main(), which contains the STEPS list literal."""
     import inspect
+
     return inspect.getsource(wiz.main)
 
 

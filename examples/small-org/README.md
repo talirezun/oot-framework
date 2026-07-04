@@ -20,7 +20,7 @@
 
 1. **A perception-gap finding** — see `firm/change/perception-gap-2026-04.md`. Davor's +25% self-report vs. +5% DORA-measured. Confronted in BR; data accepted; 30-day re-baseline.
 2. **A Tier-1 dispute** — see `firm/compensation/2026-04/disputes/D-2026-04-001.md`. Anya's value_tier classification dispute on output #14. Resolved in 4 days; April variable +€1,500.
-3. **A blocker that pushed a deal slip** — see `firm/business-reviews/2026-03-27.md`. Lumina widget qualification step blocker; resolved via ADR-2026-007 a week later.
+3. **A blocker that pushed a deal slip** — the Lumina widget qualification-step blocker (raised late March, before this slice starts). Its resolution is in the slice: `firm/business-reviews/2026-04-10.md` (blocker closed) via `firm/decisions/D-2026-011.md` and the fix output OL-20260410-001.
 
 ## What this example demonstrates
 
@@ -29,6 +29,23 @@
 - Disputes resolve at Tier 1 in days, not weeks.
 - The Curator-fed Brain is operationally complete after 60 days.
 
-## v1.0 scaffold status
+## Population status — representative two-week slice
 
-This reference org ships as a scaffold in v1.0. The directory structure is specified in this README (and in [`examples/SPEC.md`](../SPEC.md)); population lands in v1.x. Two representative Brain pages are in place today (`firm/klarna-tests/KT-2026-001.md`, `firm/partners/index.md`). The full 60-day operational data (X1 ledger rows, R1 daily logs, weekly BRs, R6 audit logs) — and all the `firm/...` paths referenced in the awkward-edges list above, which are **(v1.x)** — land in v1.x.
+This reference org is **populated with a representative two-week operational slice (2026-04-06 → 2026-04-19)**; the full quarter (60-90 days per [`examples/SPEC.md`](../SPEC.md)) lands in v1.x. Every wikilink in the slice resolves within this example.
+
+What IS present under `firm/`:
+
+- `index.md` + `theses.md` — firm overview and manifesto adaptation.
+- `partners/` — roster (`index.md`) + 3 partner profiles carrying `P-NNN` join keys per [ADR-005](../../docs/internal/ADR-005-partner-join-key-and-output-weight.md).
+- `output-logs/` — 10 daily R1 logs (weekdays 2026-04-06 → 2026-04-17), including one **co-authored output split at weight 0.5/0.5** (2026-04-14) per ADR-005.
+- `business-reviews/` — 2 Friday BRs (04-10 with the perception-gap confrontation; 04-17 with the Klarna outcome).
+- `decisions/D-2026-011.md` — the qualification-step decision both BRs reference.
+- `klarna-tests/KT-2026-001.md` — the pass-flow Klarna Test (16/20, PROCEED, 90-day review scheduled 2026-07-12).
+- `compensation/2026-04/` — draft monthly variable-pay summary + the resolved Tier-1 dispute `D-2026-04-001` (Anya's output #14, +€1,500).
+- `change/perception-gap-2026-04.md` — Davor's 20-point gap and the 30-day re-baseline.
+- `audit-logs/` — 3 representative R6 Article-12 daily logs (04-08, 04-12, 04-14).
+- `brain-health/2026-W16.md` — one R5 weekly snapshot.
+
+**No `firm/excel/*.xlsx` ships in this example.** The Excel state (X1-X9) is generated at adoption by `scripts/build_excel.py` and then mutated by Routines (ADR-001); populated xlsx binaries checked into an example would rot instantly against the generator and are unreviewable in diffs. The markdown pages above are the human-readable mirror of what those workbooks contain at a real firm.
+
+Deferred to v1.x: the remaining ~10 weeks of the quarter, per-partner variable-statement pages (`firm/partners/<id>/variable-statements/`), the founder-approval packet, and the 90-day Klarna review entry (due 2026-07-12).

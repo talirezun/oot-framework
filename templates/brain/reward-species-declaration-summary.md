@@ -19,7 +19,7 @@ status: active
 **Reward species:** `{{REWARD_SPECIES}}`
 **Signed:** {{SIGNED_DATE}}
 **Signed PDF:** [{{PDF_FILENAME}}]({{PDF_LINK}})
-**X2 sheet row:** see `templates/excel/reward-species-declaration.xlsx` sheet `{{PARTNER_ID}}`.
+**X2 row:** see `templates/excel/reward-species-declaration.xlsx` → `Base_Variable_Split` sheet, row with `partner_id = {{PARTNER_ID}}` (single shared sheet, ADR-005).
 
 ## Compensation summary
 
@@ -38,7 +38,7 @@ Validation: variable weights sum to 1.0; bonus splits sum to 1.0.
 
 ## Long-tail eligibility
 
-Long-tail entries (per output) are tracked in `templates/excel/reward-species-declaration.xlsx` sheet `{{PARTNER_ID}}` Long_Tail_Schedule sub-sheet. Quarterly settlement via R4.
+Long-tail entries (per output) are tracked in `templates/excel/reward-species-declaration.xlsx` → `Long_Tail_Schedule` sheet, rows with `partner_id = {{PARTNER_ID}}` (single shared sheet, ADR-005). Quarterly settlement via R4.
 
 Currently active long-tail rows: {{N_ACTIVE_LONG_TAIL_ROWS}}.
 

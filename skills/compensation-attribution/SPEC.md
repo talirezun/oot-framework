@@ -115,9 +115,9 @@ The eventual SKILL.md follows the canonical template. Numbered sections below co
 **Initial declaration (during onboarding):**
 
 1. Open `reward-species-declaration.xlsx` (X2) in the firm's spreadsheet tool.
-2. Add a sheet for the new partner (one workbook with one sheet per partner is the convention for orgs <20 partners).
+2. Add the new partner's row to the single shared sheets (ADR-005: no per-partner sheets — one `Partner_Profile` row and one `Base_Variable_Split` row, each keyed by `partner_id` in column A).
 3. Populate Partner_Profile (A: partner_id, B: full_name, C: cohort, D: start_date, E: jurisdiction, F: base_currency, G: stablecoin_upgrade_pref [Yes|No], H: unit_fund_interest [Yes|No], I: two_worlds_self_id).
-4. Populate Base_Variable_Split (A: reward_species, B: base_amount, C+D+E sum-to-1.0 variable weights, F: output_multiplier defaulted to 1.0, G+H+I sum-to-1.0 bonus splits).
+4. Populate Base_Variable_Split (A: partner_id, B: reward_species, C: base_amount, D+E+F sum-to-1.0 variable weights, G: output_multiplier defaulted to 1.0, H+I+J sum-to-1.0 bonus splits — ADR-005 leading partner_id shift).
 5. Long_Tail_Schedule starts empty; populated as outputs ship with long-tail eligibility.
 6. Unit_Fund_Eligibility is **locked** in Gen 1 (sheet protection enabled; activation flag in `firm/decisions/D-...md` when Gen 2 opens).
 7. Renegotiation_Log starts empty.
@@ -173,7 +173,7 @@ R1 invokes this pack's daily-capture skill at 18:00. The pack's procedure:
    d. Determine `value_tier` per §4.10 rubric (default L if no Output Spec exists).
    e. Estimate `ai_authored_pct` from commit `Co-authored-by:` trailers and diff patterns; conservative default 0% unless evidence.
    f. Set `rework_within_30d` to `No` (R1 retroactively flips this per its detection rule — see `routines/SPEC.md` R1).
-   g. **Resolve `partner_multiplier` (X1 column J)** by reading X2's `output_multiplier` (column F) for that partner *at runtime* and writing the resolved number into X1; do not rely on a cross-workbook formula.
+   g. **Resolve `partner_multiplier` (X1 column J)** by reading X2's `output_multiplier` (Base_Variable_Split column G, after the ADR-005 leading-partner_id shift) for that partner *at runtime* — join on `partner_id` (column A) — and writing the resolved number into X1; do not rely on a cross-workbook formula.
    h. Compute `value_envelope` (X1 column K) per the embedded value-envelope lookup (XS=100, L=500, M=2000, S=8000 — Gen 1 defaults; firms can adjust).
 3. Append rows to X1 Output_Log; never edit existing rows except for the retroactive rework flip.
 4. Refresh `Partner_Multipliers_Snapshot` sheet on the first run of each calendar month (this is R3's job in subsequent runs).

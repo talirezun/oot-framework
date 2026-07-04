@@ -55,10 +55,10 @@ If the partner cannot articulate the Klarna Test framing back to you in their ow
 ### 0:30 — 1:00 — Reward Species Declaration
 
 1. Open the firm's Ledger copy `firm/excel/reward-species-declaration.xlsx` (X2) — the framework's `templates/excel/` copy is a pristine master; the firm works on its own copy in the Ledger.
-2. Add a sheet for the new partner (or use a per-partner workbook for orgs >20 partners).
+2. Add the new partner's row to the shared sheets — one `Partner_Profile` row and one `Base_Variable_Split` row, each keyed by the partner's `partner_id` (`P-NNN`) in column A (ADR-005: single shared sheets, no per-partner sheets, at any org size).
 3. Walk through every column:
-   - **Partner_Profile:** cohort, jurisdiction, base_currency, stablecoin_upgrade_pref (Gen 2), unit_fund_interest (Gen 2), two_worlds_self_id.
-   - **Base_Variable_Split:** reward_species (eat-what-you-kill / lockstep / hybrid), base_amount, variable weights summing to 1.0, output_multiplier (default 1.0), bonus splits summing to 1.0.
+   - **Partner_Profile:** partner_id, cohort, jurisdiction, base_currency, stablecoin_upgrade_pref (Gen 2), unit_fund_interest (Gen 2), two_worlds_self_id.
+   - **Base_Variable_Split:** partner_id (leading join key), reward_species (eat-what-you-kill / lockstep / hybrid), base_amount, variable weights summing to 1.0, output_multiplier (default 1.0), bonus splits summing to 1.0.
 4. **Negotiate** where the partner wants different values from your pre-fill. The negotiation is real. Pre-fills are a starting point, not a fait accompli.
 5. **Validate** the sums (variable weights = 1.0; bonus splits = 1.0 — the spreadsheet's conditional formatting flags violations red).
 6. Save the workbook.

@@ -63,29 +63,57 @@ For each question, score:
 
 A demo or vendor benchmark does not count. Internal measurements on real production traffic, with the actual user population and the actual edge-case distribution, are required.
 
+- **Score 2** — ≥3 months of internal measurement on real production traffic, covering the actual user population and edge-case distribution, showing the AI at or above the human baseline including on failure cases.
+- **Score 1** — Some real-traffic measurement exists but it is short of 3 months, partial in coverage, or shows the AI worse on a material slice (e.g. a 6-week pilot within 5% overall but 12% worse on failure cases).
+- **Score 0** — Only a demo or vendor benchmark; no internal measurement on the actual task in the actual environment.
+
 **2. Are the metrics that defined human success still being measured after the AI takes over?**
 
 If the previous quality bar was "customer issue resolved on first contact 80% of the time," that exact metric must continue to be measured. Replacing the metric with a different one — "AI confidence score," "response latency" — fails this question.
+
+- **Score 2** — The exact original success metrics remain instrumented and reported after cutover (e.g. first-contact resolution, onboarding NPS, time-to-first-product-use).
+- **Score 1** — Some original metrics are retained but others were dropped or silently swapped for proxies.
+- **Score 0** — The original metric is no longer measured; success is now judged on a substitute metric (AI confidence score, latency) that does not measure the human quality bar.
 
 **3. Is there a defined quality threshold below which the AI's deployment is automatically reversed?**
 
 A pre-committed threshold ("if first-contact resolution drops below 75% for two consecutive weeks, we revert"). With no threshold, there is no reversal trigger; without a reversal trigger, there is no reversal plan.
 
+- **Score 2** — A specific, pre-committed, numeric threshold with a time window is written down and owned ("if onboarding NPS < 60 for two weeks, revert").
+- **Score 1** — A reversal condition exists only in vague or qualitative terms ("if quality clearly degrades"), with no number or window.
+- **Score 0** — No reversal threshold defined; nothing would automatically trigger a rollback.
+
 **4. Is the reversal plan operational, not theoretical?**
 
 Have the displaced humans been retained on standby contracts? Are escalation paths to human review still active? Can the org practically restore the previous staffing within two weeks if the threshold is breached?
+
+- **Score 2** — Displaced humans are on standby contracts (or escalation-to-human paths are live), and previous staffing can demonstrably be restored within two weeks.
+- **Score 1** — A restoration path exists in principle but is untested, slow, or partial (e.g. informal willingness to rehire, no contract in place).
+- **Score 0** — No operational reversal: the human was not retained, no standby contract exists, and staffing cannot be practically restored.
 
 **5. Have affected partners been consulted, and have their concerns been addressed in writing?**
 
 Not "informed." Not "managed." Consulted. With a written record of what they said and how it was addressed.
 
+- **Score 2** — Affected partners were consulted, their concerns are recorded in writing, and each concern was addressed (mitigated or explicitly accepted as a documented risk).
+- **Score 1** — Partners were informed and their feedback acknowledged, but concerns raised were not addressed (e.g. a failure-case worry logged but left open).
+- **Score 0** — Affected partners were not consulted, or were merely notified after the decision was made.
+
 **6. Is there a METR baseline?**
 
 DORA + SPACE + DX Core 4 metrics captured before AI rollout, per the Change Management Skill Pack. Without a baseline, the perception gap (humans report 20% faster while measurably 19% slower) cannot be detected.
 
+- **Score 2** — DORA + SPACE + DX Core 4 (or domain-equivalent) metrics were captured for ≥90 days pre-rollout and are available as the comparison baseline.
+- **Score 1** — A partial or short baseline exists (some metrics, or a window well under 90 days) — enough to gesture at, not enough to detect the perception gap.
+- **Score 0** — No pre-rollout baseline; there is nothing to compare post-rollout measurements against.
+
 **7. Has the decision been reviewed by a partner who is *not* a beneficiary of the cost saving?**
 
 A partner whose variable pay or long-tail entitlement does not increase as a result of the action. This is the conflict-of-interest check.
+
+- **Score 2** — A partner whose variable pay / long-tail entitlement does not increase from the action reviewed the decision with full evidence and signed off.
+- **Score 1** — A nominally independent party reviewed it but without full evidence, or the reviewer's independence is arguable.
+- **Score 0** — Reviewed only by the partner championing the change, who benefits from the cost saving — the conflict of interest is unmitigated.
 
 **8. Is the public-communication posture for this decision specified — even if the chosen posture is "no public communication"?**
 
@@ -101,9 +129,17 @@ The previous "n/a" loophole has been removed: there is no decision in scope for 
 
 A calendar invite, an owner, a budget for the review work, and a pre-committed decision framework for what the review's outputs trigger.
 
+- **Score 2** — The 90-day review is scheduled with a named owner, a budget, and a pre-committed decision framework for what its outputs trigger.
+- **Score 1** — The review is on the calendar but lacks an owner, a budget, or a decision framework.
+- **Score 0** — No 90-day review scheduled.
+
 **10. Would the founder be willing to defend this decision publicly, in detail, two years from now?**
 
 The longest-horizon honesty check. If the answer is no, the action fails by definition. If the answer is yes, the founder is putting their reputation behind it; the rest of the framework can support that.
+
+- **Score 2** — The founder is willing to defend the decision publicly and in detail two years out, putting their reputation behind it.
+- **Score 1** — The founder is "comfortable" with the decision but not willing to defend it in detail — hedged confidence.
+- **Score 0** — The founder would not defend it publicly. Per this question, the action fails by definition.
 
 ### Scoring template
 

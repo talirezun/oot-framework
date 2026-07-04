@@ -30,6 +30,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check internal markdown links
+        # Pin is deliberate: lychee-action v2 REMOVED the `--exclude-mail` flag
+        # used in `args` below, so an unconsidered bump to @v2 breaks this workflow.
+        # To upgrade: first drop `--exclude-mail` from args (v2 excludes mail via a
+        # different mechanism), THEN bump the pin. Do not bump alone.
         uses: lycheeverse/lychee-action@v1
         with:
           args: >-

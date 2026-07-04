@@ -66,14 +66,15 @@ This pack encodes the **attribution agent pattern**: read commits, specs, review
 **Initial declaration** at onboarding:
 
 1. Open `templates/excel/reward-species-declaration.xlsx` (X2).
-2. Add a sheet named `<partner_id>` (one workbook with one sheet per partner is the convention for orgs <20 partners).
+2. Add the partner's row to the single shared sheets (ADR-005: no per-partner sheets) — a `Partner_Profile` row and a `Base_Variable_Split` row, each keyed by the new partner's `partner_id` (`P-NNN`) in column A.
 3. Populate **Partner_Profile** (cohort: `full-time-partner | project-specialist | advisor`; jurisdiction; base_currency; stablecoin_upgrade_pref; unit_fund_interest; two_worlds_self_id).
-4. Populate **Base_Variable_Split**:
-   - `reward_species`: `eat-what-you-kill | lockstep | hybrid`
-   - `base_amount` (annual)
-   - `variable_weight_personal` (C) + `variable_weight_team` (D) + `variable_weight_company` (E) **must sum to 1.0**
-   - `output_multiplier` (F): default 1.0; rare adjustments
-   - `bonus_split_personal` (G) + `bonus_split_team` (H) + `bonus_split_company` (I) **must sum to 1.0**
+4. Populate **Base_Variable_Split** (one shared sheet, one row per partner, keyed by the leading `partner_id` in column A per ADR-005 — column letters below reflect that shift):
+   - `partner_id` (A): the `P-NNN` join key matching Partner_Profile column A
+   - `reward_species` (B): `eat-what-you-kill | lockstep | hybrid`
+   - `base_amount` (C, annual)
+   - `variable_weight_personal` (D) + `variable_weight_team` (E) + `variable_weight_company` (F) **must sum to 1.0**
+   - `output_multiplier` (G): default 1.0; rare adjustments
+   - `bonus_split_personal` (H) + `bonus_split_team` (I) + `bonus_split_company` (J) **must sum to 1.0**
 5. **Long_Tail_Schedule** starts empty.
 6. **Unit_Fund_Eligibility** is locked in Gen 1 (sheet protection enabled).
 7. **Renegotiation_Log** starts empty.
@@ -107,13 +108,13 @@ R1 will reference the Output Spec by wikilink at output-capture time. If R1 capt
 
 Invoked by R1 at 18:00. For each detected output signal:
 
-1. Resolve `partner_id` from author/owner. If multiple authors, append fractional rows.
+1. Resolve `partner_id` from author/owner. For a co-authored output, append **one row per co-author** with `weight` (column N) = `1/count` — or the output spec's `attribution_split` fractions when the partners have agreed a split (ADR-005). The column-L formula shares the envelope across the co-author rows; do not record the split as a free-text note.
 2. Classify `output_type`: `commit | pr_merged | contract_signed | deal_closed | spec_drafted | review_completed | design_shipped | content_published`.
 3. Cross-reference `output_spec_ref`. If missing → `status: needs-spec`.
 4. Determine `value_tier` (default L if no Output Spec).
 5. Estimate `ai_authored_pct` from `Co-authored-by:` trailers + diff patterns.
 6. Set `rework_within_30d=No` (R1 retroactively flips per its detection rule — see below).
-7. **Resolve `partner_multiplier` (X1.J) by reading X2's `output_multiplier` field at runtime** — do not use a cross-workbook formula.
+7. **Resolve `partner_multiplier` (X1.J) by reading X2's `output_multiplier` field at runtime** — join on `partner_id` (X2 `Base_Variable_Split` column A → `output_multiplier` column G, per ADR-005); do not use a cross-workbook formula.
 8. Append rows to X1 Output_Log — but see the appended-row contract below; it is not just "write the values."
 9. Write daily summary to `firm/output-logs/YYYY-MM-DD.md` (per `templates/brain/daily-output-log.md`).
 
@@ -121,7 +122,8 @@ Invoked by R1 at 18:00. For each detected output signal:
 
 - **Find the next empty row via column A (`log_id`), NOT `ws.max_row`.** The `value_envelope_table` embedded at O1:P5 inflates `max_row` to 5 even when data only fills rows 2–4; appending at `max_row + 1` leaves a permanent ghost gap. Scan down column A for the first empty cell.
 - **MUST write the K (`value_envelope`) formula on every appended row:** `=VLOOKUP(G{R}, $O$2:$P$5, 2, FALSE)`. Leaving K blank makes the cell contribute zero to Monthly_Variable's SUMIFS — a silent zero-pay failure R3 does not catch. Do not rely on the embedded lookup's Gen-1 defaults (XS=100, L=500, M=2000, S=8000) being read some other way; the formula in column K is how the envelope reaches the row.
-- **MUST write the L (`computed_variable`) formula on every appended row:** `=K{R}*J{R}*IF(I{R}="Yes", 0, 1)`. Blank L means zero variable pay for that output until someone manually patches it — same silent-failure class as K.
+- **MUST write the L (`computed_variable`) formula on every appended row:** `=K{R}*J{R}*N{R}*IF(I{R}="Yes", 0, 1)`. Blank L means zero variable pay for that output until someone manually patches it — same silent-failure class as K. The `N{R}` (`weight`) factor shares the envelope across co-authors (ADR-005).
+- **MUST write the N (`weight`) column on every appended row (ADR-005):** `1.0` for a single-author output; `1/count` (or the output spec's `attribution_split` fraction) for each co-author row of a co-authored output. This is the resolved fix for the multi-author double-pay defect — two co-authors on one output no longer each receive 100% of the envelope. The split is carried in `weight`, never in a free-text note.
 - **Dedupe on `output_ref` (column E) for idempotent re-runs.** Before appending a candidate, collect the set of `output_ref` values already in Output_Log within the last 45 days and skip any candidate already present. Running R1 twice on the same day (e.g. after an infra retry) must append zero duplicate rows and pay nobody twice.
 
 **Retroactive rework detection rule (4 conditions — matches `routines/SPEC.md` R1).** On every run within the 30 days after an earlier commit, R1 flips that earlier X1 row's `rework_within_30d` to `Yes` (which zeroes its `computed_variable` via the column-L formula) **if all four hold**: (a) same `partner_id` on both commits; (b) the new commit is within 30 days after the earlier one; (c) ≥50% file overlap between the two commits' changed-file sets; (d) the new commit's message OR its associated PR title/description matches the regex `\b(fix|revert|hotfix|redo|retry|reapply|backout|rollback)\b` (case-insensitive). Every retroactive flip is logged in the daily Brain summary under a `## Retroactive rework detections` heading.

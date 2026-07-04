@@ -38,19 +38,10 @@ jobs:
       - name: Pytest
         run: python -m pytest tests/ -q
 
-      # ── Lint. Covers scripts/ AND installer/. ──
-      # TODO(v1.x): the tree is NOT yet ruff/black-clean, so lint is reported
-      # (annotations) but not gating. Pre-existing dirt to clear before flipping
-      # `continue-on-error` off:
-      #   - scripts/build_excel.py: F401 (unused get_column_letter), F541 (f-string
-      #     without placeholders); black would reformat build_excel.py + validate_skills.py.
-      #   - installer/wizard.py: F401, F541 (~30 findings); black would reformat.
-      # Reformatting source is out of scope for the CI-hardening pass; do it in a
-      # dedicated formatting PR, then remove the two `continue-on-error` lines below.
-      - name: Ruff lint (scripts + installer)
-        continue-on-error: true
-        run: python -m ruff check scripts/ installer/ --output-format=github
+      # ── Lint. Covers scripts/, installer/, AND tests/. Hard-gating since the
+      # 2026-07-04 formatting pass cleared the tree (ruff --fix + black). ──
+      - name: Ruff lint (scripts + installer + tests)
+        run: python -m ruff check scripts/ installer/ tests/ --output-format=github
 
-      - name: Black format check (scripts + installer)
-        continue-on-error: true
-        run: python -m black --check scripts/ installer/
+      - name: Black format check (scripts + installer + tests)
+        run: python -m black --check scripts/ installer/ tests/

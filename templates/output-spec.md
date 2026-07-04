@@ -30,12 +30,20 @@ value_tier: {{S | M | L | XS}}
 created: {{TODAY}}
 updated: {{TODAY}}
 authors: [{{YOUR_PARTNER_ID}}]
+# attribution_split: OPTIONAL. Only for co-authored outputs where the co-authors
+# have agreed a non-even split. Maps partner_id -> fraction (must sum to 1.0).
+# R1 writes each co-author's fraction into X1 column N (weight); if omitted, R1
+# defaults to an even 1/N split across `authors`. Example:
+# attribution_split: {mira-tek: 0.7, davor-krznar: 0.3}
 status: drafted
 expected_outcome: "{{ONE_SENTENCE_OUTCOME}}"
 outcome_review_date: {{REVIEW_DATE}}
 linked_pr_or_contract: "TBD"
 ---
 ```
+
+> 💡 **Guidance — attribution_split (co-authored outputs only, ADR-005):**
+> If two or more partners co-author this output, R1 shares the value envelope across them instead of paying each the full amount. By default the split is even (`1/N`). Only add the optional `attribution_split` field when the co-authors have agreed an *uneven* split — e.g. `attribution_split: {mira-tek: 0.7, davor-krznar: 0.3}`. The fractions must sum to `1.0`. R1 writes each partner's fraction into their `weight` (column N) row in the output ledger. Single-author outputs never need this field.
 
 > 💡 **Guidance — value_tier:**
 > - **S** (€8,000 envelope): a flagship piece of work that takes weeks. Major feature, multi-year customer contract, foundational architecture.

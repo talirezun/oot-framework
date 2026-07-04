@@ -10,6 +10,8 @@ All names are fictional, all numbers are illustrative. Currency: EUR throughout 
 
 ## Example 1 — `examples/small-org/`
 
+> **Status:** populated with a **representative two-week slice** (2026-04-06 → 2026-04-19): 10 daily output logs, 2 BRs, 1 decision, the Klarna Test, the April compensation summary + resolved dispute, the perception-gap page, 3 audit logs, 1 brain-health snapshot. The full-quarter counts below (60 daily logs, 8 BRs, populated Excel) remain the v1.x target. Excel `.xlsx` state is generated at adoption, not checked into the example.
+
 ### Profile
 
 - **Firm:** Solunar Studio. A 3-partner generative-software studio. Founded 2026-Q1.
@@ -37,7 +39,7 @@ All names are fictional, all numbers are illustrative. Currency: EUR throughout 
 ### Excel content
 
 - **X1 partner-output-ledger.xlsx**: Two months of populated Output_Log rows (~50 rows), populated Monthly_Variable for both months, Partner_Dashboard auto-computed.
-- **X2 reward-species-declaration.xlsx**: Three sheets (one per partner) with full population.
+- **X2 reward-species-declaration.xlsx**: single shared `Partner_Profile` + `Base_Variable_Split` sheets with three rows (one per partner, keyed by `partner_id` in column A per ADR-005), fully populated; `Long_Tail_Schedule` shared sheet.
 - **X3 business-review.xlsx**: 8 weekly rows; Decisions_Log has 2 entries; Blockers has 3 closed and 1 open.
 - **X4 klarna-test.xlsx**: 1 row (KT-2026-001) with full scoring.
 - **X5 metr-baseline.xlsx**: Pre-Code-&-QA-rollout metrics captured for Mira and Davor (Anya is project-bound, didn't roll out tools); 4-week pilot results showing the perception gap detected on Davor (he reported +25% productivity; DORA delta was +5%).
@@ -49,7 +51,7 @@ All names are fictional, all numbers are illustrative. Currency: EUR throughout 
 ### Awkward edges to include (for realism)
 
 1. **A perception-gap finding** — X5 shows Davor's +25 self-report vs. +5 DORA-measured; the Friday BR for week-of-2026-04-10 has a discussion item where Mira confronts the gap directly, Davor accepts the data, they decide to run a 30-day re-baseline.
-2. **A Tier-1 dispute** — Anya disputes a value_tier classification on her output #14 (Mira marked it `M`, Anya argues `S`). Resolved in 4 days. `firm/compensation/2026-04/disputes/D-2026-04-001.md` records the conversation; Anya's variable_statement for April reflects the agreed `S` tier (€2,000 envelope vs. original €500).
+2. **A Tier-1 dispute** — Anya disputes a value_tier classification on her output #14 (capture marked it `L`, Anya argues `M`). Resolved in 4 days. `firm/compensation/2026-04/disputes/D-2026-04-001.md` records the conversation; Anya's April variable reflects the agreed `M` tier (€2,000 envelope vs. original €500 — net +€1,500).
 3. **A blocker that pushed a deal slip** — week-of-2026-03-27 BR records a blocker that Davor raised about the Lumina widget's qualification step; resolved via an ADR a week later.
 
 ### What this example demonstrates

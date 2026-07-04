@@ -88,7 +88,7 @@ The framework's intellectual core is ~60 minutes of reading. You don't have to r
 | 5 | [`docs/MODULES.md`](docs/MODULES.md) | ~10 min | What to install, in what order, and what's optional. The dependency graph + a Day-N progression table. |
 | 6 | [`docs/AUTOMATION-PIPELINE.md`](docs/AUTOMATION-PIPELINE.md) | ~15 min | How the 8 Routines fit together. Cloud + privacy pipeline diagrams, schedule timeline, dependency graph, **and the Second Brain bridge** — how cloud Routines reach the Curator-synced semantic graph via Curator's two-way GitHub sync. |
 | 7 | [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md) | ~20 min | The external tools the framework rests on. With links to every wiki. |
-| 8 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — screenshot-rich, no shell required. |
+| 8 | [`docs/walkthroughs/`](docs/walkthroughs/) | as needed | Tier-2 UI walkthroughs (Claude Desktop, Curator, Excel, BR, Klarna, Routines monitoring) — no shell required. Screenshot binaries land in v1.x; the prose walkthroughs are complete now. |
 | 9 | [`research/README.md`](research/README.md) | optional | Going deeper — paper summaries, original articles, and the curated ecosystem index. |
 
 > 💡 **For the technically-minded:** also read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) — the agent-orientation files. They are vendor-neutral guides for any AI coding assistant working in this repo.
@@ -191,14 +191,15 @@ The full framework, as scaffolded in this repository:
 
 **9 pre-built Excel templates** — partner output ledger, reward-species declaration, business review, Klarna Test, METR baseline, agent-skill ROI, EU AI Act mapping register, treasury runway (optional), ØØT-readiness assessment. All formula-driven. All written to and read from by scheduled Routines so the spreadsheet is a review surface, not a data-entry surface.
 
-**8 scheduled Routines** — daily output capture, weekly Business Review prep, monthly variable pay calculation, quarterly long-tail settlement, weekly Brain health check, daily EU AI Act audit trail, on-event Klarna Test trigger, weekly treasury runway update. Cloud-track runs on Anthropic infrastructure ([Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code), laptop closed). Privacy-track runs on local cron / launchd / Task Scheduler hitting headless LM Studio.
+**8 scheduled Routines** — daily output capture, weekly Business Review prep, monthly variable pay calculation, quarterly long-tail settlement, weekly Brain health check, daily EU AI Act audit trail, on-event Klarna Test trigger, weekly treasury runway update. Cloud-track runs on Anthropic infrastructure ([Claude Code Routines](https://claude.com/blog/introducing-routines-in-claude-code), laptop closed). Privacy-track runs on local cron / launchd / Task Scheduler invoking OpenCode headless against LM Studio's local server. Community-track runs the same prompt bodies on a 3-rung ladder (manual → laptop cron → GitHub Actions).
 
 **4 governance documents** — Klarna Test (the signature epistemic check), EU AI Act mapping methodology, decision rights matrix, secrets policy (Bitwarden + Trezor two-layer architecture).
 
-**Two parallel tool tracks:**
+**Three parallel operating tracks** (Routines, Skill Packs, Excel templates and governance are byte-identical across all three — only the harness and scheduler differ):
 
-- **Cloud track** (canonical, fastest path): Claude Desktop, Claude Code, GitHub (your Ledger holds markdown + `.xlsx` state; your Second Brain repo holds the Curator-synced semantic graph), Slack, the Curator + MyCuratorMCP, Claude Code Routines. Your spreadsheet app is your choice — Excel, LibreOffice, Numbers, Excel-for-Web.
-- **Privacy track** (full Generation 1 parity): LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP for filesystem, optional Excel MCP, 4thtech for on-chain end-to-end-encrypted communication, PollinationX for decentralised storage, GitHub MCP for cross-machine sync, OS-native scheduling.
+- **Cloud track** (canonical, fastest path): Claude Desktop, Claude Code, GitHub (your Ledger holds markdown + `.xlsx` state; your Firm Brain repo holds the Curator-synced semantic graph), Slack, the Curator + MyCuratorMCP, Claude Code Routines. Your spreadsheet app is your choice — Excel, LibreOffice, Numbers, Excel-for-Web.
+- **Privacy track** (full Generation 1 parity, sovereignty-first): LM Studio with local Qwen / Llama / DeepSeek hosted by the `llmster` headless daemon, OpenCode as the agent harness, Desktop Commander MCP for filesystem, optional Excel MCP, 4thtech for on-chain end-to-end-encrypted communication, PollinationX for decentralised storage, GitHub MCP for cross-machine sync, OS-native scheduling.
+- **Community track** (free-to-start, no subscription, no dedicated hardware, no sovereignty claims — see [ADR-003](docs/internal/ADR-003-community-track-no-subscription.md)): OpenCode on free / own-key / local models, GitHub, Curator + Gemini Flash Lite pay-as-you-go, a 3-rung automation ladder. Budget-motivated founders start here; sovereignty-motivated founders use the privacy track.
 
 ## Status: Generation 1
 

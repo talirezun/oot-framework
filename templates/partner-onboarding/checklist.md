@@ -17,7 +17,7 @@ Tick boxes as you complete each step. Commit the completed checklist to `firm/pa
 ## The 90-min onboarding session
 
 - [ ] **6. Walk through MANIFESTO.md together.** 30 min. The partner internalises the five theses. Questions invited.
-- [ ] **7. Reward Species Declaration.** Open the firm's Ledger copy `firm/excel/reward-species-declaration.xlsx` (X2) — the framework's `templates/excel/` copy is a pristine master; the firm works on its own copy in the Ledger. Add the partner's sheet. Walk through every column. Negotiate where the partner wants different values. Validate sums (variable weights + bonus splits both = 1.0). Save.
+- [ ] **7. Reward Species Declaration.** Open the firm's Ledger copy `firm/excel/reward-species-declaration.xlsx` (X2) — the framework's `templates/excel/` copy is a pristine master; the firm works on its own copy in the Ledger. Add the partner's row to the shared `Partner_Profile` + `Base_Variable_Split` sheets, keyed by `partner_id` in column A (ADR-005 — no per-partner sheets). Walk through every column. Negotiate where the partner wants different values. Validate sums (variable weights + bonus splits both = 1.0). Save.
 - [ ] **8. Two Worlds of Code self-id.** Run the 5-question assessment from S4 §4.9. Record `two_worlds_self_id`.
 - [ ] **9. Output Spec for first piece of work.** Open `templates/output-spec.md` (the tutorial copy). Draft together. Commit to `firm/partners/<partner_id>/output-specs/<DATE>--<SHORT_SLUG>.md`.
 - [ ] **10. Partner Charter signed.** Print signed PDF from `templates/partner-charter.md`. Both sign. Counsel signature line filled if applicable. Store at `firm/partners/<partner_id>/legal/partner-charter-<DATE>.pdf`.

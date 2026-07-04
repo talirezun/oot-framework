@@ -30,7 +30,7 @@ labels: bug
 
 ## Have you tried the troubleshooting doc?
 
-Link the relevant section: [`docs/07-troubleshooting.md`](../../docs/07-troubleshooting.md)
+Link the relevant section: [`docs/07-troubleshooting.md`](https://github.com/talirezun/oot-framework/blob/main/docs/07-troubleshooting.md)
 
 - [ ] Yes, the documented fix did not work or doesn't apply.
 - [ ] No.

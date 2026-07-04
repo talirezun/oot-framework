@@ -53,7 +53,7 @@ The framework is more "discipline" than "tool"; the discipline doesn't fit in co
 
 The agent / wizard / manual docs will surface these. Knowing them ahead of time saves time:
 
-- **Cloud track or privacy track?** Cloud is faster, easier, uses Claude Code Routines (laptop closed). Privacy is sovereign, requires an always-on machine, uses 4thtech + PollinationX + LM Studio + local cron. **Most founders should start cloud** unless they have a clear sovereignty mandate.
+- **Which track — cloud, privacy, or community?** Cloud is faster, easier, uses Claude Code Routines (laptop closed). Privacy is sovereign, requires an always-on machine, uses 4thtech + PollinationX + LM Studio + local cron. The **community track** ([ADR-003](docs/internal/ADR-003-community-track-no-subscription.md)) is free-to-start with no Anthropic subscription and no dedicated hardware — OpenCode on free/local models, automation via a 3-rung ladder. **Most founders should start cloud** unless they have a clear sovereignty mandate (→ privacy) or a hard budget constraint (→ community).
 - **Are you in the EU?** If yes, the EU AI Act (full obligations from 2 August 2026) and GDPR materially affect your build. Governance & Compliance Skill Pack and [`governance/EU-AI-ACT.md`](governance/EU-AI-ACT.md) are mandatory reading, not optional.
 - **What jurisdiction will the entity operate in?** Worker classification, variable-pay legality, securities law, and crypto-payroll regulation all vary. [`docs/06-when-to-call-a-lawyer.md`](docs/06-when-to-call-a-lawyer.md) lists the eleven touchpoints requiring local counsel.
 - **Firm operational repo location?** Default `~/<firm-slug>`. You'll pick during install.

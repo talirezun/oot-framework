@@ -18,8 +18,8 @@ A complete worked example of S3 from partner-signs-on through their first variab
 
 The founder + Mira run §4.1 of S3:
 
-1. Open `templates/excel/reward-species-declaration.xlsx`.
-2. Add sheet `mira-tek`.
+1. Open the firm's `reward-species-declaration.xlsx` (X2).
+2. Add Mira's row (keyed by her `partner_id` in column A) to the shared `Partner_Profile` and `Base_Variable_Split` sheets (ADR-005: no per-partner sheets).
 3. Populate Partner_Profile and Base_Variable_Split per the values above.
 4. Validate: 0.6 + 0.3 + 0.1 = 1.0 ✓; bonus_split sum = 1.0 ✓ (default 1/3 each).
 5. Generate signed PDF; store at `firm/partners/mira-tek/legal/reward-species-2026-03-15.pdf`.

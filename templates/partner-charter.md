@@ -22,7 +22,7 @@ Cohort changes require a signed renegotiation per §6.
 
 ## 2. Reward Species Declaration
 
-The Partner has signed a Reward Species Declaration recorded in `firm/excel/reward-species-declaration.xlsx` (X2) sheet `{{PARTNER_ID}}` in the **Ledger** repo (operative truth) and optionally mirrored in the Firm Brain at `entities/partners/{{PARTNER_ID}}/reward-species-declaration` (human-readable summary, partner-authored). The declaration specifies:
+The Partner has signed a Reward Species Declaration recorded in `firm/excel/reward-species-declaration.xlsx` (X2) — the `Base_Variable_Split` row keyed by `partner_id = {{PARTNER_ID}}` (single shared sheet, ADR-005) — in the **Ledger** repo (operative truth) and optionally mirrored in the Firm Brain at `entities/partners/{{PARTNER_ID}}/reward-species-declaration` (human-readable summary, partner-authored). The declaration specifies:
 
 - Reward species: `{{eat-what-you-kill | lockstep | hybrid}}`.
 - Annual base amount: {{BASE}} {{CURRENCY}}.

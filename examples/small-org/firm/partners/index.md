@@ -4,22 +4,23 @@ slug: partners/index
 domain: firm
 type: index
 created: 2026-02-01
-updated: 2026-04-30
+updated: 2026-04-19
 authors: [mira-tek]
 status: active
+tags: [partner, index]
 ---
 
 # Solunar Studio — Partners
 
-> **v1.x note:** the per-partner pages this roster wikilinks to (`partners/mira-tek`, `partners/davor-krznar`, `partners/anya-gorska`, the check-in pages) are not yet authored — they land with the populated `firm/` tree in v1.x. The wikilinks below are the target slugs, not resolving links today.
-
 ## Roster
 
-| Partner | Cohort | Reward species | Joined | Two-worlds |
-|---|---|---|---|---|
-| [[partners/mira-tek]] (founder) | full-time-partner | hybrid 60/30/10 | 2026-02-01 | agentic-engineer |
-| [[partners/davor-krznar]] | full-time-partner | eat-what-you-kill | 2026-02-15 | agentic-engineer |
-| [[partners/anya-gorska]] | project-specialist | hybrid 80/15/5 | 2026-03-01 | vibe-coder |
+| Partner | ID | Cohort | Reward species | Joined | Two-worlds |
+|---|---|---|---|---|---|
+| [[partners/mira-tek]] (founder) | P-001 | full-time-partner | hybrid 60/30/10 | 2026-02-01 | agentic-engineer |
+| [[partners/davor-krznar]] | P-002 | full-time-partner | eat-what-you-kill | 2026-02-15 | agentic-engineer |
+| [[partners/anya-gorska]] | P-003 | project-specialist | hybrid 80/15/5 | 2026-03-01 | vibe-coder |
+
+Partner IDs are the `P-NNN` join key per [ADR-005](../../../../docs/internal/ADR-005-partner-join-key-and-output-weight.md); wikilinks use the stable per-partner slug.
 
 ## Recent renegotiations
 
@@ -27,8 +28,7 @@ None.
 
 ## Quarterly check-ins
 
-- 2026-Q1 — completed. See [[partners/mira-tek/check-ins/2026-Q1]] (and per-partner pages).
-- 2026-Q2 — scheduled mid-July.
+The framework's ontology has no dedicated check-ins path; check-in outcomes are recorded on each partner's profile page and in the relevant BR. 2026-Q1 check-ins completed; 2026-Q2 scheduled mid-July.
 
 ## Roles
 

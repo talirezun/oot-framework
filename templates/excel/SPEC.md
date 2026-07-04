@@ -66,10 +66,13 @@ Columns:
 | K | value_envelope | Number | From the value-envelope lookup |
 | L | computed_variable | Number | Formula (see below) |
 | M | notes | Text | Optional human annotation |
+| N | weight | Number in (0, 1] | Co-authorship weight. Default `1.0`. For a co-authored output R1 writes **one row per co-author** with `weight = 1/N` (N = number of co-authors) — or the explicit fractions from the output spec's `attribution_split` field when the partners have agreed a split. Shares the value envelope across co-authors instead of duplicating it. See ADR-005. |
 
 Named ranges:
-- `output_log` = Output_Log!$A:$M
+- `output_log` = Output_Log!$A:$N
 - `value_envelope_table` = (defined in this sheet rows 1–5 in cells O1:P5; see lookup table below)
+
+> **Column N sits *before* the O1:P5 envelope lookup table.** Data columns run A–N; the envelope table occupies O1:P5. Column N is the last data column and does not collide with the lookup block.
 
 Value envelope lookup table (in cells O1:P5):
 | value_tier | base_envelope |
@@ -81,11 +84,30 @@ Value envelope lookup table (in cells O1:P5):
 
 Formulas in Output_Log:
 
-- **J (partner_multiplier):** **No Excel formula.** Each workbook is self-contained — cross-workbook references via openpyxl are unreliable. Instead, the value of `J` is **written directly by the Routine** that appends a row (R1 on daily capture; R3 on month-open backfill if any partner_multiplier changed). The Routine reads `reward-species-declaration.xlsx` (X2) at runtime, applies the partner's `output_multiplier` (X2 column F), and writes the resolved number into `J`. A read-only mirror sheet `Partner_Multipliers_Snapshot` (refreshed monthly by R3) is included for human inspection only — it is not consumed by any formula.
+- **J (partner_multiplier):** **No Excel formula.** Each workbook is self-contained — cross-workbook references via openpyxl are unreliable. Instead, the value of `J` is **written directly by the Routine** that appends a row (R1 on daily capture; R3 on month-open backfill if any partner_multiplier changed). The Routine reads `reward-species-declaration.xlsx` (X2) at runtime, joins on `partner_id`, applies the partner's `output_multiplier` (X2 Base_Variable_Split column G, after the ADR-005 leading-partner_id shift), and writes the resolved number into `J`. A read-only mirror sheet `Partner_Multipliers_Snapshot` (refreshed monthly by R3) is included for human inspection only — it is not consumed by any formula.
 - **K (value_envelope):** `=VLOOKUP(G{R}, $O$2:$P$5, 2, FALSE)` where `{R}` is the row number. **Written by the Routine on every appended row.** The build script seeds rows 2-N with formulas for sample data, but operational Routines (R1 on daily capture; R3 on backfill) MUST write K's formula on every row they append. Without this the cell stays blank and contributes zero to downstream SUMIFS — see ADR-001 install-test-report-2026-05-10 Finding 6.
-- **L (computed_variable):** `=K{R} * J{R} * IF(I{R}="Yes", 0, 1)` where `{R}` is the row number — `value_envelope × partner_multiplier × rework_flag`. **Written by the Routine on every appended row.** Same discipline as K. Rework-within-30d zeros out the variable per the YOLO model's principle that AI-assisted output requiring rework "was not actually output, it was just typing." If L is blank, the row contributes zero to monthly variable pay — silent failure mode that the install-test-report-2026-05-10 surfaced. Do not skip writing L just because the SUMIFS would handle blanks; write the formula so the partner can audit it.
+- **L (computed_variable):** `=K{R} * J{R} * N{R} * IF(I{R}="Yes", 0, 1)` where `{R}` is the row number — `value_envelope × partner_multiplier × weight × rework_flag`. **Written by the Routine on every appended row.** Same discipline as K. The `weight` factor (column N) shares the envelope across co-authors so two co-authors on one Large output receive €500 × 0.5 each, not €500 each (ADR-005). Rework-within-30d zeros out the variable per the YOLO model's principle that AI-assisted output requiring rework "was not actually output, it was just typing." If L is blank, the row contributes zero to monthly variable pay — silent failure mode that the install-test-report-2026-05-10 surfaced. Do not skip writing L just because the SUMIFS would handle blanks; write the formula so the partner can audit it.
 
 **Design decision — AI-authored output is paid at full rate at month-1.** The formula deliberately does **not** discount by `H ai_authored_pct`. The framework's correction discipline is the rework-within-30d zero-out (the `rework_within_30d` field flips to `Yes` retroactively when R1 detects rework — see R1's detection rule in `routines/SPEC.md`). This is the cleanest expression of the manifesto's seven-layer compensation principle: humans direct, agents implement, the firm pays for output that lands and stays landed.
+
+**Appended-row contract — Output_Log (R1) (ADR-004 §3).** When R1 appends a row it MUST honour this per-column contract. "Literal" = R1 writes the captured value. "Formula (R1 MUST write)" = R1 writes the Excel formula string, substituting the row number; leaving it blank is a silent zero-pay bug. "Human-only" = never written by R1.
+
+| Col | Field | Contract |
+|---|---|---|
+| A | log_id | Literal (`OL-YYYYMMDD-NNN`) |
+| B | date | Literal |
+| C | partner_id | Literal (joins X2 Partner_Profile column A — ADR-005) |
+| D | output_type | Literal |
+| E | output_ref | Literal (dedupe key) |
+| F | output_spec_ref | Literal |
+| G | value_tier | Literal |
+| H | ai_authored_pct | Literal |
+| I | rework_within_30d | Literal (`No` on create; flipped to `Yes` retroactively per R1's rule) |
+| J | partner_multiplier | Literal — resolved by reading X2 at write time (NOT a formula) |
+| K | value_envelope | **Formula (R1 MUST write):** `=VLOOKUP(G{R},$O$2:$P$5,2,FALSE)` |
+| L | computed_variable | **Formula (R1 MUST write):** `=K{R}*J{R}*N{R}*IF(I{R}="Yes",0,1)` |
+| M | notes | Literal (optional) |
+| N | weight | Literal — `1.0` single-author; `1/count` (or the output spec's `attribution_split`) for co-authored rows (ADR-005) |
 
 Conditional formatting:
 - Column I: red fill if "Yes".
@@ -107,11 +129,12 @@ Columns:
 | H | approval_date | Date | |
 | I | payment_date | Date | |
 
-Formulas:
+Column ownership:
 
-- **C (total_outputs):** `=COUNTIFS(Output_Log!B:B, ">="&DATE(YEAR_FROM_A2, MONTH_FROM_A2, 1), Output_Log!B:B, "<"&DATE(YEAR_FROM_A2, MONTH_FROM_A2+1, 1), Output_Log!C:C, B2)`
-- **D (total_variable):** `=SUMIFS(Output_Log!L:L, [same date and partner filters as C])`
-- **F:** `=D2+E2`
+- **C (total_outputs) and D (total_variable) are R3-WRITTEN LITERALS, not formulas.** The `YEAR_FROM_A2` / `MONTH_FROM_A2` pseudo-syntax below is **not valid Excel** — `month` (column A) is stored as the text `YYYY-MM`, and a COUNTIFS/SUMIFS keyed off a parsed text month is fragile across locales and openpyxl round-trips. Instead R3 filters Output_Log to the month in Python, aggregates per partner, and **writes the resolved integer (C) and number (D) directly**. The pseudo-formulas are retained here only as the *definition* of what C and D must equal:
+  - **C (total_outputs)** ≡ count of Output_Log rows whose `date` (B) falls in `month` (A) and whose `partner_id` (C) matches `partner_id` (B) — i.e. `COUNTIFS(Output_Log!B:B, ">="&<month-start>, Output_Log!B:B, "<"&<next-month-start>, Output_Log!C:C, <partner_id>)`.
+  - **D (total_variable)** ≡ `SUM` of Output_Log `computed_variable` (L) over the same date+partner filter — i.e. `SUMIFS(Output_Log!L:L, <same filters as C>)`. Because L already folds in the co-authorship `weight` (column N), D is co-author-correct without extra handling.
+- **F (total_compensation):** `=D{R}+E{R}` — this one IS a live Excel formula.
 
 **3. Partner_Dashboard**
 
@@ -136,7 +159,7 @@ Read-only mirror of the relevant fields from X2. Refreshed monthly by R3 (Monthl
 | A | partner_id | Text | |
 | B | full_name | Text | From X2 Partner_Profile |
 | C | base_amount | Number | From X2 Base_Variable_Split (annualised) |
-| D | output_multiplier | Number | From X2 Base_Variable_Split column F |
+| D | output_multiplier | Number | From X2 Base_Variable_Split column G (`output_multiplier`) |
 | E | reward_species | Text | From X2 |
 | F | snapshot_date | Date | When this row was last refreshed |
 
@@ -175,7 +198,7 @@ DO NOT
 
 ## X2 — reward-species-declaration.xlsx
 
-**Purpose:** Per-partner contract for compensation structure. One file per partner OR one workbook with one sheet per partner — choose the latter for organisations <20 partners. Version-controlled in Brain.
+**Purpose:** The firm's compensation contract for every partner. **One shared workbook per firm** (ADR-005): `Base_Variable_Split` and `Long_Tail_Schedule` are single sheets keyed by a leading `partner_id` column (one row per partner / per partner-artifact) — per-partner *sheets* are explicitly rejected. Lives in the Ledger (`firm/excel/reward-species-declaration.xlsx`), mutated by Routines per ADR-001.
 
 ### Sheets (in order)
 
@@ -197,29 +220,35 @@ DO NOT
 
 | Col | Name | Type | Description |
 |---|---|---|---|
-| A | reward_species | Text | One of: `eat-what-you-kill`, `lockstep`, `hybrid` |
-| B | base_amount | Number | Annual base in base_currency |
-| C | variable_weight_personal | Number (0–1) | Weight on personal output for variable |
-| D | variable_weight_team | Number (0–1) | Weight on team contribution |
-| E | variable_weight_company | Number (0–1) | Weight on company outcomes |
-| F | output_multiplier | Number | Default 1.0; rare adjustments |
-| G | bonus_split_personal | Number | Annual bonus weights (~1/3 default) |
-| H | bonus_split_team | Number | (~1/3 default) |
-| I | bonus_split_company | Number | (~1/3 default) |
+| A | partner_id | Text | **Leading join key (ADR-005), format `P-NNN`.** Joins `Partner_Profile` column A. One row per partner. |
+| B | reward_species | Text | One of: `eat-what-you-kill`, `lockstep`, `hybrid` |
+| C | base_amount | Number | Annual base in base_currency |
+| D | variable_weight_personal | Number (0–1) | Weight on personal output for variable |
+| E | variable_weight_team | Number (0–1) | Weight on team contribution |
+| F | variable_weight_company | Number (0–1) | Weight on company outcomes |
+| G | output_multiplier | Number | Default 1.0; rare adjustments |
+| H | bonus_split_personal | Number | Annual bonus weights (~1/3 default) |
+| I | bonus_split_team | Number | (~1/3 default) |
+| J | bonus_split_company | Number | (~1/3 default) |
 
-Validation: **C + D + E = 1.0** (the three variable-pay weights must sum to 1.0); **G + H + I = 1.0** (the three annual-bonus splits must sum to 1.0). Highlight cell red if violated. Column F (`output_multiplier`) is a free-running multiplier and is not part of the sum constraint.
+Validation: **D + E + F = 1.0** (the three variable-pay weights must sum to 1.0); **H + I + J = 1.0** (the three annual-bonus splits must sum to 1.0). Highlight cell red if violated. Column G (`output_multiplier`) is a free-running multiplier and is not part of the sum constraint.
+
+**Single shared sheet (ADR-005).** `Base_Variable_Split` stays one sheet with **one row per partner**, keyed by the leading `partner_id`. Per-partner *sheets* are explicitly rejected: row-wise partitioning keeps openpyxl append logic, named ranges, and cross-sheet lookups simple, and the sheet is already a review surface that filters by column. R1/R3 resolve a partner's `output_multiplier` by matching `partner_id` in column A (not by assuming the single-row degenerate case). R3's downstream lookup: filter `Base_Variable_Split` to the row where column A = the target `partner_id`, read `base_amount` (C) and `output_multiplier` (G).
 
 **3. Long_Tail_Schedule**
 
 | Col | Name | Type | Description |
 |---|---|---|---|
-| A | output_id | Text | Reference to X1 Output_Log |
-| B | description | Text | Brief description |
-| C | partner_share_pct | Number | Partner's % of long-tail entitlement (0–100) |
-| D | settlement_period | Text | `quarterly` (Gen 1 default) |
-| E | start_date | Date | |
-| F | end_date | Date | Or "ongoing" |
-| G | total_settled_to_date | Number | Cumulative |
+| A | partner_id | Text | **Leading join key (ADR-005), format `P-NNN`.** Joins `Partner_Profile` column A. One row per partner-artifact. |
+| B | output_id | Text | Reference to X1 Output_Log |
+| C | description | Text | Brief description |
+| D | partner_share_pct | Number | Partner's % of long-tail entitlement (0–100) |
+| E | settlement_period | Text | `quarterly` (Gen 1 default) |
+| F | start_date | Date | |
+| G | end_date | Date | Or "ongoing" |
+| H | total_settled_to_date | Number | Cumulative |
+
+**Single shared sheet (ADR-005).** Like `Base_Variable_Split`, `Long_Tail_Schedule` stays one sheet — one row per (partner, artifact), keyed by the leading `partner_id`. R4 settles "per partner" by filtering on column A. Per-partner sheets are rejected for the same reasons.
 
 **4. Unit_Fund_Eligibility (locked in Gen 1)**
 
@@ -329,15 +358,39 @@ Mirror sheet of X4 Decision_Log entries that hit during the BR week.
 | J | reversal_plan_ref | Text | Brain wikilink |
 | K | review_date_90d | Date | |
 | L | post_review_outcome | Text | After 90-day review |
+| M | status | Text | **Lifecycle state (ADR-004). Literal enum, never a formula:** `scoring \| remediation \| monitoring \| proceeded \| held`. Data-validated. |
 
 Formulas:
 - **H (total_score):** `=IFERROR(VLOOKUP(A2, Klarna_Score!A:L, 12, FALSE), "")` — pulls `total` (Klarna_Score column L) by test_id via a direct sheet-range reference. (There is no `Klarna_Score_Index` named range — the generator uses the direct `Klarna_Score!A:L` range with column index 12; `IFERROR` blanks the cell when no matching test_id exists yet.)
 - **I (decision):** `=IF(H2>=14, "PROCEED", "HOLD")` — **formula-driven; do not overwrite with a literal.**
 - **K (review_date_90d):** `=B2+90`
+- **M (status):** literal enum, never a formula (see below).
+
+**`decision` (I) vs `status` (M) — two different questions (ADR-004).** Column I is the **threshold verdict**: what the *score* says (PROCEED at ≥14, HOLD below). Column M is the **lifecycle state**: where the *process* is. They are allowed to disagree transiently — e.g. I=`PROCEED` while M=`monitoring` during the 90-day review window, or I=`HOLD` while M=`remediation` because gaps are being fixed for a re-score. R7 writes M=`scoring` on row creation; the scoring session's outcome moves it to `proceeded` (I=PROCEED, work ships), `remediation` (I=HOLD, gaps being fixed for a re-score), or `held` (I=HOLD, decision stands); `proceeded` rows become `monitoring` until the column-K review date passes, then close back to `proceeded`. R2's weekly read surfaces every row with M ∈ {`scoring`, `remediation`, `monitoring`}. Post-meeting M updates come from R2's writeback or from a human editing the sheet — both legitimate per ADR-001. The `oot/klarna-test` gate is unaffected: it reads Klarna_Score directly and never consults `status`.
 
 Conditional formatting:
 - Column I: green if "PROCEED", red if "HOLD".
 - Column K: red if past today and L is empty.
+
+**Appended-row contract — Decision_Log (R7) (ADR-004 §3).** When R7 appends a row it MUST honour this contract. Same legend as X1's contract.
+
+| Col | Field | Contract |
+|---|---|---|
+| A | test_id | Literal (`KT-YYYY-NNN`) |
+| B | date | Literal |
+| C | decision_summary | Literal |
+| D | trigger | Literal |
+| E | trigger_ref | Literal |
+| F | scorer | Literal (partner_id) |
+| G | non_beneficiary_reviewer | Literal (partner_id; ≠ scorer / beneficiary, Q7) |
+| H | total_score | **Formula (R7 MUST write):** `=IFERROR(VLOOKUP(A{R},Klarna_Score!A:L,12,FALSE),"")` |
+| I | decision | **Formula (R7 MUST write):** `=IF(ISBLANK(H{R}),"",IF(H{R}>=14,"PROCEED","HOLD"))` |
+| J | reversal_plan_ref | Human-only (filled during scoring) |
+| K | review_date_90d | **Formula (R7 MUST write) OR literal review date** — written as a real date cell so the review-overdue CF fires |
+| L | post_review_outcome | Human-only (after 90-day review) |
+| M | status | Literal — R7 writes `scoring` on create; transitions per the lifecycle above |
+
+> R7 replicated the Finding-6 bug class before ADR-004: it appended A–G literals but never wrote the H/I/K formulas or the F/G reviewer columns. The contract above closes that.
 
 **2. Klarna_Score**
 
@@ -537,6 +590,28 @@ Upcoming committed payments. Columns: due_date, description, amount, currency, r
 
 Conditional formatting: D red if <6 months; G red if <1.0.
 
+**Appended-row contract — Cash_Position + Runway_Calc (R8) (ADR-004 §3).** R8 mutates two sheets each run and MUST honour this ordering and contract:
+
+1. **Cash_Position first.** R8 appends the day's balance rows (one per account) to `Cash_Position` **before** computing burn — burn is a delta over the *just-appended* history, so the row must exist first.
+2. **Runway_Calc next.** R8 appends one snapshot row and, on that row, writes the D and G formulas.
+
+| Sheet | Col | Field | Contract |
+|---|---|---|---|
+| Cash_Position | A | date | Literal |
+| Cash_Position | B | account_label | Literal |
+| Cash_Position | C | balance | Literal (pulled from banking API) |
+| Cash_Position | D | currency | Literal |
+| Cash_Position | E | balance_eur_equivalent | Literal (FX-converted at write time) |
+| Runway_Calc | A | snapshot_date | Literal |
+| Runway_Calc | B | total_cash_eur | Literal — R8 sums the day's Cash_Position rows in Python and writes the number |
+| Runway_Calc | C | monthly_burn_average | Literal — rolling-3-month delta over Cash_Position history (realised outflow, NOT Obligations) |
+| Runway_Calc | D | runway_months | **Formula (R8 MUST write):** `=IFERROR(B{R}/C{R},0)` |
+| Runway_Calc | E | unit_fund_outstanding_units | Literal |
+| Runway_Calc | F | implied_redemption_value | Literal (units × current_bid) |
+| Runway_Calc | G | reserve_coverage_ratio | **Formula (R8 MUST write):** `=IFERROR(B{R}/IF(F{R}=0,1,F{R}),0)` |
+
+R8 additionally writes a one-paragraph markdown snapshot to `firm/treasury/<YYYY-MM-DD>.md` in the Ledger in the **same commit**, so R6's audit-trail capture (which scans Ledger markdown paths) sees treasury activity (ADR-004 §4).
+
 **4. Reserve_Discipline**
 
 Policy parameters. Columns: parameter, value, last_review_date, owner. Examples: minimum_reserve_months (default 9), unit_fund_redemption_pct_per_quarter_max (default 5%), bid_update_cadence (default monthly).
@@ -612,6 +687,14 @@ For each dimension scoring <60%, auto-generated recommendations referencing the 
 **4. README** — standard, with explicit note that this is a diagnostic, not a gate; founders may proceed below 60% with documented mitigation.
 
 ---
+
+## Migration note — existing Gen-1 firm workbooks (ADR-004 + ADR-005)
+
+Firms that copied the templates before this schema revision must patch their stateful `firm/excel/` copies once. No automated migrator ships in Gen 1 (few, early firms); apply by hand or with a one-off openpyxl script:
+
+- **X1 `partner-output-ledger.xlsx` (ADR-005):** insert column **N `weight`** in `Output_Log` (header `weight`; set `1.0` for every existing row) and update the column-L fill to the new formula `=K{R}*J{R}*N{R}*IF(I{R}="Yes",0,1)` on every populated row.
+- **X2 `reward-species-declaration.xlsx` (ADR-005):** insert a leading `partner_id` column at **A** in both `Base_Variable_Split` and `Long_Tail_Schedule` (all other columns shift right by one). Backfill `partner_id` from `Partner_Profile` column A — single-partner firms set every row to `P-001`.
+- **X4 `klarna-test.xlsx` (ADR-004):** add column **M `status`** in `Decision_Log` (header `status`; data-validation list `scoring,remediation,monitoring,proceeded,held`). No formula changes needed — `decision` (I) stays formula-driven. Backfill `status` for any in-flight tests (`scoring`/`remediation`/`monitoring`) and closed tests (`proceeded`/`held`).
 
 ## Generation conventions
 

@@ -1,6 +1,6 @@
 # AGENTS.md — Cross-vendor orientation for ØØT
 
-This file orients **any AI agent** (Claude, Cursor, Cody, GitHub Copilot, OpenAI Codex, Gemini, LM Studio-hosted local models, or future agents working through Linux Foundation Agentic AI Foundation conventions) when working in the ØØT framework repository.
+This file orients **any AI agent** (Claude, Cursor, Cody, GitHub Copilot, OpenAI Codex, Gemini, OpenCode, Augment, Aider, LM Studio-hosted local models, or future agents working through Linux Foundation Agentic AI Foundation conventions) when working in the ØØT framework repository. (OpenCode is also the framework's own first-class **community-track** install harness — see `docs/internal/ADR-003-community-track-no-subscription.md`.)
 
 It is the vendor-neutral counterpart to `CLAUDE.md`. Both files exist; both should be read; if your harness reads AGENTS.md preferentially, this is the file you want.
 
@@ -11,14 +11,16 @@ It is the vendor-neutral counterpart to `CLAUDE.md`. Both files exist; both shou
 `oot-framework` — the canonical reference implementation of **ØØT (Organisation of Tomorrow)**. A markdown-first framework for partner-run, AI-augmented organisations. Contents:
 
 - The intellectual core (`MANIFESTO.md`) and technical specification (`SPEC.md`).
-- 12 hand-built Skill Packs (`skills/`).
-- 9 pre-built Excel templates with formulas and Routine integration (`templates/excel/`).
+- 12 hand-built Skill Packs (`skills/` — 7 hardened S1–S6/S12, 5 scaffolded S7–S11).
+- 9 pre-built Excel templates with formulas and Routine integration (`templates/excel/`; generated from `templates/excel/SPEC.md` by `scripts/build_excel.py`).
 - 8 cloud Routines + 8 privacy-track equivalents (`routines/`).
 - 4 governance documents (`governance/`).
-- 12 Tier-1 + 6 Tier-2 plain-language user guides (`docs/`).
-- Reference org examples (`examples/`).
-- Installer wizard for Cloud and Privacy tracks (`installer/`).
+- Plain-language user guides (`docs/`) + 6 UI walkthroughs (`docs/walkthroughs/`).
+- Reference org examples (`examples/`; `small-org/` populated, others README-only).
+- Installer for **three operating configurations** — cloud, privacy, and community — across three install paths: agent-assisted (Path A), Python wizard (Path B, `installer/wizard.py`), manual docs (Path C).
+- A `pytest` suite (`tests/`) that CI runs as a hard gate.
 - Research index and ecosystem references (`research/`).
+- Architecture Decision Records (`docs/internal/ADR-001`…`ADR-005`) recording the load-bearing design decisions — read these before changing the Excel schema, the Ledger/Firm-Brain split, or the track model.
 
 ---
 
@@ -111,12 +113,13 @@ If your agent does not have one of these, document the substitution in your sess
 
 ## What to commit
 
-After each phase in `BUILD-INSTRUCTIONS.md`:
+The 10-phase scaffolding build (`BUILD-INSTRUCTIONS.md`) is complete; that file is now historical. For any change to the released framework:
 
-- Run the SKILL.md frontmatter linter (Phase 8 ships this).
-- Run any Phase-specific tests.
-- Commit with a message following the convention `phase-<n>: <what was built>`. Example: `phase-3: scaffold tier-1 skill packs (S1–S6, S12)`.
-- Push to the working branch.
+- Run `python3 scripts/validate_skills.py` (must be 12/12) if any `SKILL.md` changed.
+- Run `python3 scripts/build_excel.py` and verify the regenerated `.xlsx` if `templates/excel/SPEC.md` changed.
+- Run `python3 -m pytest tests/ -q` (the CI hard gate; 51 tests covering the validator, `build_excel` structure incl. the ADR-004/005 schemas, and the installer wizard state machine).
+- Run `lychee --offline --no-progress .` (0 errors) for doc changes.
+- Commit with the convention `<phase|fix|feat>-<n>: <what>` (e.g. `fix-skill-s7: harden EU AI Act §4.1`) and the `Co-Authored-By:` trailer for AI-authored work.
 
 ---
 

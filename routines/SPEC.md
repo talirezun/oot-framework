@@ -20,7 +20,7 @@ Track symmetry: cloud and privacy Routines perform the same operation. Privacy R
 
 **Routines write only to the Ledger.** They never push to the Firm Brain (Curator Shared Brain). Per [ADR-002](../docs/internal/ADR-002-firm-brain-curator-shared-brain.md):
 
-- **Ledger** (`<firm>-ledger`) — Routine-writable, openpyxl + signed commits per ADR-001. Holds all `.xlsx` files plus Routine-authored operational markdown: `firm/output-logs/`, `firm/audit-logs/`, `firm/business-reviews/`, `firm/klarna-tests/`, `firm/partners/<id>/variable-statements/`, `firm/partners/<id>/long-tail-statements/`, `firm/compensation/`, `firm/brain-health/`.
+- **Ledger** (`<firm>-ledger`) — Routine-writable, openpyxl + signed commits per ADR-001. Holds all `.xlsx` files plus Routine-authored operational markdown: `firm/output-logs/`, `firm/audit-logs/`, `firm/business-reviews/`, `firm/klarna-tests/`, `firm/partners/<id>/variable-statements/`, `firm/partners/<id>/long-tail-statements/`, `firm/compensation/`, `firm/brain-health/`, `firm/treasury/` (R8 daily snapshot per ADR-004).
 - **Firm Brain** (`<firm>-brain`) — partner-writable only, via Curator Shared Brain Push. **No Routine pushes here.** Holds partner-authored firm IP: theses, decisions, ADRs, partner profiles, prompts, change-management artefacts. Routines may **read** the Firm Brain (via git clone of the `<firm>-brain` repo, scoped to `collective/<firm-domain>/wiki/`) when they need firm context — see the per-Routine "Firm Brain reads" column below.
 
 ### Per-Routine repo access matrix
@@ -104,7 +104,7 @@ Sources to read:
 
 For each output:
 - Generate a log_id following the format OL-YYYYMMDD-NNN.
-- Determine the partner_id from the author/owner (consult the partners Brain page if uncertain; if multiple authors, create one row per partner with a fractional output_value note).
+- Determine the partner_id from the author/owner (consult the partners Brain page if uncertain). **For a co-authored output, create one row per co-author and set each row's `weight` (column N) to `1/count`** — or to the explicit fractions in the output spec's `attribution_split` field when the partners have agreed a split (ADR-005). The column-L formula (`=K*J*N*IF(rework…)`) then *shares* the value envelope across co-authors instead of paying each the full amount. Do NOT record the split as a free-text note; `weight` is the load-bearing field.
 - Classify output_type per the X1 schema.
 - Reference the output_spec_ref from the Ledger if one exists; flag for human review if not.
 - Estimate value_tier (S/M/L/XS) based on the output_spec value envelope; default to L if no spec exists.
@@ -127,12 +127,13 @@ For each output:
         # r is now the first empty row to append at
 
 3a. **Dedupe against already-logged outputs (makes re-runs idempotent).** Before appending any candidate, read the existing Output_Log rows and collect the set of `output_ref` values (column E) from every row whose `date` (column B) is within the last 45 days. **Skip any candidate whose `output_ref` already appears in that set** — it was captured on a prior run. Running R1 twice on the same day (e.g. after an Anthropic-infra retry) must therefore append zero duplicate rows and pay nobody twice. Only genuinely new outputs get appended. Log the count of skipped-as-duplicate candidates in the daily Brain summary.
-4. Append the new rows starting at row `r`. Per row R appended:
-   - **Columns A-I:** write the captured values directly to row R (log_id, date, partner_id, output_type, output_ref, output_spec_ref, value_tier, ai_authored_pct, rework_within_30d).
-   - **Column J (`partner_multiplier`):** resolve by reading X2 (`firm/excel/reward-species-declaration.xlsx`) at write time per the v1.0 design decision (no cross-workbook formulas). Write the resolved number.
+4. Append the new rows starting at row `r`. Per row R appended (the appended-row contract, ADR-004 §3):
+   - **Columns A-I:** write the captured values directly to row R (log_id, date, partner_id, output_type, output_ref, output_spec_ref, value_tier, ai_authored_pct, rework_within_30d). The `partner_id` (C) joins X2 Partner_Profile column A (ADR-005).
+   - **Column J (`partner_multiplier`):** resolve by reading X2 (`firm/excel/reward-species-declaration.xlsx`) at write time per the v1.0 design decision (no cross-workbook formulas). Match the partner by `partner_id` in `Base_Variable_Split` column A (ADR-005 join key), read `output_multiplier` (column G), write the resolved number.
    - **Column K (`value_envelope`):** **MUST write the formula** `=VLOOKUP(G{R}, $O$2:$P$5, 2, FALSE)` (with `{R}` substituted to the row number). Without this formula the cell stays blank and contributes zero to Monthly_Variable's SUMIFS — silent failure mode that R3 will not catch. Do NOT leave K blank.
-   - **Column L (`computed_variable`):** **MUST write the formula** `=K{R}*J{R}*IF(I{R}="Yes", 0, 1)` (with `{R}` substituted). Same discipline as K — blank L means zero variable pay for that output until someone manually patches it.
+   - **Column L (`computed_variable`):** **MUST write the formula** `=K{R}*J{R}*N{R}*IF(I{R}="Yes", 0, 1)` (with `{R}` substituted). Same discipline as K — blank L means zero variable pay for that output until someone manually patches it. The `N{R}` factor shares the envelope across co-authors (ADR-005).
    - **Column M (`notes`):** write any human-readable annotation, optional.
+   - **Column N (`weight`):** write `1.0` for a single-author output; write `1/count` (or the output spec's `attribution_split` fraction) for each co-author row of a co-authored output (ADR-005).
 5. For any retroactive rework_within_30d updates, edit the corresponding Output_Log rows in place.
 6. Save X1.
 7. Write the daily Brain summary as a markdown file at `firm/output-logs/YYYY-MM-DD.md` following the template at `templates/brain/daily-output-log.md`. Include: total outputs captured, breakdown by partner, count skipped as duplicates, any anomalies (e.g., a partner with zero outputs for >3 consecutive days), any retroactive rework_within_30d updates.
@@ -179,7 +180,7 @@ Your task: populate business-review.xlsx (X3) Weekly_Review sheet for the week s
 
 2. Query the Ledger (firm/output-logs/) for blocker tags raised in the past 7 days that remain open. Write to column C (blockers).
 
-3. Read klarna-test.xlsx Decision_Log for any tests in {{state IN ("scoring", "remediation", "monitoring")}} state. Write to column D (klarna_test_status).
+3. Read klarna-test.xlsx Decision_Log column M (`status`) for any tests with M ∈ {`scoring`, `remediation`, `monitoring`} (ADR-004). Write to column D (klarna_test_status). Post-meeting, R2 may write M back to Decision_Log (e.g. a test the BR agreed to close moves `monitoring`→`proceeded`, or a re-score decision moves `remediation`→`scoring`) — the writeback is a signed commit like any other Routine mutation.
 
 4. Read the KPI sources for week-over-week deltas and write to column E (kpi_movements). Each KPI has a specific home: `ai_skill_roi` from X6 ROI_Calc (`roi_multiple`); `agent_human_ratio` from X6 Human_Agent_Ratio (`agent_human_ratio`); `treasury_runway_months` from X8 Runway_Calc (`runway_months`) — or "n/a" if X8 not adopted; `partner_count` from X2 Partner_Profile (row count); `customer_count` from X3 Monthly_BR (`customer_count_delta`).
 
@@ -228,9 +229,9 @@ Your task: lock the previous month's Output_Log and produce per-partner variable
 
 2. Aggregate per partner: total_outputs, total_variable (SUM of computed_variable column).
 
-3. Read reward-species-declaration.xlsx for each partner's base_amount and current reward_species parameters.
+3. Read reward-species-declaration.xlsx for each partner's base_amount and current reward_species parameters. Join on `partner_id` — filter `Base_Variable_Split` to the row where column A (`partner_id`, ADR-005) matches the partner, then read `base_amount` (column C) and `output_multiplier` (column G).
 
-4. Populate the Monthly_Variable sheet of partner-output-ledger.xlsx for {{LAST_MONTH}}: one row per partner, with total_outputs, total_variable, base_pay (last_month proportional), total_compensation, sign_off_status='draft'.
+4. Populate the Monthly_Variable sheet of partner-output-ledger.xlsx for {{LAST_MONTH}}: one row per partner, with total_outputs, total_variable, base_pay (last_month proportional), total_compensation, sign_off_status='draft'. **total_outputs (C) and total_variable (D) are written as resolved literals** (aggregate in Python), not Excel formulas — the pseudo-COUNTIFS/SUMIFS in the SPEC is a definition, not valid Excel. total_variable already reflects co-authorship weight because it sums Output_Log column L (which folds in column N).
 
 5. For each partner, generate a personalised statement at firm/partners/{{partner_id}}/variable-statements/YYYY-MM.md following the template at `templates/brain/variable-statement.md`. Statement includes: month, total outputs (with the top 5 listed by value), variable computation with the multiplier, base pay, total compensation, list of any retroactive rework_within_30d zero-outs from prior months that affected this month's pool. The statement is the partner's official record of their variable for the month. The template ends with an explicit acknowledgement block:
 
@@ -292,13 +293,13 @@ You are running the quarterly long-tail entitlement settlement for an ØØT orga
 
 Your task: for every output that has an entry in any partner's reward-species-declaration.xlsx Long_Tail_Schedule with settlement_period='quarterly', compute the partner's long-tail payment for the quarter.
 
-1. Read all reward-species-declaration files (or sheets) for the firm. Extract every Long_Tail_Schedule row where end_date is empty OR > {{LAST_QUARTER_END}}, AND start_date <= {{LAST_QUARTER_END}}.
+1. Read the firm's single reward-species-declaration.xlsx. In `Long_Tail_Schedule` (one shared sheet, keyed by leading `partner_id` in column A — ADR-005), extract every row where end_date is empty OR > {{LAST_QUARTER_END}}, AND start_date <= {{LAST_QUARTER_END}}. Settle "per partner" by grouping on column A (`partner_id`), NOT by assuming per-partner sheets.
 
 2. For each such (partner, output) pair, query the Ledger or financial system for the realised outcome attributable to the output during {{LAST_QUARTER}}: revenue generated, cost saved, customer impact metric — the metric committed to in the Output Spec.
 
-3. Compute the partner's long-tail payment for the quarter as: outcome_attributable × partner_share_pct / 100.
+3. Compute the partner's long-tail payment for the quarter as: outcome_attributable × partner_share_pct / 100 (partner_share_pct is column D after the ADR-005 shift).
 
-4. Update the partner's Long_Tail_Schedule sheet: append the quarter to total_settled_to_date.
+4. Update the partner's Long_Tail_Schedule row: add the quarter's settlement to total_settled_to_date (column H after the ADR-005 shift).
 
 5. Generate a per-partner long-tail statement at firm/partners/{{partner_id}}/long-tail-statements/YYYY-Q{{N}}.md.
 
@@ -355,7 +356,7 @@ Failure handling: if outcome attribution data is missing for an output, flag for
 You are appending today's audit trail to the EU AI Act Article 12 record for an ØØT organisation. Today is {{TODAY}}.
 
 Your task:
-1. Clone {{LEDGER_REPO_URL}} and read all agent decisions logged today across all firm Routines (R1, R2, R3, R4, R5, R7, R8) and any ad-hoc Skill invocations that produced an output affecting partners or customers. Each Routine writes its decisions as markdown in the Ledger — read today's files under `firm/output-logs/` (R1), `firm/business-reviews/` (R2), `firm/partners/*/variable-statements/` (R3), `firm/brain-health/` (R5), `firm/klarna-tests/` (R7), and `firm/audit-logs/` itself (yesterday's entries, for continuity). R6's source-of-truth is the Ledger, not the Curator graph.
+1. Clone {{LEDGER_REPO_URL}} and read all agent decisions logged today across all firm Routines (R1, R2, R3, R4, R5, R7, R8) and any ad-hoc Skill invocations that produced an output affecting partners or customers. Each Routine writes its decisions as markdown in the Ledger — read today's files under `firm/output-logs/` (R1), `firm/business-reviews/` (R2), `firm/partners/*/variable-statements/` (R3), `firm/partners/*/long-tail-statements/` (R4), `firm/compensation/` (R3/R4 founder-approval packets), `firm/brain-health/` (R5), `firm/klarna-tests/` (R7), `firm/treasury/` (R8), and `firm/audit-logs/` itself (yesterday's entries, for continuity). R6's source-of-truth is the Ledger, not the Curator graph.
 2. For each decision, capture: timestamp, AI system identifier (which model + Skill), decision context (sanitised input summary), output, human reviewer if any, related use_case_id from eu-ai-act-mapping.xlsx.
 3. Append to firm/audit-logs/YYYY-MM-DD.md following the template at templates/brain/audit-log-day.md.
 4. Update eu-ai-act-mapping.xlsx Audit_Log_Index sheet with today's entry count and any anomalies flagged.
@@ -382,7 +383,7 @@ Failure handling: if any source unreachable, append from available sources and f
 
 **MCP servers and tools:** GitHub connector / GitHub MCP (PR status check, Brain-repo clone + signed commit + push). Slack / 4thtech connector. Email / dMail. Code execution required (openpyxl appends row to X4 Decision_Log).
 
-> **Known schema gap (fix scheduled, ADR pending):** Decision_Log has no `status` column; the scoring/remediation state machine currently has no Excel home. Do not write a `status` value — column I (`decision`) is formula-driven (`=IF(H2>=14,"PROCEED","HOLD")`). The R7 prompt body below (and R2 §3, R2's `klarna_test_status` roll-up) refer to `status='scoring'`, `status='proceeded'`, `status='held'`, and the BR-visible `scoring`/`remediation`/`monitoring` states as the *intended* state machine, but there is no column to persist them yet. Until the ADR lands, track these states in the `firm/klarna-tests/{{test_id}}.md` Ledger page frontmatter, not in X4.
+**Schema (ADR-004).** Decision_Log column **M `status`** is the Excel home for the lifecycle state machine (literal enum `scoring | remediation | monitoring | proceeded | held`; data-validated; never a formula). It is distinct from column I `decision`, which is the formula-driven threshold verdict (`=IF(H>=14,"PROCEED","HOLD")`). The two may disagree transiently. R7 writes and updates M directly; it does NOT track state in the `firm/klarna-tests/{{test_id}}.md` frontmatter as a schema workaround (that page remains the human-readable context record). See ADR-004 for the full contract.
 
 **Prompt body:**
 
@@ -391,15 +392,20 @@ You are launching a Klarna Test scoring for an ØØT organisation. The trigger i
 
 Your task:
 1. Generate a test_id following format KT-YYYY-NNN.
-2. Append a row to klarna-test.xlsx Decision_Log with: test_id, today's date, decision_summary (extracted from PR title + description), trigger='pr_label', trigger_ref=PR URL, status='scoring'.
+2. Append a row to klarna-test.xlsx Decision_Log per the appended-row contract (ADR-004, `templates/excel/SPEC.md`):
+   - **Columns A-G literals:** test_id (A), today's date (B), decision_summary from PR title + description (C), trigger='pr_label' (D), trigger_ref=PR URL (E), scorer=the assigned scorer partner_id (F), non_beneficiary_reviewer partner_id (G).
+   - **Column H (total_score) MUST write the formula** `=IFERROR(VLOOKUP(A{R},Klarna_Score!A:L,12,FALSE),"")`.
+   - **Column I (decision) MUST write the formula** `=IF(ISBLANK(H{R}),"",IF(H{R}>=14,"PROCEED","HOLD"))`. Do NOT write a literal — I is formula-driven.
+   - **Column K (review_date_90d) MUST write** the 90-day review date as a real date cell (see step 10).
+   - **Column M (status) literal = `scoring`.**
 3. Identify the affected partner(s) — partners whose primary function (per their Output Spec history) overlaps with the PR's automated capability.
 4. Identify the non-beneficiary reviewer — a partner whose variable pay or long-tail does not increase as a result of the action.
-5. Block PR merge by posting a **failing GitHub status check** named `oot/klarna-test` against the PR's head SHA. The status check is implemented by the GitHub Actions workflow at `.github/workflows/klarna-gate.yml` (shipped in Phase 8). The workflow re-runs on every push to the PR and reads the `klarna-test.xlsx` Klarna_Score sheet for the matching `test_id`; it sets the check to **passing** only when **all three** conditions hold simultaneously: `total_score >= 14` AND `scorer_signoff = Yes` AND `non_beneficiary_signoff = Yes`. The firm must have configured branch protection on the merge target to require the `oot/klarna-test` status check; without that protection, the gate is advisory rather than enforcing. Both setup steps (the workflow file and the branch-protection rule) are documented in the Code & QA SKILL.md (S4) and shipped by the cloud installer in Phase 9.
+5. Block PR merge by posting a **failing GitHub status check** named `oot/klarna-test` against the PR's head SHA. The status check is implemented by the GitHub Actions workflow at `.github/workflows/klarna-gate.yml` (shipped in Phase 8). The workflow re-runs on every push to the PR and reads the `klarna-test.xlsx` Klarna_Score sheet for the matching `test_id`; it sets the check to **passing** only when **all three** conditions hold simultaneously: `total_score >= 14` AND `scorer_signoff = Yes` AND `non_beneficiary_signoff = Yes`. The gate reads Klarna_Score directly and never consults the `status` column. The firm must have configured branch protection on the merge target to require the `oot/klarna-test` status check; without that protection, the gate is advisory rather than enforcing. Both setup steps (the workflow file and the branch-protection rule) are documented in the Code & QA SKILL.md (S4) and shipped by the cloud installer in Phase 9.
 6. Post to Slack/dChat #klarna-test: "{{TEST_ID}}: PR #{{PR_NUMBER}} ({{TITLE}}) requires Klarna Test scoring before merge. Affected partner(s): {{LIST}}. Non-beneficiary reviewer: {{ASSIGNED}}. Scoring window: 5 business days. Reference: governance/KLARNA-TEST.md."
 7. Email/dMail the founder + affected partner(s) + non-beneficiary reviewer with the same content.
 8. Open a Ledger page at firm/klarna-tests/{{test_id}}.md with the full context.
-9. Monitor the Klarna_Score sheet for the test_id; on completion, update Decision_Log row status to 'proceeded' (>=14) or 'held' (<14). On 'proceeded', remove the merge block. On 'held', leave the merge blocked and post the remediation list to #klarna-test.
-10. Schedule the 90-day review (Q9 of the rubric) — write the date to Decision_Log column K, set a calendar reminder (cloud track) or cron entry (privacy track).
+9. Monitor the Klarna_Score sheet for the test_id; on completion, update Decision_Log column M `status` per the ADR-004 lifecycle: `proceeded` (I=PROCEED, work ships → remove the merge block) or, if I=HOLD, either `remediation` (gaps being fixed for a re-score) or `held` (decision stands). On `held`/`remediation`, leave the merge blocked and post the remediation list to #klarna-test. Once a `proceeded` row enters its 90-day review window, set M=`monitoring`; when the column-K review date passes and the outcome is recorded, close M back to `proceeded`.
+10. Schedule the 90-day review (Q9 of the rubric) — write the date to Decision_Log column K (as a real date cell, per step 2), set a calendar reminder (cloud track) or cron entry (privacy track).
 
 Failure handling: if scoring isn't complete in 5 business days, escalate to founder for direct decision; never auto-proceed without a complete score.
 ```
@@ -425,20 +431,22 @@ Failure handling: if scoring isn't complete in 5 business days, escalate to foun
 ```
 You are running the weekly treasury runway update for an ØØT organisation. Today is {{TODAY}}.
 
-Your task:
+Your task (appended-row contract, ADR-004 §3 — order matters):
 1. Pull current balances from all firm bank accounts and stablecoin wallets via configured banking/blockchain APIs.
-2. Compute total_cash_eur (FX-converted to base currency).
-3. Read upcoming Obligations from treasury-runway.xlsx — payroll, variable, long-tail, suppliers, due in next 90 days.
-4. Compute monthly_burn_average over rolling 3 months.
-5. Update treasury-runway.xlsx Runway_Calc sheet with today's snapshot row: total_cash_eur, monthly_burn_average, runway_months, unit_fund_outstanding_units, implied_redemption_value, reserve_coverage_ratio.
-6. If runway_months < threshold (default 9 months) OR reserve_coverage_ratio < 1.0, post alert to Slack #treasury (or dChat) and email founder.
+2. **Append the day's Cash_Position rows FIRST** (one per account: date, account_label, balance, currency, balance_eur_equivalent — all literals). Burn is a delta over the just-appended history, so these rows must exist before you compute burn.
+3. Compute total_cash_eur (FX-converted to base currency) by summing the day's Cash_Position rows in Python.
+4. Read upcoming Obligations from treasury-runway.xlsx — payroll, variable, long-tail, suppliers, due in next 90 days (for context only; NOT the burn source).
+5. Compute monthly_burn_average over rolling 3 months from historical Cash_Position deltas (realised outflow, NOT Obligations).
+6. **Append one Runway_Calc snapshot row.** Write literals for snapshot_date (A), total_cash_eur (B), monthly_burn_average (C), unit_fund_outstanding_units (E), implied_redemption_value (F). **MUST write the D formula** `=IFERROR(B{R}/C{R},0)` and **the G formula** `=IFERROR(B{R}/IF(F{R}=0,1,F{R}),0)` on the appended row.
+7. Write a one-paragraph markdown snapshot to `firm/treasury/{{TODAY}}.md` in the Ledger (runway_months, reserve_coverage_ratio, any breach) so R6's audit trail — which scans Ledger markdown — sees treasury activity (ADR-004 §4). Commit it in the SAME commit as the X8 mutation.
+8. If runway_months < threshold (default 9 months) OR reserve_coverage_ratio < 1.0, post alert to Slack #treasury (or dChat) and email founder.
 
 Failure handling: if any banking API is unreachable, flag in alert; never silently skip an account.
 ```
 
-**Implementation:** clone Ledger; openpyxl appends snapshot row to `firm/excel/treasury-runway.xlsx`; signed-commit; push. Pattern C as R1.
+**Implementation:** clone Ledger; openpyxl appends the Cash_Position rows then the Runway_Calc snapshot row (with D/G formulas) to `firm/excel/treasury-runway.xlsx`; write `firm/treasury/{{TODAY}}.md`; `git add firm/excel/treasury-runway.xlsx firm/treasury/{{TODAY}}.md && git commit -S && git push`. Pattern C as R1.
 
-**Expected outputs:** X8 Runway_Calc updated; alert if thresholds breached; signed commit on `main`.
+**Expected outputs:** X8 Cash_Position + Runway_Calc updated; `firm/treasury/{{TODAY}}.md` snapshot; alert if thresholds breached; one signed commit on `main` carrying both.
 
 **Privacy-track delta:** Banking APIs identical (most are HTTP-callable); same openpyxl operation locally; dChat instead of Slack.
 
