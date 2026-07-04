@@ -37,6 +37,8 @@ Total partners using the privacy track typically have one of three motivations: 
 
 Same decision-making framework as the cloud track plus three privacy-specific items. **Don't skip this section** — each decision affects later steps.
 
+> 💸 **Choosing the privacy track only to avoid a Claude subscription?** That's a budget motivation, not a sovereignty one — and the privacy track's hardware (Mac mini, UPS, Trezors) costs ~€2,460 up front. If your driver is *budget, not sovereignty*, use the **community track** instead ([ADR-003](../docs/internal/ADR-003-community-track-no-subscription.md)): OpenCode + free models, no Anthropic plan, no dedicated hardware. See [`docs/MODULES.md`](MODULES.md#community-track) + [`installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md).
+
 ### 1. Confirm sovereignty mandate
 
 If your customers don't require it and your founder doesn't strongly want it, the cloud track is materially less work and equally framework-compliant. Three valid privacy-track motivations: (a) regulatory pressure that disallows cloud-LLM ingest of customer data, (b) philosophical / political commitment to self-custody, (c) Generation 2 stablecoin payroll readiness which requires Trezor identities anyway.

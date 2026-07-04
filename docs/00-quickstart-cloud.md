@@ -50,6 +50,8 @@ If at any step a screenshot doesn't match what you see (Anthropic / GitHub / Sla
 
 Don't skip this section. Each decision here affects later steps; making them now saves backtracking.
 
+> 💸 **No Claude subscription?** You can still adopt ØØT. The **community track** ([ADR-003](../docs/internal/ADR-003-community-track-no-subscription.md)) drives this same install with **OpenCode + free models** — no Anthropic plan — and replaces the scheduled Routines with a 3-rung automation ladder. See [`docs/MODULES.md`](MODULES.md#community-track) + [`installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md). This guide otherwise assumes the cloud track.
+
 ### 1. Cloud or privacy track?
 
 This guide is the **cloud** path. If you need full sovereignty (4thtech + PollinationX + LM Studio + always-on machine), use [`00-quickstart-privacy.md`](00-quickstart-privacy.md) instead. Most founders should start cloud.

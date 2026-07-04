@@ -84,7 +84,7 @@ This list is current as of v1.0.1 (May 2026). It's not exhaustive — the framew
 
 - **Augment Code** — strong on multi-file builds; excellent context handling. Works against Anthropic / OpenAI / others. MCP support varies by version. https://www.augmentcode.com/
 - **Aider** — minimalist; works against any OpenAI-compatible API including LM Studio's local server endpoint. No native MCP yet (May 2026); manual fallback for MCP verification steps. https://aider.chat/
-- **OpenCode (opencode-ai)** — open-source Claude Code competitor. Native MCP. Author-verified basic operation; end-to-end install test queued (ADR-003 will make OpenCode first-class). https://github.com/sst/opencode
+- **OpenCode (opencode-ai)** — open-source Claude Code competitor and the framework's **community-track harness** (free/local models, no Anthropic subscription — see [ADR-003](../../docs/internal/ADR-003-community-track-no-subscription.md) and the full [`OPENCODE-SETUP.md`](OPENCODE-SETUP.md) appendix). Native MCP. Repo `anomalyco/opencode` (formerly `sst/opencode`); npm package `opencode-ai`; site [opencode.ai](https://opencode.ai). **Satisfies R4 via `"permission": {"*": "ask"}` in `opencode.json`; its `--auto` / auto-approve flag violates R4 and must stay OFF during the install.** Author-verified basic operation; end-to-end install test queued (community-track live test, same queue as the privacy e2e). https://github.com/anomalyco/opencode
 - **Cline (formerly Claude Dev)** — VSCode extension, broad model support including local. https://github.com/cline/cline
 - **Continue.dev** — VSCode/JetBrains extension, broad model support. https://www.continue.dev/
 

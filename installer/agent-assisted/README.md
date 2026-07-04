@@ -14,6 +14,14 @@ After install, the daily-driver playbooks live alongside the install plans:
 - [`WEEKLY-OPS.md`](WEEKLY-OPS.md) — Friday BR prep + Sunday brain-health
 - [`MONTHLY-OPS.md`](MONTHLY-OPS.md) — 1st-of-month variable pay + acknowledgement polling
 
+Files in this directory:
+
+- [`START-HERE.md`](START-HERE.md) — the copy-paste prompt for your coding agent.
+- [`AGENT-CAPABILITY-SPEC.md`](AGENT-CAPABILITY-SPEC.md) — is your agent good enough to drive the install?
+- [`cloud-install-plan.md`](cloud-install-plan.md) / [`privacy-install-plan.md`](privacy-install-plan.md) — the agent-runnable plans.
+- [`OPENCODE-SETUP.md`](OPENCODE-SETUP.md) — the **community-track** harness appendix: install and operate ØØT with OpenCode + free/local models and **no Anthropic subscription** (per [ADR-003](../../docs/internal/ADR-003-community-track-no-subscription.md)).
+- [`DAILY-OPS.md`](DAILY-OPS.md) / [`WEEKLY-OPS.md`](WEEKLY-OPS.md) / [`MONTHLY-OPS.md`](MONTHLY-OPS.md) — the post-install daily-driver playbooks.
+
 This is the primary path because it best matches the framework's own discipline: humans direct, agents implement, and the artefact is the audit trail. The agent reads the install plan, executes against your machine, asks for your decisions, and produces a written summary you can hand to your accountant or your lawyer.
 
 > **Status:** v1.0.1 (May 2026). The install plans are stable and have been tested with Claude Code (cloud track) end-to-end on the framework's authors' own machine. Other compatible agents (Augment Code, Aider, OpenCode, Cline, Continue.dev) are author-verified for basic operation but not yet driven to a full end-to-end install. Cursor's agent mode is **not recommended** — it is IDE-bound, which makes the plans' terminal steps awkward (see [AGENT-CAPABILITY-SPEC.md](AGENT-CAPABILITY-SPEC.md) "NOT recommended"); use Cline if you want a VSCode-resident agent. Report issues at [github.com/talirezun/oot-framework/issues](https://github.com/talirezun/oot-framework/issues).

@@ -22,6 +22,24 @@ That's the floor. With those five, you have: a Brain that grows, a weekly self-c
 
 ---
 
+<a id="community-track"></a>
+
+## No Anthropic subscription? The community track
+
+The Day-1 minimum above assumes the **cloud track** (Anthropic account, module 1). If you don't have a subscription budget — and don't need the privacy track's sovereignty (dedicated hardware, Trezors, 4thtech) — there's a third configuration: the **community track**, defined in [`docs/internal/ADR-003-community-track-no-subscription.md`](internal/ADR-003-community-track-no-subscription.md). It's free-to-start, no Anthropic subscription, no dedicated hardware. Everything except the harness and the scheduler is byte-identical to the other tracks — the Routines, Skill Packs, Excel templates, and governance are the same files.
+
+| Layer | Community-track choice |
+|---|---|
+| Install + daily-ops harness | **OpenCode** — free built-in models, your own API key, or a local model. Setup: [`installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md). |
+| Ledger + Firm Brain | GitHub — **unchanged** (ADR-001 / ADR-002 apply verbatim). |
+| Brain ingest | Curator + Gemini Flash Lite pay-as-you-go (~€5-10/month). |
+| Klarna gate (R7) | GitHub Actions — free, identical to the other tracks. |
+| Scheduled Routines | **Three-rung automation ladder** — (1) manual playbook runs (zero setup), (2) laptop cron running `opencode run`, (3) GitHub Actions scheduled workflows (laptop-closed, still no subscription). |
+
+The trade-off is honest: only Rung 3 gives you laptop-closed automation, and Rung 3 transits your Ledger content through the model provider you point it at (EU founders apply the same S7 assessment as on cloud). The community track makes **no sovereignty claims** — if you have a privacy mandate, use the privacy track. Full detail, install steps, and the automation ladder are in [ADR-003](internal/ADR-003-community-track-no-subscription.md) and [`OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md).
+
+---
+
 ## The dependency graph (visual)
 
 ```mermaid

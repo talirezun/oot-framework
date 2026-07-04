@@ -72,6 +72,8 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 **Cloud track.** The canonical, fastest path. Claude Desktop, Claude Code, Slack, GitHub (Ledger holds markdown + `.xlsx` state; Second Brain repo holds the Curator-synced semantic graph), the Curator, MyCuratorMCP, Claude Code Routines. Anthropic infrastructure where applicable. Spreadsheet viewer is user choice (Excel / LibreOffice / Numbers / Excel-for-Web).
 
+**Community track.** The free-to-start, no-subscription, no-dedicated-hardware operating configuration ([ADR-003](docs/internal/ADR-003-community-track-no-subscription.md)). Install harness and daily-ops agent is **OpenCode** on free built-in / own-key / local models; the Ledger and Firm Brain are GitHub (unchanged); Brain ingest is Curator + Gemini Flash Lite pay-as-you-go; scheduled Routines run on a three-rung automation ladder (manual playbook runs → laptop cron → GitHub Actions). Makes **no sovereignty claims** — budget-motivated founders use this, sovereignty-motivated founders use the **privacy track**. Everything but the harness and scheduler is byte-identical to the **cloud track**. Harness setup: [`installer/agent-assisted/OPENCODE-SETUP.md`](installer/agent-assisted/OPENCODE-SETUP.md).
+
 **Privacy track.** The full-Gen-1-parity sovereignty path. LM Studio with local Qwen / Llama / DeepSeek, Desktop Commander MCP, Excel MCP, 4thtech for on-chain communication, PollinationX for decentralised storage, GitHub MCP, OS-native scheduling.
 
 **4thtech.** The on-chain end-to-end-encrypted communication and file-transfer framework. Wallet-as-identity, fully self-custodial, permissionless. Privacy-track comms layer. `https://github.com/4thtech`.

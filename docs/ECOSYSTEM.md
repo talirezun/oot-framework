@@ -116,7 +116,7 @@
 ### Coding agents (the install + daily-ops harness)
 - **What:** the coding-agent harness that runs the install plan and, in Gen 1, drives daily operations. The framework is **LLM-agnostic** — it needs an agent that meets the behaviour bar in [`installer/agent-assisted/AGENT-CAPABILITY-SPEC.md`](../installer/agent-assisted/AGENT-CAPABILITY-SPEC.md), not any specific model or vendor.
 - **Claude Code (reference):** Anthropic's CLI agent; the harness the framework's authors test against first. Native MCP, signed commits, long context. Runs on a Pro / Max / Team plan (see Anthropic Claude above for plan-tier guidance).
-- **OpenCode (the no-subscription harness):** open-source, free — point it at free or local models (including an LM Studio endpoint) and you can install and operate the framework with **no Anthropic subscription**. Native MCP. The framework's fuller first-class support for OpenCode is in progress (see ADR-003, in flight). Repo: [github.com/sst/opencode](https://github.com/sst/opencode).
+- **OpenCode (the community-track harness):** open-source, free — point it at free built-in models, your own API key, or a local model (including an LM Studio endpoint) and you can install **and operate** the framework with **no Anthropic subscription**. This is the **community track** ([ADR-003](internal/ADR-003-community-track-no-subscription.md)): free-to-start, no dedicated hardware, no sovereignty claims. Native MCP; satisfies the capability spec's R4 pause-and-confirm via `"permission": {"*": "ask"}` (keep `--auto` OFF during install). Full setup — install, model/permission config, my-curator wiring, START-HERE variant, and the 3-rung automation ladder — is in [`installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md). Repo: [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode) (formerly `sst/opencode`; npm `opencode-ai`).
 - **Also known-compatible:** Augment Code (strong multi-file builds), Aider (minimalist; works against any OpenAI-compatible API including local LM Studio), Cline (VSCode extension, broad model support). Per [`AGENT-CAPABILITY-SPEC.md`](../installer/agent-assisted/AGENT-CAPABILITY-SPEC.md) §Known compatible agents.
 - **When you'll meet it:** the very first install step — you paste [`installer/agent-assisted/START-HERE.md`](../installer/agent-assisted/START-HERE.md) into your chosen agent and let it drive.
 - **Cost:** Claude Code needs an Anthropic plan; OpenCode + Aider + Cline are free (you pay only for whatever model/API you point them at, or nothing if you run local models).
@@ -216,6 +216,20 @@ The smallest realistic cloud firm, so small teams can see the real entry cost.
 | **Total** | **~€0** | **~€320–€330** |
 
 Bitwarden org, Yubikeys, and Google Workspace are **optional in Gen 1** (see decision #13 above) — a 3-partner firm can start with none of them.
+
+### Community track — 3-partner (no Anthropic subscription)
+
+The budget floor for a firm with no subscription and no dedicated hardware, per [ADR-003](internal/ADR-003-community-track-no-subscription.md). Same 3 partners as the cloud starter above, so the delta is visible.
+
+| Item | One-time | Monthly |
+|---|---|---|
+| OpenCode harness (free built-in models) | — | €0 |
+| Curator pay-as-you-go ingest (Gemini Flash Lite) | — | ~€5–€10 |
+| GitHub — Free private (no enforced branch protection) *or* Team 3 × €4 for enforcement | — | €0–€12 |
+| Slack | — | €0 (free tier, ≤10) |
+| **Total** | **~€0** | **~€5–€22** |
+
+Trade-off vs. the cloud track: laptop-closed scheduled automation requires Rung 3 (GitHub Actions running the routine prompt against a model API — typically cents/month at ØØT's ~2.3 runs/day). GitHub Free works for solo/2-partner firms but does **not** enforce branch protection; Team (~€4/user/month) buys enforcement (same trade-off as the cloud track). No sovereignty claims — see ADR-003.
 
 ### Cloud track — 10-partner firm
 

@@ -20,6 +20,8 @@ You have a coding agent (Claude Code, Augment Code, Aider, OpenCode, Cline, Cont
 
 → **[Start here: `installer/agent-assisted/START-HERE.md`](installer/agent-assisted/START-HERE.md)** — single copy-paste prompt for your agent.
 
+> 💸 **No Anthropic subscription?** The **community track** ([ADR-003](docs/internal/ADR-003-community-track-no-subscription.md)) runs this install with **OpenCode + free models** — no Claude plan, no dedicated hardware — with automation via a 3-rung ladder. See [`installer/agent-assisted/OPENCODE-SETUP.md`](installer/agent-assisted/OPENCODE-SETUP.md) and [`docs/MODULES.md`](docs/MODULES.md#community-track).
+
 ### 🛠️ Path B — Wizard (Python terminal) — **one-line install**
 
 For founders who explicitly prefer a guided form over an agent. **~3-4 hours.** Same 15-step structure as Path A; interactive terminal prompts; resumable; dry-run available.

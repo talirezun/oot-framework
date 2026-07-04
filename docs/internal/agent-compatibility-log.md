@@ -11,8 +11,9 @@ If you successfully run an install with an agent not listed in [`installer/agent
 | Date | Agent | Version | LLM backend | Track | Result | Notes |
 |---|---|---|---|---|---|---|
 | 2026-05-10 | Claude Code | (current) | Claude Sonnet 4.6 | Cloud | ✓ End-to-end | Reference install. Authoritative for the cloud plan. |
+| 2026-07-04 | OpenCode | n/a | free / local (author's choice) | Community | ⏳ QUEUED | Author-verified basic operation; end-to-end install test QUEUED (community-track live test, same queue as the privacy e2e). Community track defined in [ADR-003](ADR-003-community-track-no-subscription.md); harness setup at [`installer/agent-assisted/OPENCODE-SETUP.md`](../../installer/agent-assisted/OPENCODE-SETUP.md). |
 
-(Privacy-track end-to-end test is queued for the next install-path overhaul iteration.)
+(Privacy-track and community-track end-to-end tests are queued for the next install-path overhaul iteration — both need the maintainer's test instance and accounts.)
 
 ---
 

@@ -2,6 +2,14 @@
 
 ØØT follows [Semantic Versioning](https://semver.org). The framework's version is independent of Generation: v1.x is the Gen-1 release line; Gen-2 will open the v2.x line; Gen-3 will open v3.x.
 
+## Unreleased
+
+Driven by the full-repo audit of 2026-07-03 and delivered as a phased improvement plan.
+
+- **Audit-driven trust fixes (2026-07-04).** Installer wizard state machine hardened (missing Brain-ingest + Klarna-gate steps added; renumbered to 18 steps branded /17); the Klarna gate reworked; R1 dedupe + last-run catch-up semantics so irregular routine cadence never double-pays.
+- **Doc-truth sweep.** The Second Brain bridge is now taught in Path C (`docs/00-quickstart-cloud.md` Step 8c); [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md#cost-summary) is the canonical cost page (other docs link, don't restate); contradiction kill-list resolved (Klarna ≥14/20, Routine per-day limits 5/15/15/25, Google-Sheets ghosts → openpyxl per ADR-001, retired "Brain repo" → "Ledger").
+- **NEW: the community track ([ADR-003](docs/internal/ADR-003-community-track-no-subscription.md)).** A third operating configuration — **no Anthropic subscription, no dedicated hardware**. Install and operate ØØT with **OpenCode** on free/local models; scheduled automation via a 3-rung ladder (manual playbook runs → laptop cron → GitHub Actions). New harness appendix [`installer/agent-assisted/OPENCODE-SETUP.md`](installer/agent-assisted/OPENCODE-SETUP.md); MODULES / quickstart decision blocks / FAQ / ECOSYSTEM / GLOSSARY updated; OpenCode naming resolved (`anomalyco/opencode`, formerly `sst/opencode`; npm `opencode-ai`) and its R4 mapping (`"permission": {"*": "ask"}`; `--auto` prohibited during install) documented. End-to-end community-track install test QUEUED alongside the privacy-track e2e.
+
 ## v1.2.0 — 2026-05-15
 
 **Tier 3: user-facing surface aligned with the v1.1.0 Firm Brain primitive.** Where v1.1.0 rebuilt the framework's internal specs (ADR-002, ontology, skills, governance, routines/SPEC, partner-charter) around the three-primitive split (Ledger / Firm Brain / Second Brain), v1.2.0 carries that alignment through to the docs and tools founders actually touch on Sunday morning of Weekend One.

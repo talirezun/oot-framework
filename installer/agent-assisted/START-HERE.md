@@ -4,6 +4,8 @@ You're about to install the ØØT framework on your machine. This page gives you
 
 If you don't yet have a coding agent installed, see the [README](README.md) → "When to use Path A vs. the other paths" — for less-technical founders who don't want to use any agent, the manual track at [`docs/00-quickstart-cloud.md`](../../docs/00-quickstart-cloud.md) covers the same ground in plain English.
 
+**No paid subscription?** OpenCode runs this install with free models — no Anthropic plan needed. See [`OPENCODE-SETUP.md`](OPENCODE-SETUP.md) for the community-track harness setup (install, model/permission config, my-curator wiring, and an OpenCode variant of the prompt below).
+
 ---
 
 ## What to do
