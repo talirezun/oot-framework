@@ -27,8 +27,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "ruff>=0.6.0",
-    "black>=24.0.0",
+    # black + ruff are EXACT-pinned so local and CI resolve byte-identical
+    # formatters. A floor (`>=`) let CI pull a newer stable style than the
+    # tree was formatted with, breaking `black --check` in CI only (F12).
+    "ruff==0.15.20",
+    "black==25.11.0",
     "mypy>=1.10.0",
     "pytest>=8.0.0",
 ]
