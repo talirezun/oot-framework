@@ -2,9 +2,9 @@
 
 ØØT follows [Semantic Versioning](https://semver.org). The framework's version is independent of Generation: v1.x is the Gen-1 release line; Gen-2 will open the v2.x line; Gen-3 will open v3.x.
 
-## Unreleased
+## v1.3.0 — 2026-07-05
 
-Driven by the full-repo audit of 2026-07-03 and delivered as a phased improvement plan.
+Driven by the full-repo audit of 2026-07-03, delivered as a phased improvement plan, and **validated live end-to-end on 2026-07-05**: community track (OpenCode + free model), privacy track (OpenCode headless against local LM Studio), four real routine cycles on the maintainer's test instance — R6, R1 (appended-row K/L/N contract verified in the workbook), R5 via the my-curator MCP, the ADR-005 migration — and a genuine launchd scheduled fire that proved R1's dedupe skip-path unattended. All routine commits GPG-signed and pushed. Eleven live-test findings (F1–F11) folded back into the docs same-day.
 
 - **Audit-driven trust fixes (2026-07-04).** Installer wizard state machine hardened (missing Brain-ingest + Klarna-gate steps added; renumbered to 18 steps branded /17); the Klarna gate reworked; R1 dedupe + last-run catch-up semantics so irregular routine cadence never double-pays.
 - **Doc-truth sweep.** The Second Brain bridge is now taught in Path C (`docs/00-quickstart-cloud.md` Step 8c); [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md#cost-summary) is the canonical cost page (other docs link, don't restate); contradiction kill-list resolved (Klarna ≥14/20, Routine per-day limits 5/15/15/25, Google-Sheets ghosts → openpyxl per ADR-001, retired "Brain repo" → "Ledger").

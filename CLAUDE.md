@@ -2,7 +2,7 @@
 
 This file orients Claude Code (and any other agentic coding assistant) when working in the ØØT framework repository.
 
-> **Status: v1.2.0 released 2026-05-15** (tags on `main`: `v1.0.0` · `v1.0.1` · `v1.1.0` · `v1.2.0`). All 10 build phases complete; Gen 1 operational. An audit-driven improvement effort is in flight — see "Active conversations" below and the gitignored `IMPROVEMENT-PLAN.md`. Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework).
+> **Status: v1.3.0 released 2026-07-05** (tags on `main`: `v1.0.0` · `v1.0.1` · `v1.1.0` · `v1.2.0` · `v1.3.0`). Gen 1 operational and **live-validated end-to-end** (2026-07-05: community + privacy tracks, signed routine cycles, scheduled fire). The 2026-07-03 audit-driven improvement effort is complete; residual roadmap in "Active conversations" below and the gitignored `IMPROVEMENT-PLAN.md`. Repository at [github.com/talirezun/oot-framework](https://github.com/talirezun/oot-framework).
 
 ---
 
