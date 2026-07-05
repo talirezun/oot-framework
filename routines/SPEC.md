@@ -98,7 +98,7 @@ You are running the daily output capture for an ØØT organisation. Today is {{T
 Your task: read all output signals from the past 24 hours across the following sources, and append rows to partner-output-ledger.xlsx (file X1) per its schema in templates/excel/SPEC.md.
 
 Sources to read:
-1. GitHub: all commits across all firm repos in the last 24 hours. Include: commit hash, author (note any Co-authored-by: trailers indicating AI assistance), files changed, lines added/deleted, PR association if applicable.
+1. GitHub: all commits across all firm repos in the last 24 hours. Include: commit hash, author (note any Co-authored-by: trailers indicating AI assistance), files changed, lines added/deleted, PR association if applicable. **EXCLUDE the routines' own writebacks:** skip any commit authored by the firm's routine-bot identity (e.g. `oot-bot`) AND any commit whose subject line starts with a routine prefix (`R1:`, `R2:`, … `R9:`, or `migration:`). Routine writebacks (R6's audit commit, R5's brain-health snapshot, R1's own append, etc.) are audit events — captured by R6, never counted as partner output.
 2. Slack channels listed in {{TRACKED_CHANNELS}} (or 4thtech dChat threads on privacy track): outputs explicitly tagged with #output, contracts mentioned in #commercial, deals closed in #sales.
 3. Google Drive (or local filesystem on privacy track): documents created or significantly modified in {{TRACKED_FOLDERS}}.
 

@@ -13,7 +13,7 @@ If you (the human) are reading this directly, see [`START-HERE.md`](START-HERE.m
 The privacy-track install differs from cloud in three fundamental ways:
 
 1. **You're installing on an always-on machine, not the user's daily laptop.** "The machine" in this plan means a Mac mini / NUC / Raspberry Pi 5 with FDE + UPS that the user has acquired and set up. Many steps run on the always-on machine; some run on the user's daily laptop (e.g. Claude Desktop's MCP wiring on the laptop talks to Curator running on the always-on machine via Tailscale).
-2. **Routines run via OS-native scheduling** (cron / launchd / Task Scheduler) that invoke **OpenCode headless** (`opencode run`) against a **local LM Studio server** (hosted by the `llmster` daemon), not via Claude Code Routines on Anthropic's infrastructure. OpenCode is the agent (skills, MCP, code execution); LM Studio + `llmster` are only the model server.
+2. **Routines run via OS-native scheduling** (cron / launchd / Task Scheduler) that invoke **OpenCode headless** (`opencode run`) against a **local LM Studio server**, not via Claude Code Routines on Anthropic's infrastructure. OpenCode is the agent (skills, MCP, code execution); LM Studio is only the model server. Two ways to run that server, depending on the machine: **on macOS with the LM Studio desktop app installed, there is no separate `llmster` binary** — the app's own server (started and managed with `lms server start` / `lms load`) fills the daemon role. The standalone **`llmster` headless daemon** is the **Linux / headless-server** path where there's no GUI app. Either way, the endpoint is the same OpenAI-compatible `http://127.0.0.1:1234/v1`.
 3. **Per-partner Trezors are Day-1**, not Gen-2-deferred — they're how 4thtech wallet identities work.
 
 Same ground rules from the [cloud plan preamble](cloud-install-plan.md#agent-read-this-preamble-first) apply: pause and confirm before consequential actions; web-UI primary; never silently downgrade; honest failure reporting; resume from state; don't invent inputs; translate technical for the user; read before write; clipboard sandbox caveat (don't rely on `pbcopy`/`xclip`).
@@ -272,19 +272,19 @@ If yes, write the passphrase on a SEPARATE paper card from the seed; store separ
 
 Total: ~55-95 GB. Download time: 1-3 hours depending on connection. Tell me `done`."
 
-### 4.3 — Headless model server (llmster daemon + lms CLI)
+### 4.3 — Headless model server (LM Studio app server on macOS / `llmster` daemon on Linux, driven by the `lms` CLI)
 
-> **Reality check:** the model server on the privacy track is **LM Studio ≥0.3.5 run headless by the `llmster` daemon**, managed with LM Studio's own **`lms`** CLI. `llmster` is not an agent CLI — it has no `--skill` / `--prompt-file` / `--backfill` flags; it only *hosts* models on an OpenAI-compatible server. The agent that runs skills, clones the Ledger, and calls MCP tools is **OpenCode** (installed at Step 4.5).
+> **Reality check:** the model server on the privacy track is **LM Studio ≥0.3.5 run headless**, managed with LM Studio's own **`lms`** CLI. **Which "headless" you get depends on the machine:** on **macOS with the LM Studio desktop app**, the app *is* the server — `lms server start` runs it headless; there is no separate `llmster` binary to install. On **Linux / a headless server** with no GUI app, the standalone **`llmster` daemon** fills that role. Whichever it is, it only *hosts* models on an OpenAI-compatible server — it has no `--skill` / `--prompt-file` / `--backfill` flags; it is not an agent CLI. The agent that runs skills, clones the Ledger, and calls MCP tools is **OpenCode** (installed at Step 4.5).
 
-🟡 **ASK USER:** "In LM Studio, start headless / server mode. LM Studio ships the `lms` CLI and the `llmster` headless daemon (see lmstudio.ai/docs/developer/core/headless). Run:
+🟡 **ASK USER:** "In LM Studio, start headless / server mode (on macOS the desktop app's own server does this via `lms server start`; on a headless Linux box it's the `llmster` daemon — see lmstudio.ai/docs/developer/core/headless). Run:
 
 ```
 lms server start
-lms load qwen-3-14b-instruct --ttl 3600
+lms load qwen-3-14b-instruct --context-length 32768 --ttl 3600
 lms ls          # confirm the model is loaded
 ```
 
-The `--ttl 3600` keeps the model warm for an hour so scheduled Routines don't pay a cold-load each fire. Confirm the server is up at `http://127.0.0.1:1234/v1`. Tell me what you see."
+The `--context-length 32768` is **required**, not a tuning knob: LM Studio's default 4096-token context cannot even hold an agent's system prompt, so a default-loaded model fails immediately with `n_keep >= n_ctx`. The `--ttl 3600` keeps the model warm for an hour so scheduled Routines don't pay a cold-load each fire. Confirm the server is up at `http://127.0.0.1:1234/v1`. Tell me what you see."
 
 ### 4.4 — Smoke test the model server
 
@@ -513,7 +513,7 @@ mkdir -p ~/oot-framework/logs
     <array>
         <string>/bin/bash</string>
         <string>-lc</string>
-        <string>cd ~/&lt;firm-slug&gt; &amp;&amp; /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)"</string>
+        <string>cd ~/&lt;firm-slug&gt; &amp;&amp; lms unload --all; lms load qwen-3-14b-instruct --context-length 32768 --ttl 900 -y &amp;&amp; /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)"</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
@@ -540,10 +540,14 @@ launchctl load ~/Library/LaunchAgents/oot.r5.plist
 
 ```cron
 # ~/oot-framework/routines/privacy/cron.txt   (replace <firm-slug> with the firm runner dir)
-0 9 * * 0 cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)" >> ~/oot-framework/logs/r5.log 2>&1
-0 18 * * * cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
-0 23 * * * cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r6.prompt.md)" >> ~/oot-framework/logs/r6.log 2>&1
-0 8 * * 5 cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r2.prompt.md)" >> ~/oot-framework/logs/r2.log 2>&1
+# Each line chains `lms unload --all; lms load … --ttl 900 -y &&` before opencode — this is
+# the robust scheduled-fire pattern (see OPENCODE-SETUP.md §h, the TTL/JIT trap): a keep-warm
+# TTL always expires before the next daily fire, LM Studio then JIT-reloads at the default 4096
+# context (breaking the run), and a plain re-`lms load` spawns a duplicate `<model>:2` instance.
+0 9 * * 0 cd ~/<firm-slug> && lms unload --all; lms load qwen-3-14b-instruct --context-length 32768 --ttl 900 -y && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r5.prompt.md)" >> ~/oot-framework/logs/r5.log 2>&1
+0 18 * * * cd ~/<firm-slug> && lms unload --all; lms load qwen-3-14b-instruct --context-length 32768 --ttl 900 -y && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
+0 23 * * * cd ~/<firm-slug> && lms unload --all; lms load qwen-3-14b-instruct --context-length 32768 --ttl 900 -y && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r6.prompt.md)" >> ~/oot-framework/logs/r6.log 2>&1
+0 8 * * 5 cd ~/<firm-slug> && lms unload --all; lms load qwen-3-14b-instruct --context-length 32768 --ttl 900 -y && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r2.prompt.md)" >> ~/oot-framework/logs/r2.log 2>&1
 ```
 
 ```bash
@@ -585,14 +589,24 @@ The install-time rule everywhere else is **ask before every consequential action
   },
   "permission": {
     "bash": {
+      "*": "ask",
       "git *": "allow",
       "python3 *": "allow",
       "mktemp *": "allow",
       "ls *": "allow",
       "cat *": "allow",
-      "*": "ask"
+      "echo *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "grep *": "allow",
+      "find *": "allow",
+      "wc *": "allow",
+      "date": "allow",
+      "date *": "allow",
+      "mkdir *": "allow"
     },
     "edit": "allow",
+    "external_directory": "allow",
     "webfetch": "ask"
   },
   "mcp": {
@@ -603,7 +617,9 @@ The install-time rule everywhere else is **ask before every consequential action
 }
 ```
 
-`edit` is scoped to this working directory by virtue of the runner dir being the project root — OpenCode's `edit` permission applies to files under the project. `git`/`python3`/`mktemp` cover the ADR-001 clone + openpyxl + signed-commit path; everything else stays `ask`. Add `4thtech` to the `mcp` block once its CLI is configured (Step 5). Tell me `done`."
+> ⚠️ **The `"*": "ask"` catch-all MUST be the first key in the `bash` object.** OpenCode permission rules are **last-match-wins** — a trailing catch-all matches after every allow rule and overrides them all, so every unattended fire auto-rejects and the Routine deadlocks. First-position catch-all = the allow rules below it win. (Validated live both ways.)
+
+`edit` is scoped to this working directory by virtue of the runner dir being the project root — OpenCode's `edit` permission applies to files under the project. `git`/`python3`/`mktemp` cover the ADR-001 clone + openpyxl + signed-commit path. The read-only helpers (`echo`/`head`/`tail`/`grep`/`find`/`wc`/`date`/`mkdir`) are there because models emit compound commands (`ls … || echo "not found"`) and every segment must independently match an allow rule or the whole command drops to the catch-all. `"external_directory": "allow"` is needed when a Routine prompt reads a `SKILL.md` from the framework clone (`~/oot-framework/skills/…`) outside the firm folder — the alternative is to copy those `SKILL.md` files into the firm folder at install and drop this line. Everything still unlisted stays `ask`. Add `4thtech` to the `mcp` block once its CLI is configured (Step 5). Tell me `done`."
 
 `step_12a_opencode_scoped_config: done`.
 

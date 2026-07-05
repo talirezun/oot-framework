@@ -59,6 +59,8 @@ Point OpenCode at your own provider key. **Gemini Flash Lite is the recommended 
 
 If you have a capable machine, run a local model — no API key, no data leaving your machine for the agent's own reasoning. This is the community-track path that most resembles the privacy track without buying dedicated hardware. Qwen 3 32B+ or Llama 3.3 70B are the models the framework recommends for sustained 50-step install tasks (per [`AGENT-CAPABILITY-SPEC.md`](AGENT-CAPABILITY-SPEC.md) "Tested privacy track"). Smaller models (7B/13B) tend to lose track around step 30.
 
+**Model fidelity, from live testing.** Small models (≤9-10B) complete the routine cycles but make cosmetic formatting slips — in a live run a qwen3.5-9b wrote an X7 wikilink with a `.md` suffix that prior rows lacked, and dropped the closing `---` of a page's YAML frontmatter. When the hardware allows, prefer an **MoE-class local model** (e.g. `qwen3.5-35b-a3b`, which activates only a few billion parameters per token so it runs far faster than a dense 35B) for daily routines. Either way, the founder-review step is what catches these cosmetic slips — a small model plus review is a workable floor.
+
 ### Minimal `opencode.json`
 
 Global config lives at `~/.config/opencode/opencode.json`; a per-project `opencode.json` in the repo root overrides it. A minimal config that sets a model looks like this:
@@ -70,7 +72,22 @@ Global config lives at `~/.config/opencode/opencode.json`; a per-project `openco
 }
 ```
 
-For a local model via LM Studio (OpenAI-compatible endpoint), you configure it as a provider in `opencode.json` — see OpenCode's provider docs at [opencode.ai](https://opencode.ai). For the free built-in models you don't need to set `model` at all; OpenCode prompts you.
+For a local model via LM Studio (OpenAI-compatible endpoint), the `lmstudio/` model prefix used everywhere in this doc only exists if you **define the `lmstudio` provider**. Add this live-validated block to your global config at `~/.config/opencode/opencode.jsonc` (it merges with any project-level `opencode.json` in the runner directory — the two are layered, not exclusive):
+
+```json
+"provider": {
+  "lmstudio": {
+    "npm": "@ai-sdk/openai-compatible",
+    "name": "LM Studio (local)",
+    "options": { "baseURL": "http://127.0.0.1:1234/v1" },
+    "models": { "qwen/qwen3.5-9b": { "name": "Qwen 3.5 9B (local)" } }
+  }
+}
+```
+
+The model IDs under `models` must match LM Studio's own identifiers **exactly** — run `lms ls` to see them. The `--model` flag is then `lmstudio/<that id>` (e.g. `--model lmstudio/qwen/qwen3.5-9b`); multi-slash IDs are fine because OpenCode only splits on the *first* `/` — the leading segment is the provider, the rest is the model ID verbatim.
+
+For the free built-in models you don't need to set `model` at all; OpenCode prompts you.
 
 ---
 
@@ -97,11 +114,11 @@ This makes OpenCode stop and ask you before **every** tool call. That is deliber
 
 ## (e) Wiring the my-curator MCP
 
-The Curator installs a **local MCP server** (the my-curator server) so the agent can read and write your Second Brain. OpenCode speaks MCP natively — add the server under the top-level `mcp` key in `opencode.json`. There are two ways the Curator exposes the server; use whichever matches your Curator install:
+The Curator installs a **local MCP server** (the my-curator server) so the agent can read and write your Second Brain. OpenCode speaks MCP natively — add the server under the top-level `mcp` key in `opencode.json`. There are two ways the Curator exposes the server; **Variant 2 (stdio) is the recommended default** — it's the form validated on the live-test instance and it needs no shim.
 
-### Variant 1 — local-HTTP (the Curator's local server at 127.0.0.1:8765)
+### Variant 1 — local-HTTP (127.0.0.1:8765)
 
-The Curator runs a local HTTP MCP endpoint at `http://127.0.0.1:8765/mcp`. Bridge it into OpenCode with `mcp-remote` (a small stdio↔HTTP shim via `npx`), the same pattern the cloud install plan uses for Claude Desktop:
+Some Curator installs run a local HTTP MCP endpoint at `http://127.0.0.1:8765/mcp`, bridged into OpenCode with `mcp-remote` (a small stdio↔HTTP shim via `npx`), the same pattern the cloud install plan uses for Claude Desktop:
 
 ```json
 {
@@ -115,9 +132,11 @@ The Curator runs a local HTTP MCP endpoint at `http://127.0.0.1:8765/mcp`. Bridg
 }
 ```
 
-### Variant 2 — local stdio server directly
+> **Caveat (from live testing):** many Curator installs expose the MCP as **stdio ONLY** — the local-HTTP endpoint may be absent or disabled. Verify with `curl -s http://127.0.0.1:8765/mcp` before committing to this variant; if it's unreachable, use **Variant 2 (stdio)** below.
 
-If your Curator install exposes the my-curator server as a direct stdio command (rather than the HTTP endpoint), configure it as a `local` server whose `command` array is the server's launch command. Check your Curator app's "MCP" / "integrations" panel for the exact command it wants you to run (it's the same command the Curator prints for the Claude Desktop `mcpServers` block — OpenCode's `command` array takes the executable and its args as list elements):
+### Variant 2 — local stdio server directly (recommended default)
+
+The stdio form is the validated default. Configure the my-curator server as a `local` server whose `command` array is the server's launch command — this is the **same command the Curator prints for the Claude Desktop `mcpServers` block**; find it in your `claude_desktop_config.json` under `mcpServers.my-curator` (OpenCode's `command` array takes the executable and its args as list elements). The live-validated form is:
 
 ```json
 {
@@ -125,11 +144,13 @@ If your Curator install exposes the my-curator server as a direct stdio command 
   "mcp": {
     "my-curator": {
       "type": "local",
-      "command": ["<the-curator-mcp-executable>", "<arg1>", "<arg2>"]
+      "command": ["/usr/local/bin/node", "<path>/mcp/server.js", "--domains-path", "<path>/domains"]
     }
   }
 }
 ```
+
+Validated live as: `node ~/second-brain/mcp/server.js --domains-path ~/second-brain/domains` (use the absolute `node` path — e.g. `/usr/local/bin/node` — in the config's first array element).
 
 > `"type": "local"` is for stdio servers running on your machine (both variants above are local — the HTTP endpoint is bridged through a local `npx` process). `"type": "remote"` with a `url` is for genuinely remote HTTP MCP servers, which the my-curator server is not.
 
@@ -225,22 +246,26 @@ The scheduler (cron / launchd / Task Scheduler) runs `opencode run` non-interact
 
 ```bash
 # cron line (R1 example, daily 18:00). Replace <firm-slug> and the model per routine.
-0 18 * * * cd ~/<firm-slug> && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
+# The `lms unload --all; lms load …` prefix is load-bearing on a scheduled fire — see the TTL/JIT note below.
+0 18 * * * cd ~/<firm-slug> && lms unload --all; lms load qwen-3-14b-instruct --context-length 32768 --ttl 900 -y && /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)" >> ~/oot-framework/logs/r1.log 2>&1
 ```
 
 - `cd ~/<firm-slug>` first — this is the firm's **runner directory**, where the scoped `opencode.json` lives (below). OpenCode loads the project-level config from its working directory.
-- `--model lmstudio/<model>` — on the privacy track the provider is `lmstudio` (a local LM Studio server); on community Rung 2 it can be any provider you've configured (e.g. `google/gemini-2.5-flash-lite`).
+- `lms unload --all; lms load … --ttl 900 -y &&` — chain the model reload into the cron line itself (see the TTL/JIT note directly below for why). `-y` skips the interactive confirm so it runs unattended.
+- `--model lmstudio/<model>` — on the privacy track the provider is `lmstudio` (a local LM Studio server); on community Rung 2 it can be any provider you've configured (e.g. `google/gemini-2.5-flash-lite`). On a non-LM-Studio provider (Rung 2 with an API model) drop the `lms unload/load` prefix — it's LM-Studio-specific.
 - `"$(cat …)"` — the prompt body. It begins with an instruction to read the routine's owner SKILL.md file(s) first (this replaces any per-invocation skill flags; the prompt loads its own skills).
-- One-time on the always-on machine: `mkdir -p ~/oot-framework/logs`, and keep the model warm with `lms load <model> --ttl 3600` (LM Studio's `lms` CLI; the `--ttl` avoids a cold-load on every fire).
+- One-time on the always-on machine: `mkdir -p ~/oot-framework/logs`. **The `--context-length 32768` is not optional:** LM Studio's default 4096-token context cannot even hold an agent's system prompt, so a run against a default-loaded model fails immediately with `n_keep >= n_ctx`.
 
-**launchd (macOS)** can't do the `$(cat …)` shell substitution itself, so wrap the whole command in a login shell — this is the simplest correct form for a plist:
+> **⚠️ TTL/JIT trap — why the cron line chains `lms unload --all; lms load …` instead of relying on a keep-warm TTL (from live testing).** A `lms load --ttl <seconds>` keep-warm always expires long before the *next* daily fire (a 3600s TTL is dead 23 hours before an every-24h routine runs). When the model has expired and a run arrives, LM Studio **JIT-reloads it at the default 4096 context** — which breaks the run (`n_keep >= n_ctx`) exactly as an un-`--context-length`'d load would. Worse, a plain re-`lms load` of an already-loaded model creates a **DUPLICATE instance** (identifier `<model>:2`) while the stale instance keeps serving — so you end up with two copies and requests hitting the wrong one. The robust scheduled-fire pattern is therefore to **unload everything, then load fresh at the right context, then run**, all in the cron line: `lms unload --all; lms load <model> --context-length 32768 --ttl 900 -y && opencode run …`. The short `--ttl 900` is just a safety margin for the run's own duration; it is *not* relied on to survive to the next fire. (A long keep-warm TTL still makes sense for an **always-loaded server you drive interactively** — it's only the *scheduled* fire that needs the unload+load prefix.)
+
+**launchd (macOS)** can't do the `$(cat …)` shell substitution itself, so wrap the whole command in a login shell — this is the simplest correct form for a plist. The same `lms unload --all; lms load …` prefix belongs here too (a scheduled launchd fire hits the identical TTL/JIT trap):
 
 ```xml
 <key>ProgramArguments</key>
 <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>cd ~/&lt;firm-slug&gt; &amp;&amp; /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"</string>
+    <string>cd ~/&lt;firm-slug&gt; &amp;&amp; lms unload --all; lms load qwen-3-14b-instruct --context-length 32768 --ttl 900 -y &amp;&amp; /usr/local/bin/opencode run --model lmstudio/qwen-3-14b-instruct "$(cat ~/oot-framework/routines/privacy/r1.prompt.md)"</string>
 </array>
 ```
 
@@ -253,14 +278,24 @@ The scheduler (cron / launchd / Task Scheduler) runs `opencode run` non-interact
   "$schema": "https://opencode.ai/config.json",
   "permission": {
     "bash": {
+      "*": "ask",
       "git *": "allow",
       "python3 *": "allow",
       "mktemp *": "allow",
       "ls *": "allow",
       "cat *": "allow",
-      "*": "ask"
+      "echo *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "grep *": "allow",
+      "find *": "allow",
+      "wc *": "allow",
+      "date": "allow",
+      "date *": "allow",
+      "mkdir *": "allow"
     },
     "edit": "allow",
+    "external_directory": "allow",
     "webfetch": "ask"
   },
   "mcp": {
@@ -271,11 +306,24 @@ The scheduler (cron / launchd / Task Scheduler) runs `opencode run` non-interact
 }
 ```
 
-- The `bash` allow-list covers the ADR-001 write path (git clone + `python3`/openpyxl + `git commit -S`) and nothing else — everything unlisted stays `ask` (which, unattended, means it will fail loudly rather than run silently).
+> ⚠️ **Rule order matters — OpenCode permission rules are LAST-MATCH-WINS.** The `"*": "ask"` catch-all must be the **first** key in the `bash` object. If you put it last, it matches every command *after* the allow rules and overrides them all — every unattended fire then auto-rejects and the Routine deadlocks. (Validated live both ways: catch-all first = allow rules honoured; catch-all last = everything asks and fails.)
+
+- The `bash` allow-list covers the ADR-001 write path (git clone + `python3`/openpyxl + `git commit -S`) **plus the read-only helpers real models actually reach for**: models emit compound commands (`ls … || echo "not found"`), and every segment must independently match an allow rule or the whole command falls to the catch-all. `echo`/`head`/`tail`/`grep`/`find`/`wc`/`date`/`mkdir` are the segments observed in live runs — everything still unlisted stays `ask` (which, unattended, means it fails loudly rather than running silently).
+- `"external_directory": "allow"` lets the agent read files outside the firm folder — needed when a Routine prompt reads a `SKILL.md` from the framework clone (e.g. `~/oot-framework/skills/…`) that lives outside `~/<firm-slug>`. The alternative, if you'd rather not grant it, is to **copy the needed `SKILL.md` files into the firm folder at install time** and drop this line.
 - `edit` is scoped to the working directory by virtue of the runner dir being the project root.
 - Add `4thtech` (privacy) or drop MCP servers you don't use.
 
+> The validated reference config from the live test instance is at `~/<firm-slug>/opencode.json` after install — reproduce its structure exactly (catch-all first, read-only helpers listed, `external_directory` at the permission top level).
+
 > ⚠️ **`--auto` is NOT the way to make a scheduled run non-interactive.** Global auto-approve removes the pause on *every* action, machine-wide — the exact thing §d forbids. The scoped allow-list above is the correct, auditable form of the unattended exception: it authorises a known-small set of operations and refuses the rest. Never reach for `--auto` to "just make cron work".
+
+### Prompt-authoring rules for unattended runs
+
+Two OpenCode permission behaviours bite silently in unattended mode; the routine **prompts** must be authored around them (this is a constraint on how you write the `r*.prompt.md` bodies, not on the config):
+
+1. **The permission glob does not span newlines.** A multiline `python3 -c "…"` command does **not** match the `python3 *` allow rule (the glob stops at the first newline) — so it drops to the catch-all and is **auto-rejected**, even though single-line `python3` is allowed. **Rule:** never emit multiline inline Python. Instead, instruct the agent to **write the Python to a script file with the edit tool, then run it as a single-line command** (`python3 firm/tmp/r1_writeback.py`). Single-line invocations match the glob; multiline `-c` blobs don't.
+2. **`rm` is (correctly) not allow-listed**, so any deletion prompts — and unattended that means it fails. **Rule:** prompts must **never instruct deletion.** Leave temp files unstaged (they simply don't enter the commit) rather than cleaning them up.
+3. **Stop on errors — but order cleanup last.** Instruct the agent to STOP on any error, **with one exception:** a permission-rejection of a *cleanup* step must not abort the *commit* step. So either put any optional cleanup **after** the signed commit, or skip cleanup entirely. Never let a rejected `rm` (or a rejected multiline command) leave the run without its commit.
 
 ### Keeping MCP servers warm (`opencode serve` + `--attach`)
 
@@ -288,6 +336,22 @@ opencode run --attach --model lmstudio/<model> "$(cat …/r<N>.prompt.md)"
 ```
 
 On an always-on privacy-track machine, running `opencode serve` as a launchd/systemd unit and having the cron lines `--attach` is the low-latency setup. For a laptop (Rung 2) it's optional — the cold-boot cost is usually fine at ØØT's ~2.3 runs/day.
+
+### Troubleshooting headless runs
+
+Two failure modes surfaced repeatedly in live testing of `opencode run`:
+
+- **"Unexpected server error" on every fire.** Two causes, check both:
+  1. **The OpenCode DESKTOP app is running.** The CLI attaches to a running desktop app if it finds one, and the two fight over the same session — quit the OpenCode desktop app and re-run. (The desktop app's data lives separately from the CLI's, so quitting it costs you nothing.)
+  2. **A corrupt CLI state database.** Run `opencode run --print-logs` and look for `SQLiteError` (e.g. `no such column`). If you see it, the CLI's state DB is corrupt — back it up so OpenCode rebuilds a fresh one:
+     ```bash
+     mv ~/.local/share/opencode/opencode.db ~/.local/share/opencode/opencode.db.bak
+     ```
+     OpenCode recreates the DB on the next run. This touches only the CLI's state — the desktop app's data is a separate store and is unaffected.
+- **`opencode upgrade` hangs silently.** The in-place upgrade command can stall with no output. Don't wait on it — the curl installer is the reliable re-install path and upgrades in place:
+  ```bash
+  curl -fsSL https://opencode.ai/install | bash
+  ```
 
 ---
 

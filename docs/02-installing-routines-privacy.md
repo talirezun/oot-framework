@@ -15,7 +15,7 @@ The privacy track replaces Anthropic's [Claude Code Routines](https://claude.com
 - **Cloud:** Claude Code → `/schedule` → Anthropic infrastructure runs the Routine.
 - **Privacy:** cron / launchd / Task Scheduler → your always-on machine runs `opencode run --model lmstudio/<model> "$(cat <prompt-file>)"` against a **local LM Studio server**.
 
-The agent that clones the Ledger, runs openpyxl, and calls the MCP servers is **OpenCode** (open-source terminal agent, non-interactive `opencode run` mode). The **model** it uses is served locally by **LM Studio**, which the **`llmster` headless daemon** hosts on LM Studio's OpenAI-compatible server (`http://127.0.0.1:1234/v1`). LM Studio is *only* the model server — it does not run skills, clone repos, or call MCP tools; OpenCode does all of that.
+The agent that clones the Ledger, runs openpyxl, and calls the MCP servers is **OpenCode** (open-source terminal agent, non-interactive `opencode run` mode). The **model** it uses is served locally by **LM Studio** on its OpenAI-compatible server (`http://127.0.0.1:1234/v1`). How you run that server headless depends on the machine: **on macOS with the LM Studio desktop app, the app itself is the server** (`lms server start`) — there is no separate `llmster` binary; on a **headless Linux box** with no GUI app, the standalone **`llmster` daemon** fills that role. Either way, LM Studio is *only* the model server — it does not run skills, clone repos, or call MCP tools; OpenCode does all of that.
 
 ### How the pieces fit
 
@@ -26,7 +26,7 @@ cron / launchd / Task Scheduler   (the schedule — fires on time, only while th
 opencode run --model lmstudio/<model> "$(cat r<N>.prompt.md)"
    run from the firm's runner dir (~/<firm-slug>) so it picks up the scoped opencode.json
         │
-        ├─▶ LM Studio server  ─── the model (hosted headless by the llmster daemon; kept warm via `lms load … --ttl`)
+        ├─▶ LM Studio server  ─── the model (served headless: the LM Studio app on macOS, or the llmster daemon on headless Linux; kept warm via `lms load … --context-length 32768 --ttl`)
         ├─▶ MCP servers       ─── github-mcp, desktop-commander, 4thtech, my-curator (declared in opencode.json → mcp)
         └─▶ code execution    ─── git clone + openpyxl + signed commit (ADR-001 Pattern C)
                                         │
@@ -44,8 +44,8 @@ The trade-off: cloud Routines fire while your laptop is closed; privacy-track Ro
 
 The privacy track's scheduled Routines run on a **three-piece stack**. Install all three before wiring any Routine:
 
-1. **LM Studio ≥0.3.5 + the `llmster` daemon** — the model server. Download Qwen 3 14B (or larger) inside LM Studio, then run the headless daemon per [lmstudio.ai/docs/developer/core/headless](https://lmstudio.ai/docs/developer/core/headless). It serves an OpenAI-compatible endpoint at `http://127.0.0.1:1234/v1`.
-2. **The `lms` CLI** — LM Studio's own command-line tool (ships with LM Studio). Use it to manage the server and keep a model warm: `lms server start`, then `lms load qwen-3-14b-instruct --ttl 3600`. (The `--ttl` keeps the model resident so a cron fire doesn't pay a cold-load every run.)
+1. **LM Studio ≥0.3.5, run headless** — the model server. Download Qwen 3 14B (or larger) inside LM Studio, then run it headless per [lmstudio.ai/docs/developer/core/headless](https://lmstudio.ai/docs/developer/core/headless). **On macOS with the desktop app, the app itself is the headless server** (`lms server start`); on a **headless Linux box** it's the standalone **`llmster` daemon**. Either way it serves an OpenAI-compatible endpoint at `http://127.0.0.1:1234/v1`.
+2. **The `lms` CLI** — LM Studio's own command-line tool (ships with LM Studio). Use it to manage the server and keep a model warm: `lms server start`, then `lms load qwen-3-14b-instruct --context-length 32768 --ttl 3600`. The `--context-length 32768` is required — LM Studio's default 4096-token context can't even hold the agent's system prompt, so a default-loaded model fails with `n_keep >= n_ctx`. The `--ttl` keeps the model resident so a cron fire doesn't pay a cold-load every run.
 3. **OpenCode** — the agent harness (`opencode run`). Install per [`../installer/agent-assisted/OPENCODE-SETUP.md`](../installer/agent-assisted/OPENCODE-SETUP.md), configure an OpenAI-compatible provider named `lmstudio` pointing at `http://127.0.0.1:1234/v1`, wire the MCP servers (`my-curator`, `desktop-commander`, `github-mcp`, `4thtech`) in `opencode.json` → `mcp`, and drop the **scoped unattended `opencode.json`** into the firm's runner directory (see OPENCODE-SETUP.md → "Scheduled / unattended runs").
 
 Plus:
@@ -167,7 +167,7 @@ Install per [`routines/privacy/R2.md`](../routines/privacy/R2.md). Manual fire. 
 - Cause 4: cron user doesn't have the env vars the tools need. Set them in the crontab itself, or wrap the command in `/bin/bash -lc '…'` so a login shell sources your profile (this is also why the launchd plists use `/bin/bash -lc`).
 
 **2. OpenCode hangs or errors: model / MCP unreachable.**
-- Cause A — model server down: OpenCode's `lmstudio` provider can't reach `http://127.0.0.1:1234/v1`. Fix: start the LM Studio server via the `llmster` daemon and load a model — `lms server start && lms load qwen-3-14b-instruct --ttl 3600`. Add the daemon to startup (macOS launchd, Linux systemd unit). LM Studio here is **only** the model server.
+- Cause A — model server down: OpenCode's `lmstudio` provider can't reach `http://127.0.0.1:1234/v1`. Fix: start the LM Studio server (the desktop app's own server on macOS, or the `llmster` daemon on a headless Linux box) and load a model — `lms server start && lms load qwen-3-14b-instruct --context-length 32768 --ttl 3600` (the `--context-length` is required; the default 4096 can't hold the agent's system prompt). Add the server to startup (macOS launchd, Linux systemd unit). LM Studio here is **only** the model server.
 - Cause B — MCP server missing: the MCP servers now live in the runner directory's `opencode.json` `mcp` block, **not** in LM Studio. If a Routine reports a missing tool (e.g. `github-mcp`), check that block and that the server's binary/command is installed. Tip: use `opencode serve` + `--attach` (see OPENCODE-SETUP.md) to keep MCP servers warm and avoid a cold-boot on every fire.
 
 **3. R6 push fails: "secret key not found".**
@@ -181,6 +181,10 @@ Install per [`routines/privacy/R2.md`](../routines/privacy/R2.md). Manual fire. 
 **5. R3 hangs / produces garbage on Qwen 3 14B.**
 - Cause: R3 is high-stakes; smaller models struggle with the multi-partner aggregation logic.
 - Fix: switch the R3 plist/cron entry to use Llama 3.3 70B (downloads ~40GB). The framework's authors strongly recommend this.
+
+**6. Small models make cosmetic formatting slips.**
+- Observed live: a small model (≤9-10B) completes the routine cycles correctly but produces minor markdown-formatting slips — e.g. a wikilink written with a `.md` suffix that prior rows lacked, and a dropped closing `---` on a page's YAML frontmatter. The numbers and logic were right; only the formatting drifted.
+- Fix: when your hardware allows, run an **MoE-class local model** (e.g. `qwen3.5-35b-a3b`) for the daily routines — it's far more formatting-consistent than a small dense model while staying fast. Either way, the **founder-review step is what catches these slips** — a small model plus review is a workable floor.
 
 ---
 

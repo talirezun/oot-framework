@@ -112,9 +112,9 @@ Definitions of every term ØØT uses in a non-standard or non-obvious way. If a 
 
 **Excel MCP.** The MCP server (`haris-musa/excel-mcp-server`, MIT-licensed) that lets local LLMs read and write Excel files. The piece that gives the privacy track full Gen 1 automation parity.
 
-**llmster.** LM Studio's **headless daemon** — it *hosts* local models on LM Studio's OpenAI-compatible server (`http://127.0.0.1:1234/v1`) without keeping the GUI open. It is a model server, not an agent: it does not load skills, clone repos, or call MCP tools. On the privacy track the agent harness that does all that is **OpenCode** (`opencode run`), which uses the llmster-hosted model.
+**llmster.** LM Studio's standalone **headless daemon** for the **Linux / headless-server** path — it *hosts* local models on LM Studio's OpenAI-compatible server (`http://127.0.0.1:1234/v1`) on a box with no GUI app. **On macOS with the LM Studio desktop app installed there is no separate `llmster` binary** — the app's own server (started with `lms server start`) fills the daemon role. Either way it is a model server, not an agent: it does not load skills, clone repos, or call MCP tools. On the privacy track the agent harness that does all that is **OpenCode** (`opencode run`), which uses the locally hosted model.
 
-**lms.** LM Studio's command-line tool (ships with LM Studio). Manages the model server and loaded models: `lms server start`, `lms load <model> --ttl <seconds>` (keeps a model warm so scheduled Routines skip the cold-load), `lms unload`, `lms ls`.
+**lms.** LM Studio's command-line tool (ships with LM Studio), used on both the macOS-app and Linux-daemon paths. Manages the model server and loaded models: `lms server start`, `lms load <model> --context-length 32768 --ttl <seconds>` (the `--context-length` is required — LM Studio's default 4096-token context can't hold an agent's system prompt, so a default load fails with `n_keep >= n_ctx`; the `--ttl` keeps a model warm so scheduled Routines skip the cold-load), `lms unload`, `lms ls` (lists loaded models and their exact identifiers).
 
 **Desktop Commander MCP.** Local filesystem MCP server. Privacy-track replacement for the Google Drive Claude connector.
 

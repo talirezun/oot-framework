@@ -20,7 +20,7 @@ Two execution substrates, identical prompts:
   - **Claude Code CLI** in your terminal: `/schedule` command
   - **Web dashboard:** [claude.ai/code/routines](https://claude.ai/code/routines)
   - **Claude Code desktop app:** "New Remote Task" feature *(this is the Claude Code-specific desktop app, distinct from Claude Desktop chat)*
-- **Privacy track** — cron / launchd / Task Scheduler on your always-on machine, where each schedule runs **OpenCode headless** (`opencode run`) against a **local LM Studio server** (hosted by the `llmster` daemon). **Privacy track is the one that needs a dedicated machine.** That's the structural trade-off vs. cloud track's sovereign-but-laptop-must-be-on cost.
+- **Privacy track** — cron / launchd / Task Scheduler on your always-on machine, where each schedule runs **OpenCode headless** (`opencode run`) against a **local LM Studio server** (served headless by the LM Studio desktop app's own server on macOS, or the standalone `llmster` daemon on a headless Linux box). **Privacy track is the one that needs a dedicated machine.** That's the structural trade-off vs. cloud track's sovereign-but-laptop-must-be-on cost.
 
 ---
 
@@ -296,7 +296,7 @@ flowchart TB
     subgraph AlwaysOn["🖥️ Always-on machine (your hardware)"]
         Cron[cron / launchd / Task Scheduler]
         OpenCode[opencode run<br/>headless agent]
-        LMStudio[LM Studio server<br/>hosted by llmster daemon<br/>Qwen 3 14B / Llama 3.3 70B]
+        LMStudio[LM Studio server<br/>headless: app on macOS / llmster on Linux<br/>Qwen 3 14B / Llama 3.3 70B]
         OpenpyxlP[Python + openpyxl]
         CuratorLocal[Local my-curator MCP]
     end
