@@ -325,23 +325,17 @@ Then identify what the user wants to do:
 
 This section is intended for ephemeral state across sessions.
 
-**As of 2026-07-04 (post-v1.2.0 — audit-driven improvement effort: Phases 0–5 complete):**
+**As of 2026-07-08 (post-v1.3.0 — live-validated end-to-end; Curator continuity established):**
 
-**Release state reconciled 2026-07-03.** The Shared Brain branch was merged to `main` (fast-forward); tags `v1.1.0` + `v1.2.0` now live on main. `v1.0.1` was tagged retroactively at the bridge-complete commit (`c59595e`). CHANGELOG restructured into v1.0.1 / v1.1.0 / v1.2.0 sections + an `## Unreleased` section holding the improvement-effort work. Stale worktree branches deleted.
+**Release state reconciled 2026-07-05.** The live e2e validation sessions (community + privacy tracks, signed routine cycles, scheduled fire) completed successfully with findings F1–F11 resolved (`7b9d52e`). v1.3.0 tagged and released (`63faf51`). Article 2 of the Research Series (*The Fight for Intelligence*) integrated (`94865a0`). Cross-harness working state continuity via The Curator established in `CLAUDE.md`, `AGENTS.md`, and `.curator-project` (`067ac88`).
 
-**Full-repo audit completed 2026-07-03** (five parallel deep reviews). The phased improvement effort is now **done through Phase 5 and pushed to `main`**. **The working plan lives in `IMPROVEMENT-PLAN.md` at the repo root — LOCAL ONLY, gitignored, the cross-session memory for this effort. Read it first in any session continuing this work.** Phases and their commits:
+**Current focus & roadmap:**
 
-- **Phase 0 — release-state untangle** — DONE, `ffcdb8d`.
-- **Phase 1 — trust-critical bug fixes** — DONE, `cdf0fd8` (installer state machine; klarna-gate reworked to always-post / read base branch / framework-repo guard; R1 output_ref dedupe; real CI test suite; money-path routine fixes).
-- **Phase 2 — doc-truth sweep** — DONE, `001e2af` (Second Brain bridge into Path C; contradiction kill-list; ECOSYSTEM canonical cost tables; wizard grew to 18 steps; 88 visible Tier-2 TODOs).
-- **Phase 3 — community track (ADR-003)** — DONE, `1a1778e` (OpenCode as first-class harness; `OPENCODE-SETUP.md`; community track threaded through all entry docs).
-- **Phase 4 — privacy-track grounding** — DONE, `f01f460` (privacy Routines invoke **OpenCode headless** — `opencode run --model lmstudio/<model>` — against the llmster-hosted LM Studio server; the fabricated `--skill`/`--prompt-file`/`--backfill` flag interface is gone; `lms` for model management; scoped-unattended `opencode.json`; install.sh files shrunk to thin pointers).
-- **Phase 5 — structural hardening + docs-sync sweep** — DONE, this commit (ADR-004 X4 `status` column + appended-row contract; ADR-005 `partner_id` join key + X1 `weight` column; validator hardened with 6 new checks; Klarna per-question 0/1/2 anchors; small-org populated; 51-test suite with hard-gating lint; full documentation sync).
-
-**Remaining open items (deliberate, tracked in IMPROVEMENT-PLAN.md):**
-
-- **The live-test session** (needs the maintainer at the keyboard, on the test instance): the privacy-track end-to-end run (LM Studio + OpenCode + the test company) **and** the OpenCode community-track e2e install. Everything above is author-verified but not yet run against real accounts. Bundled as one queued session.
-- **v1.3 roadmap:** full retirement of the legacy `<firm>-secondbrain` bridge to the Firm Brain read-path (migration banners are in place in `routines/cloud/R5.md`, `installer/wizard.py` step_12, `docs/AUTOMATION-PIPELINE.md`, cloud-install-plan Step 9b); the Rung-3 routine-runner GitHub Actions workflow template (`templates/ci/routine-runner.yml` candidate per ADR-003); the 25 walkthrough screenshots + installer web-UI choke-point captures; medium-org + regulated-eu-org population (small-org shipped Phase 5C); Tier-2 Skill Pack hardening (S7 first — owns the R6/Article-12 chain); the remaining ADR-001 amendment items (binary-xlsx conflict recovery, timezone pinning, R3 polling-window semantics, R6 hourly-retry unschedulability).
+- **Tier-2 Skill Pack hardening:** Starting with **S7 (`governance-compliance`)**, which anchors the daily R6 audit-trail routine, EU AI Act Article 12 compliance, and X7 risk register maintenance; followed by S8 (legal-operations), S9 (marketing), S10 (finance-treasury), and S11 (sales-bd).
+- **Rung-3 routine-runner template:** Candidate GitHub Actions workflow template (`templates/ci/routine-runner.yml`) per ADR-003.
+- **Walkthrough screenshots & visual assets:** 25 UI walkthrough screenshots and installer web-UI capture points.
+- **Reference org expansion:** `medium-org/` and `regulated-eu-org/` population (`small-org/` shipped in Phase 5C).
+- **Firm Brain bridge retirement:** Completion of legacy `<firm>-secondbrain` bridge phase-out.
 
 Test instance preserved for e2e work:
 - GitHub: `talirezun/oot-test-company` (private)

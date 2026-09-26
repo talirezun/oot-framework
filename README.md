@@ -53,7 +53,7 @@ For founders who want to type every step themselves. Most transparent; slowest. 
 | **Comfortable letting an agent run shell commands on your machine?** | yes | no | n/a |
 | **Want to type every command yourself?** | no | partial | yes |
 | **Have a free weekend (16h) for setup?** | n/a | n/a | yes |
-| **Cloud or privacy track?** | both | both | both |
+| **Which operating track?** | all three | all three | all three |
 
 When in doubt: Path A. The framework was designed to be installed by an agent — that's how the framework's authors install it.
 
@@ -146,7 +146,7 @@ What lives where.
 - **Desktop Commander MCP** — privacy-track filesystem. https://github.com/wonderwhy-er/DesktopCommanderMCP
 - **GitHub MCP** — cross-machine Brain sync. https://github.com/modelcontextprotocol/servers/tree/main/src/github
 
-**Secrets layer (both tracks, recommended-but-optional in Gen 1):**
+**Secrets layer (all three tracks, recommended-but-optional in Gen 1):**
 
 - **Bitwarden** — open-source password manager. https://bitwarden.com/ · Recommended once 2+ admins.
 - **Trezor** — hardware wallet (4thtech identity in privacy track; deferred to Gen 2 for cloud). https://trezor.io/
