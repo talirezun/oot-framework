@@ -11,7 +11,9 @@ It is the vendor-neutral counterpart to `CLAUDE.md`. Both files exist; both shou
 This repository's working state lives in The Curator (project `projects/ott`, see
 `.curator-project`). At the START of every session call the my-curator MCP tool
 `get_project_context` with project "ott" and read the standing brief and latest
-handoff before acting. SAVE with `save_working_state` under project "ott" with the
+handoff before acting. When the user says continue or resume, or you come
+back after a pause, call `get_project_context` again before acting — another tool or
+computer may have saved since. SAVE with `save_working_state` under project "ott" with the
 `scope` argument set to your tool's name — "claude-code" if you are Claude Code,
 "antigravity" if you are Antigravity, "opencode" if you are opencode, otherwise your
 tool's own name, lowercase and hyphenated. Pass `scope` explicitly every time, and never
