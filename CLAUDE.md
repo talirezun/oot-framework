@@ -118,7 +118,7 @@ oot-framework/
 │   ├── reporting-business-review/    (S5)
 │   ├── change-management/            (S6)
 │   ├── privacy-self-sovereign/       (S12)
-│   ├── governance-compliance/        (S7 — Tier-2 scaffold)
+│   ├── governance-compliance/        (S7 — Tier-2 hardened)
 │   ├── legal-operations/             (S8 — Tier-2 scaffold)
 │   ├── marketing/                    (S9 — Tier-2 scaffold)
 │   ├── finance-treasury/             (S10 — Tier-2 scaffold)
@@ -331,7 +331,7 @@ This section is intended for ephemeral state across sessions.
 
 **Current focus & roadmap:**
 
-- **Tier-2 Skill Pack hardening:** Starting with **S7 (`governance-compliance`)**, which anchors the daily R6 audit-trail routine, EU AI Act Article 12 compliance, and X7 risk register maintenance; followed by S8 (legal-operations), S9 (marketing), S10 (finance-treasury), and S11 (sales-bd).
+- **Tier-2 Skill Pack hardening:** **S7 (`governance-compliance`) hardened** (EU AI Act Articles 9/12/13/14, GDPR Articles 17/22, Italian Law 132/2025, 3 worked examples, references README); next is **S8 (`legal-operations`)**, followed by S9 (marketing), S10 (finance-treasury), and S11 (sales-bd).
 - **Rung-3 routine-runner template:** Candidate GitHub Actions workflow template (`templates/ci/routine-runner.yml`) per ADR-003.
 - **Walkthrough screenshots & visual assets:** 25 UI walkthrough screenshots and installer web-UI capture points.
 - **Reference org expansion:** `medium-org/` and `regulated-eu-org/` population (`small-org/` shipped in Phase 5C).
